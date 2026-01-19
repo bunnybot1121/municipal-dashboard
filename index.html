@@ -12,6 +12,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <!-- Leaflet Map -->
+    <link rel="icon" type="image/svg+xml" href="vite.svg" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -236,6 +237,41 @@
         });
     </script>
     <div id="root"></div>
+
+    <script>
+        // Dependency Health Check
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                var missing = [];
+                if (!window.Babel) missing.push("Babel (unpkg.com)");
+                // We cannot easily check React here because it's imported as a module later, 
+                // but if Babel is missing, nothing runs.
+
+                if (missing.length > 0) {
+                    var errorDiv = document.getElementById('debug-error');
+                    errorDiv.style.display = 'block';
+                    errorDiv.innerHTML += '<h3>CRITICAL: Dependencies Failed to Load</h3>' +
+                        'The following external libraries are missing (likely blocked by firewall or network):<br>' +
+                        missing.join(', ') +
+                        '<br><br>Please check your internet connection or use a less restricted network.';
+                } else {
+                    // If Babel is present but Root is empty after 3 seconds, implies React crash
+                    if (!document.getElementById('root').innerHTML.trim()) {
+                        // Wait a bit more, sometimes Babel takes time
+                        setTimeout(function () {
+                            if (!document.getElementById('root').innerHTML.trim()) {
+                                var errorDiv = document.getElementById('debug-error');
+                                errorDiv.style.display = 'block';
+                                errorDiv.innerHTML += '<h3>App Failed to Mount</h3>' +
+                                    'Babel loaded, but the React app did not start.<br>' +
+                                    'This often means a Syntax Error in the code or a failed import from esm.sh.';
+                            }
+                        }, 2000);
+                    }
+                }
+            }, 1000);
+        });
+    </script>
 
     <script type="text/babel" data-type="module">
         import React, { useState, useMemo, useEffect } from 'https://esm.sh/react@18.3.1';
