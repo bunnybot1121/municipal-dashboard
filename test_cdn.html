@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CDN Test</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide-react@latest/dist/lucide-react.min.js"></script>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script>
+        console.log('React:', !!window.React);
+        console.log('Lucide:', !!window.lucide);
+        console.log('LucideReact:', !!window.LucideReact);
+
+        // Check if we can find specific icons in LucideReact
+        if (window.LucideReact) {
+            console.log('ShieldAlert:', !!window.LucideReact.ShieldAlert);
+        }
+    </script>
+</body>
+
+</html>
