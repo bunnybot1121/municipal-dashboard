@@ -7,7 +7,8 @@ const Sidebar = () => {
     // Mock logout
     const handleLogout = () => {
         localStorage.removeItem('user');
-        window.location.href = '/municipal-dashboard/login';
+        // Redirect to root; App's ProtectedRoute will handle the redirect to /login
+        window.location.href = '/municipal-dashboard/';
     };
 
     return (

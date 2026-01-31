@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-// import { login } from '../services/api'; // API service might be gone, need to check or mock it
+import { login } from '../services/authService';
 import { ShieldCheck, User, Lock } from 'lucide-react';
 
 const LoginPage = () => {
-    const [username, setUsername] = useState('admin@city.gov'); // Mapped to email in logic
-    const [password, setPassword] = useState('password');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
     const [role, setRole] = useState('admin');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -69,20 +69,12 @@ const LoginPage = () => {
         setError('');
 
         try {
-            // Mock login since API might be gone in rollback
-            // const { data } = await login(username, password);
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const data = { role: role, name: 'Admin User' };
-
-            localStorage.setItem('user', JSON.stringify(data));
-            // Force role from toggle if needed, or use API role. 
-            // For this UI demo, we might want to respect the API but typically login overrides selection.
-            // Let's stick to API role but ensure we save what's needed.
-            localStorage.setItem('user_role', data.role);
-            localStorage.setItem('is_authenticated', 'true');
+            await login(username, password);
+            // Login successful (token stored in authService)
             navigate('/');
         } catch (err) {
-            setError(err.response?.data?.message || 'Login failed');
+            console.error(err);
+            setError(err.message || 'Login failed');
         } finally {
             setIsLoading(false);
         }

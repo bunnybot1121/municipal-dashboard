@@ -25,6 +25,8 @@ const Task = require('./models/Task');
 const StatusLog = require('./models/StatusLog');
 
 // --- ROUTES ---
+const authRoutes = require('./routes/authRoutes');
+app.use('/api/auth', authRoutes);
 
 // 1. USERS
 app.get('/api/users', async (req, res) => {
