@@ -1,0 +1,2849 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script type="module">import { injectIntoGlobalHook } from "/municipal-dashboard/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+  <script type="module" src="/municipal-dashboard/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nagarsevak AI - Municipal Dashboard</title>
+    <!-- Tailwind CSS (just in case for utilities, though I used vanilla) -->
+    <!-- Using vanilla CSS as requested, embedding styles below -->
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Leaflet Map -->
+    <link rel="icon" type="image/svg+xml" href="/municipal-dashboard/vite.svg" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <style>
+        /* --- ANTIGRAVITY ANIMATIONS --- */
+        @keyframes levitate {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-12px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .levitate-icon {
+            animation: levitate 4s ease-in-out infinite;
+        }
+
+        /* --- GLASSMORPHISM --- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Input Autofill Fix */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus {
+            -webkit-text-fill-color: white;
+            -webkit-box-shadow: 0 0 0px 1000px #0f172a inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        /* Paste Global Styles */
+        :root {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.5;
+            font-weight: 400;
+
+            --color-primary: #0f172a;
+            --color-primary-light: #334155;
+            --color-accent: #3b82f6;
+            --color-accent-hover: #2563eb;
+
+            --color-bg-body: #f8fafc;
+            --color-bg-card: #ffffff;
+            --color-bg-nav: #ffffff;
+
+            --color-text-main: #0f172a;
+            --color-text-muted: #64748b;
+
+            --color-border: #e2e8f0;
+
+            --color-blue-500: #3b82f6;
+            --color-slate-500: #64748b;
+            --color-amber-600: #d97706;
+            --color-yellow-500: #eab308;
+            --color-emerald-500: #10b981;
+            --color-red-500: #ef4444;
+
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            --backdrop-blur: 12px;
+
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 1rem;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background-color: var(--color-bg-body);
+            color: var(--color-text-main);
+        }
+
+        #root {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--backdrop-blur));
+            border: 1px solid var(--color-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: var(--radius-lg);
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-primary-light);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text-main);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--color-bg-body);
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-pending {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-in-progress {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-completed {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .layout-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 260px;
+            background-color: var(--color-bg-nav);
+            border-right: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+            padding: var(--spacing-md);
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--spacing-xl);
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+
+        .card {
+            background: var(--color-bg-card);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--color-border);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-item {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--color-text-muted);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            transition: all 0.2s;
+            margin-bottom: 0.25rem;
+            align-items: center;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background-color: #eff6ff;
+            color: var(--color-accent);
+            font-weight: 500;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin: 0;
+        }
+
+        input,
+        select {
+            font-family: inherit;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="debug-error"
+        style="color: red; padding: 20px; font-family: monospace; z-index: 9999; position: fixed; top: 0; left: 0; background: white; width: 100%; display: none;">
+    </div>
+    <script>
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            var errorDiv = document.getElementById('debug-error');
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML += '<h3>JavaScript Error:</h3>' + msg + '<br>Line: ' + lineNo + '<br>URL: ' + url + '<hr>';
+            return false;
+        };
+        window.addEventListener('unhandledrejection', function (event) {
+            var errorDiv = document.getElementById('debug-error');
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML += '<h3>Unhandled Promise Rejection:</h3>' + event.reason + '<hr>';
+        });
+    </script>
+    <div id="root"></div>
+
+    <script>
+        // Dependency Health Check
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                var missing = [];
+                if (!window.Babel) missing.push("Babel (unpkg.com)");
+                // We cannot easily check React here because it's imported as a module later, 
+                // but if Babel is missing, nothing runs.
+
+                if (missing.length > 0) {
+                    var errorDiv = document.getElementById('debug-error');
+                    errorDiv.style.display = 'block';
+                    errorDiv.innerHTML += '<h3>CRITICAL: Dependencies Failed to Load</h3>' +
+                        'The following external libraries are missing (likely blocked by firewall or network):<br>' +
+                        missing.join(', ') +
+                        '<br><br>Please check your internet connection or use a less restricted network.';
+                } else {
+                    // If Babel is present but Root is empty after 3 seconds, implies React crash
+                    if (!document.getElementById('root').innerHTML.trim()) {
+                        // Wait a bit more, sometimes Babel takes time
+                        setTimeout(function () {
+                            if (!document.getElementById('root').innerHTML.trim()) {
+                                var errorDiv = document.getElementById('debug-error');
+                                errorDiv.style.display = 'block';
+                                errorDiv.innerHTML += '<h3>App Failed to Mount</h3>' +
+                                    'Babel loaded, but the React app did not start.<br>' +
+                                    'This often means a Syntax Error in the code or a failed import from esm.sh.';
+                            }
+                        }, 2000);
+                    }
+                }
+            }, 1000);
+        });
+    </script>
+
+    <script type="text/babel" data-type="module" data-presets="react">
+        import React, { useState, useMemo, useEffect, useRef } from 'https://esm.sh/react@18.3.1';
+        import { createRoot } from 'https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1';
+        import { HashRouter, Routes, Route, NavLink, useNavigate, Navigate, Outlet } from 'https://esm.sh/react-router-dom@6.22.3?deps=react@18.3.1,react-dom@18.3.1';
+        import * as ReactRouterDOM from 'https://esm.sh/react-router-dom@6.22.3?deps=react@18.3.1,react-dom@18.3.1';
+        window.ReactRouterDOM = ReactRouterDOM; // Expose for useParams usage in component
+        import {
+            ShieldAlert, LayoutDashboard, ListTodo, LogOut, Settings, ShieldCheck, User, Lock, UserCog,
+            AlertCircle, CheckCircle2, Clock, Activity, Droplets, Zap, Truck, Waves,
+            Search, Filter, ChevronRight, ArrowUpDown, ChevronLeft,
+            Map as MapIcon, Users, AlertTriangle, Bell, MapPin, X, Plus, Save, Trash2, Edit2, Calendar as CalendarIcon
+        } from 'https://esm.sh/lucide-react@0.363.0?deps=react@18.3.1';
+
+        // --- MOCK DATA ---
+        const USERS = [
+            { id: 'u1', name: 'Admin Authority', role: 'admin' },
+            { id: 'u2', name: 'Field Staff 1', role: 'staff', department: 'water' },
+        ];
+
+        const SECTORS = [
+            { id: 'water', label: 'Water Supply', color: 'var(--color-blue-500)' },
+            { id: 'roads', label: 'Roads & Transport', color: 'var(--color-slate-500)' },
+            { id: 'drainage', label: 'Drainage & Gutters', color: 'var(--color-amber-600)' },
+            { id: 'lighting', label: 'Street Lighting', color: 'var(--color-yellow-500)' },
+        ];
+
+        const ISSUES = [
+            // --- EMERGENCY (Type B) ---
+            {
+                id: 'EMG-101', type: 'emergency', sector: 'water',
+                location: { lat: 19.0760, lng: 72.8777, address: '12th Main Rd, Block C' },
+                status: 'pending', severity: 'high',
+                title: 'Major Pipe Burst', description: 'Main water supply line burst flooding the street.',
+                reportedAt: new Date().toISOString(), // Today
+            },
+            {
+                id: 'EMG-102', type: 'emergency', sector: 'roads',
+                location: { lat: 19.0820, lng: 72.8900, address: 'Highway Exit 5' },
+                status: 'in-progress', severity: 'high',
+                title: 'Bridge Wall Collapse', description: 'Structural damage reported after heavy rains.',
+                reportedAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+            },
+
+            // --- ANNUAL MAINTENANCE (Type A) ---
+            {
+                id: 'MNT-201', type: 'maintenance', sector: 'drainage',
+                location: { lat: 19.0800, lng: 72.8800, address: 'Sector 4 North' },
+                status: 'scheduled', severity: 'medium',
+                title: 'Pre-Monsoon Drain Cleaning', description: 'Annual de-silting of major storm water drains.',
+                reportedAt: '2025-05-15T09:00:00Z', // Future date
+                scheduledDate: '2025-05-15',
+                scheduledStart: '2025-05-15T09:00:00', scheduledEnd: '2025-05-15T17:00:00'
+            },
+            {
+                id: 'MNT-202', type: 'maintenance', sector: 'lighting',
+                location: { lat: 19.0900, lng: 72.8500, address: 'City Center Blvd' },
+                status: 'scheduled', severity: 'low',
+                title: 'Street Light Audit', description: 'Yearly inspection of pole integrity.',
+                reportedAt: '2025-06-01T10:00:00Z',
+                scheduledDate: '2025-06-01',
+                scheduledStart: '2025-06-01T10:00:00', scheduledEnd: '2025-06-01T14:00:00'
+            },
+            // --- DUMMY DATA 2026 (For Demo) ---
+            { id: 'MNT-26-01', type: 'maintenance', sector: 'water', status: 'scheduled', severity: 'medium', title: 'Main Line Valve Check', scheduledStart: '2026-01-05T09:00:00', location: { address: 'Main Pump House' } },
+            { id: 'MNT-26-02', type: 'maintenance', sector: 'roads', status: 'scheduled', severity: 'low', title: 'Pothole Patching Zone A', scheduledStart: '2026-01-12T08:00:00', location: { address: 'West Avenue' } },
+            { id: 'MNT-26-03', type: 'maintenance', sector: 'lighting', status: 'completed', severity: 'low', title: 'LED Replacement Drive', scheduledStart: '2026-01-15T18:00:00', location: { address: 'Downtown' } },
+            { id: 'MNT-26-04', type: 'maintenance', sector: 'drainage', status: 'scheduled', severity: 'high', title: 'Blockage Clearance', scheduledStart: '2026-01-28T10:00:00', location: { address: 'Lowland District' } },
+
+            // FEB 2026
+            { id: 'MNT-26-05', type: 'maintenance', sector: 'water', status: 'scheduled', severity: 'medium', title: 'Filter Cleaning', scheduledStart: '2026-02-02T09:30:00', location: { address: 'Treatment Plant' } },
+            { id: 'MNT-26-06', type: 'maintenance', sector: 'roads', status: 'scheduled', severity: 'low', title: 'Signage Repainting', scheduledStart: '2026-02-03T11:00:00', location: { address: 'Highway 66' } },
+
+            // MOVED TO JAN 15 BELOW (Busy Day Mock)
+            { id: 'MNT-26-07', type: 'maintenance', sector: 'drainage', status: 'scheduled', severity: 'medium', title: 'Gutter Clearing', scheduledStart: '2026-01-15T08:00:00', location: { address: 'Market St' } },
+            { id: 'MNT-26-08', type: 'maintenance', sector: 'lighting', status: 'scheduled', severity: 'low', title: 'Pole Painting', scheduledStart: '2026-01-15T10:00:00', location: { address: 'Market St' } },
+            { id: 'MNT-26-09', type: 'maintenance', sector: 'water', status: 'scheduled', severity: 'high', title: 'Hydrant Flush', scheduledStart: '2026-01-15T14:00:00', location: { address: 'Market St' } },
+            { id: 'MNT-26-EXT', type: 'maintenance', sector: 'roads', status: 'scheduled', severity: 'medium', title: 'Pavement Repair', scheduledStart: '2026-01-15T16:00:00', location: { address: 'Market St' } },
+
+            { id: 'MNT-26-10', type: 'maintenance', sector: 'roads', status: 'scheduled', severity: 'low', title: 'Park Cleanup Assistance', scheduledStart: '2026-02-14T07:00:00', location: { address: 'Central Park' } },
+            { id: 'MNT-26-11', type: 'maintenance', sector: 'lighting', status: 'scheduled', severity: 'medium', title: 'Transformer Check', scheduledStart: '2026-02-23T11:00:00', location: { address: 'Substation 4' } },
+
+            // MAR 2026
+            { id: 'MNT-26-12', type: 'maintenance', sector: 'roads', status: 'scheduled', severity: 'high', title: 'Major Resurfacing', scheduledStart: '2026-03-20T22:00:00', location: { address: 'Ring Road' } },
+
+            // APR 2026 (Cross-Type Demo)
+            { id: 'CIT-SCH-01', type: 'citizen', sector: 'drainage', status: 'scheduled', severity: 'high', title: 'Fix Reported Blockage', scheduledStart: '2026-04-10T09:00:00', description: 'Citizen reported blockage now scheduled.', location: { address: 'Lowland District' } },
+            { id: 'MNT-26-13', type: 'maintenance', sector: 'water', status: 'scheduled', severity: 'low', title: 'Chlorine Check', scheduledStart: '2026-04-15T10:00:00', location: { address: 'Reservoir A' } },
+
+            // MAY 2026
+            { id: 'MNT-26-14', type: 'maintenance', sector: 'lighting', status: 'scheduled', severity: 'medium', title: 'Solar Panel Cleaning', scheduledStart: '2026-05-05T08:00:00', location: { address: 'Access Rd' } },
+
+            // --- CITIZEN REPORT (Type C) ---
+            {
+                id: 'CIT-301', type: 'citizen', sector: 'drainage',
+                location: { lat: 19.0750, lng: 72.8750, address: 'Market Square' },
+                status: 'pending', severity: 'medium',
+                title: 'Garbage Dump Accumulation', description: 'Huge pile of garbage blocking the small drain.',
+                reportedAt: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+                imageUrl: 'placeholder.jpg'
+            },
+            {
+                id: 'CIT-302', type: 'citizen', sector: 'roads',
+                location: { lat: 19.0790, lng: 72.8790, address: '5th Avenue' },
+                status: 'pending', severity: 'low',
+                title: 'Pothole Reporting', description: 'Deep pothole causing traffic slowdown.',
+                reportedAt: new Date(Date.now() - 43200000).toISOString(), // 12 hours ago
+                imageUrl: 'pothole_mock.jpg'
+            },
+            {
+                id: 'CIT-303', type: 'citizen', sector: 'water',
+                location: { lat: 19.0710, lng: 72.8710, address: 'Riverside Walk' },
+                status: 'pending', severity: 'high',
+                title: 'Contaminated Water', description: 'Water appearing muddy and smelling bad.',
+                reportedAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+                imageUrl: 'water_mock.jpg'
+            }
+        ];
+
+        const getStats = () => ({
+            total: ISSUES.length,
+            pending: ISSUES.filter(i => i.status === 'pending').length,
+            inProgress: ISSUES.filter(i => i.status === 'in-progress').length,
+            completed: ISSUES.filter(i => i.status === 'completed').length,
+        });
+
+        // --- SENSORS MOCK DATA ---
+        const SENSORS = [
+            {
+                id: 'SEN-W-001', type: 'pressure', sector: 'water', label: 'Main Line Pressure Monitor',
+                value: 12.5, unit: 'bar', range: { min: 15, max: 25 }, status: 'critical', trend: 'falling',
+                lastUpdated: 'Just now', location: { lat: 19.0760, lng: 72.8777, address: '12th Main Rd, Block C' }
+            },
+            {
+                id: 'SEN-W-002', type: 'flow', sector: 'water', label: 'Distribution Flow Rate',
+                value: 2400, unit: 'L/min', range: { min: 800, max: 1500 }, status: 'warning', trend: 'rising',
+                lastUpdated: '5 mins ago', location: { lat: 19.0765, lng: 72.8780, address: '12th Main Rd, Junction' }
+            },
+            {
+                id: 'SEN-D-001', type: 'level', sector: 'drainage', label: 'Sewer Level S-4',
+                value: 45, unit: '%', range: { min: 0, max: 75 }, status: 'normal', trend: 'stable',
+                lastUpdated: '10 mins ago', location: { lat: 19.0750, lng: 72.8750, address: 'Market Road' }
+            },
+            {
+                id: 'SEN-L-001', type: 'voltage', sector: 'lighting', label: 'Pole 45 Controller',
+                value: 180, unit: 'V', range: { min: 210, max: 240 }, status: 'warning', trend: 'unstable',
+                lastUpdated: '1 hour ago', location: { lat: 19.0800, lng: 72.8800, address: 'Sector 4 Park' }
+            },
+            {
+                id: 'SEN-R-001', type: 'vibration', sector: 'roads', label: 'Bridge 4 Structural Monitor',
+                value: 0.1, unit: 'g', range: { min: 0, max: 0.5 }, status: 'normal', trend: 'stable',
+                lastUpdated: '2 mins ago', location: { lat: 19.0850, lng: 72.8900, address: 'City Bridge' }
+            },
+            {
+                id: 'SEN-E-001', type: 'flood_risk', sector: 'drainage', label: 'Low-lying Area Flood Sensor',
+                value: 'Low', unit: 'Risk', status: 'normal', trend: 'stable',
+                lastUpdated: '30 mins ago', location: { lat: 19.0700, lng: 72.8600, address: 'Coastal Road' }
+            }
+        ];
+
+        const getSensorStats = () => ({
+            total: SENSORS.length,
+            critical: SENSORS.filter(s => s.status === 'critical').length,
+            warning: SENSORS.filter(s => s.status === 'warning').length,
+            normal: SENSORS.filter(s => s.status === 'normal').length
+        });
+
+        const getNearbySensors = (lat, lng, sector) => {
+            return SENSORS.filter(s =>
+                (s.sector === sector) ||
+                (Math.abs(s.location.lat - lat) < 0.005 && Math.abs(s.location.lng - lng) < 0.005)
+            );
+        };
+
+        // --- AI LOGIC ENGINE (Rule-Based) ---
+        // --- AI LOGIC ENGINE (Advanced Priority Framework) ---
+        const AI_Engine = {
+            // DYNAMIC FRAMEWORK DEFINITIONS
+            FRAMEWORK: {
+                SECTORS: [
+                    { id: 'S1', label: 'Water Supply', weight: 15, keywords: ['water', 'pipe', 'leak', 'supply', 'drinking', 'aqueduct', 'valve'] },
+                    { id: 'S2', label: 'Sewerage', weight: 13, keywords: ['sewer', 'sewage', 'clog', 'sanitation', 'manhole', 'sludge'] },
+                    { id: 'S3', label: 'Drainage', weight: 13, keywords: ['drain', 'gutter', 'nallah', 'stormwater', 'runoff'] },
+                    { id: 'S4', label: 'Roads', weight: 11, keywords: ['road', 'pothole', 'street', 'highway', 'pavement', 'tarmac', 'asphalt'] },
+                    { id: 'S5', label: 'Bridges', weight: 15, keywords: ['bridge', 'flyover', 'overpass', 'viaduct'] },
+                    { id: 'S6', label: 'Street Lighting', weight: 8, keywords: ['light', 'lamp', 'pole', 'dark', 'led', 'street light'] },
+                    { id: 'S7', label: 'Electricity', weight: 13, keywords: ['electric', 'power', 'voltage', 'current', 'wire', 'cable', 'transformer'] },
+                    { id: 'S8', label: 'Gas Lines', weight: 15, keywords: ['gas', 'pipeline', 'fume', 'leak', 'png', 'lpg'] },
+                    { id: 'S9', label: 'Solid Waste', weight: 8, keywords: ['garbage', 'trash', 'waste', 'dump', 'bin', 'refuse', 'rubbish'] },
+                    { id: 'S10', label: 'Public Toilets', weight: 8, keywords: ['toilet', 'urinal', 'restroom', 'latrine', 'wc'] },
+                    { id: 'S11', label: 'Traffic Signals', weight: 11, keywords: ['signal', 'traffic light', 'stop light'] },
+                    { id: 'S12', label: 'Public Transport', weight: 11, keywords: ['bus', 'metro', 'stop', 'station', 'transit'] },
+                    { id: 'S13', label: 'Storm Water', weight: 13, keywords: ['storm', 'flood', 'waterlogging'] },
+                    { id: 'S14', label: 'Parks & Gardens', weight: 5, keywords: ['park', 'garden', 'tree', 'greenery', 'playground'] },
+                    { id: 'S15', label: 'Government Buildings', weight: 11, keywords: ['government', 'office', 'court', 'municipal', 'ward office'] },
+                    { id: 'S16', label: 'Hospitals', weight: 13, keywords: ['hospital', 'clinic', 'medical', 'dispensary'] },
+                    { id: 'S17', label: 'Schools', weight: 13, keywords: ['school', 'college', 'university', 'student'] },
+                    { id: 'S18', label: 'Markets', weight: 11, keywords: ['market', 'bazaar', 'shop', 'vendor'] },
+                    { id: 'S19', label: 'Smart City Sensors', weight: 5, keywords: ['sensor', 'iot', 'smart', 'device', 'camera'] },
+                    { id: 'S20', label: 'Emergency Infrastructure', weight: 15, keywords: ['fire station', 'police', 'ambulance', 'bunker', 'shelter'] }
+                ],
+                EVENT_TYPES: [
+                    { id: 'E1', label: 'Complete failure', weight: 15, keywords: ['failure', 'stopped', 'not working', 'broken', 'dead', 'outage'] },
+                    { id: 'E2', label: 'Partial failure', weight: 7, keywords: ['partial', 'slow', 'dim', 'low pressure', 'intermittent'] },
+                    { id: 'E3', label: 'Leakage', weight: 10, keywords: ['leak', 'dripping', 'seeping', 'burst'] },
+                    { id: 'E4', label: 'Overflow', weight: 12, keywords: ['overflow', 'spilling', 'full', 'gushing'] },
+                    { id: 'E5', label: 'Blockage', weight: 10, keywords: ['blocked', 'clogged', 'jammed', 'choke', 'obstructed'] },
+                    { id: 'E6', label: 'Structural crack', weight: 9, keywords: ['crack', 'fissure', 'broken', 'damage', 'chip'] },
+                    { id: 'E7', label: 'Collapse', weight: 15, keywords: ['collapse', 'fall', 'caved', 'crumbled'] },
+                    { id: 'E8', label: 'Short circuit', weight: 11, keywords: ['short circuit', 'spark', 'electric fault', 'blaze'] },
+                    { id: 'E9', label: 'Fire incident', weight: 15, keywords: ['fire', 'burn', 'flame', 'smoke', 'ignite'] },
+                    { id: 'E10', label: 'Explosion risk', weight: 15, keywords: ['explosion', 'blast', 'bomb'] },
+                    { id: 'E11', label: 'Contamination', weight: 14, keywords: ['contamination', 'dirty', 'polluted', 'toxic', 'poison'] },
+                    { id: 'E12', label: 'Sensor anomaly', weight: 3, keywords: ['anomaly', 'reading', 'abnormal', 'glitch'] },
+                    { id: 'E13', label: 'Unauthorized access', weight: 5, keywords: ['unauthorized', 'trespass', 'break-in', 'intruder'] },
+                    { id: 'E14', label: 'Wear and tear', weight: 4, keywords: ['wear', 'tear', 'old', 'rusted', 'faded'] },
+                    { id: 'E15', label: 'Overload', weight: 6, keywords: ['overload', 'capacity', 'strain'] },
+                    { id: 'E16', label: 'Pressure drop', weight: 6, keywords: ['pressure', 'low flow'] },
+                    { id: 'E17', label: 'Voltage fluctuation', weight: 6, keywords: ['voltage', 'fluctuation', 'surge'] },
+                    { id: 'E18', label: 'Communication loss', weight: 5, keywords: ['offline', 'disconnect', 'no signal'] },
+                    { id: 'E19', label: 'Mechanical jam', weight: 6, keywords: ['jam', 'stuck', 'frozen'] },
+                    { id: 'E20', label: 'Corrosion', weight: 5, keywords: ['corrosion', 'rust', 'decay'] },
+                    { id: 'E21', label: 'Aging asset', weight: 4, keywords: ['aging', 'expired', 'obsolete'] },
+                    { id: 'E22', label: 'Vandalism', weight: 6, keywords: ['vandalism', 'stolen', 'theft', 'graffiti', 'broken glass'] },
+                    { id: 'E23', label: 'Weather damage', weight: 11, keywords: ['weather', 'rain', 'storm', 'wind', 'hail'] },
+                    { id: 'E24', label: 'Construction damage', weight: 8, keywords: ['construction', 'digging', 'excavation'] },
+                    { id: 'E25', label: 'Unknown anomaly', weight: 3, keywords: ['unknown', 'strange', 'weird', 'unidentified'] }
+                ],
+                SEVERITY_LEVELS: [
+                    { id: 'V1', label: 'Informational', weight: 1 },
+                    { id: 'V2', label: 'Very Low', weight: 2 },
+                    { id: 'V3', label: 'Low', weight: 3 },
+                    { id: 'V4', label: 'Moderate', weight: 5 },
+                    { id: 'V5', label: 'Medium', weight: 7 },
+                    { id: 'V6', label: 'Medium-High', weight: 9 },
+                    { id: 'V7', label: 'High', weight: 11 },
+                    { id: 'V8', label: 'Very High', weight: 13 },
+                    { id: 'V9', label: 'Critical', weight: 14 },
+                    { id: 'V10', label: 'Life Threatening', weight: 15 }
+                ],
+                LOCATIONS: [
+                    { id: 'L1', label: 'High population residential', weight: 9, keywords: ['residential', 'apartment', 'housing', 'colony', 'tower'] },
+                    { id: 'L2', label: 'Low population residential', weight: 3, keywords: ['suburb', 'remote', 'village'] },
+                    { id: 'L3', label: 'Slum / vulnerable area', weight: 10, keywords: ['slum', 'chawl', 'basti', 'shanty'] },
+                    { id: 'L4', label: 'Commercial district', weight: 6, keywords: ['commercial', 'office', 'business', 'corporate'] },
+                    { id: 'L5', label: 'Industrial zone', weight: 7, keywords: ['industrial', 'factory', 'midc', 'plant'] },
+                    { id: 'L6', label: 'Market area', weight: 8, keywords: ['market', 'bazaar', 'shopping', 'store'] },
+                    { id: 'L7', label: 'Tourist zone', weight: 5, keywords: ['tourist', 'hotel', 'resort', 'monument'] },
+                    { id: 'L8', label: 'School zone', weight: 9, keywords: ['school', 'college', 'campus'] },
+                    { id: 'L9', label: 'Hospital zone', weight: 10, keywords: ['hospital', 'medical', 'clinic'] },
+                    { id: 'L10', label: 'Government complex', weight: 8, keywords: ['government', 'court', 'secretariat'] },
+                    { id: 'L11', label: 'Metro / underground', weight: 9, keywords: ['metro', 'subway', 'tunnel'] },
+                    { id: 'L12', label: 'Highway / arterial road', weight: 8, keywords: ['highway', 'expressway', 'main road'] },
+                    { id: 'L13', label: 'Junction / crossing', weight: 8, keywords: ['junction', 'crossing', 'chowk', 'intersection'] },
+                    { id: 'L14', label: 'Flood-prone area', weight: 9, keywords: ['flood', 'low lying', 'river bank'] },
+                    { id: 'L15', label: 'Accident-prone zone', weight: 9, keywords: ['accident', 'danger', 'blind spot'] },
+                    { id: 'L16', label: 'Heritage site', weight: 6, keywords: ['heritage', 'history', 'ruins'] },
+                    { id: 'L17', label: 'Coastal zone', weight: 6, keywords: ['coastal', 'beach', 'sea', 'front'] },
+                    { id: 'L18', label: 'Hill / slope area', weight: 7, keywords: ['hill', 'slope', 'mountain'] },
+                    { id: 'L19', label: 'Smart city pilot area', weight: 4, keywords: ['smart city', 'pilot'] },
+                    { id: 'L20', label: 'Restricted security zone', weight: 10, keywords: ['restricted', 'military', 'security', 'cantonment'] }
+                ],
+                TIME_FACTORS: [
+                    { id: 'T1', label: '< 1 hour old', weight: 1, check: (h) => h < 1 },
+                    { id: 'T2', label: '1–3 hours old', weight: 2, check: (h) => h >= 1 && h < 3 },
+                    { id: 'T3', label: '3–6 hours old', weight: 4, check: (h) => h >= 3 && h < 6 },
+                    { id: 'T4', label: '6–12 hours old', weight: 6, check: (h) => h >= 6 && h < 12 },
+                    { id: 'T5', label: '12–24 hours old', weight: 8, check: (h) => h >= 12 && h < 24 },
+                    { id: 'T6', label: '> 24 hours old', weight: 9, check: (h) => h >= 24 },
+                    { id: 'T7', label: 'SLA 25% consumed', weight: 3 },
+                    { id: 'T8', label: 'SLA 50% consumed', weight: 5 },
+                    { id: 'T9', label: 'SLA 75% consumed', weight: 7 },
+                    { id: 'T10', label: 'SLA breached', weight: 10, check: (h) => h > 48 },
+                    { id: 'T11', label: 'Peak hours', weight: 2, keywords: ['peak', 'rush hour'] },
+                    { id: 'T12', label: 'Night hours', weight: 1, keywords: ['night', 'dark'] },
+                    { id: 'T13', label: 'Weekend', weight: 1, keywords: ['weekend', 'saturday', 'sunday'] },
+                    { id: 'T14', label: 'Festival / event', weight: 2, keywords: ['festival', 'diwali', 'ganesh', 'eid', 'christmas', 'event', 'parade'] },
+                    { id: 'T15', label: 'Monsoon season', weight: 2, keywords: ['monsoon', 'rain', 'wet'] }
+                ],
+                IMPACTS: [
+                    { id: 'I1', label: 'Human life risk', weight: 15, keywords: ['death', 'life', 'kill', 'fatal', 'mortal'] },
+                    { id: 'I2', label: 'Injury risk', weight: 12, keywords: ['injury', 'hurt', 'wound', 'bruise'] },
+                    { id: 'I3', label: 'Public panic', weight: 8, keywords: ['panic', 'scare', 'fear', 'mob'] },
+                    { id: 'I4', label: 'Traffic disruption', weight: 8, keywords: ['traffic', 'jam', 'congestion', 'gridlock'] },
+                    { id: 'I5', label: 'Economic loss', weight: 6, keywords: ['economic', 'loss', 'money', 'financial'] },
+                    { id: 'I6', label: 'Environmental damage', weight: 7, keywords: ['environment', 'pollution', 'tree', 'green'] },
+                    { id: 'I7', label: 'Health hazard', weight: 12, keywords: ['health', 'disease', 'sick', 'mosquito', 'dengue'] },
+                    { id: 'I8', label: 'Service disruption', weight: 9, keywords: ['disruption', 'no service', 'cut'] },
+                    { id: 'I9', label: 'Emergency service impact', weight: 11, keywords: ['ambulance', 'fire truck', 'police', 'block'] },
+                    { id: 'I10', label: 'Long-term damage', weight: 6, keywords: ['long term', 'permanent', 'irreversible'] },
+                    { id: 'I11', label: 'Legal / compliance risk', weight: 6, keywords: ['legal', 'court', 'law', 'compliance'] },
+                    { id: 'I12', label: 'Political sensitivity', weight: 5, keywords: ['political', 'minister', 'vip'] },
+                    { id: 'I13', label: 'Media attention risk', weight: 5, keywords: ['media', 'news', 'viral', 'reporter'] },
+                    { id: 'I14', label: 'Reputational damage', weight: 4, keywords: ['reputation', 'image', 'brand'] },
+                    { id: 'I15', label: 'Citizen dissatisfaction', weight: 4, keywords: ['angry', 'upset', 'complaint', 'protest'] }
+                ],
+                CONFIDENCE: [
+                    { id: 'C1', label: 'Single citizen report', weight: 1 },
+                    { id: 'C2', label: 'Multiple citizen reports', weight: 3 },
+                    { id: 'C3', label: 'Verified image evidence', weight: 5, keywords: ['image', 'photo', 'picture', 'jpg', 'png'] },
+                    { id: 'C4', label: 'Verified video evidence', weight: 6, keywords: ['video', 'mp4', 'clip'] },
+                    { id: 'C5', label: 'Sensor confirmed', weight: 6 },
+                    { id: 'C6', label: 'Sensor + citizen match', weight: 8 },
+                    { id: 'C7', label: 'Historical pattern match', weight: 3 },
+                    { id: 'C8', label: 'AI predicted failure', weight: 7 },
+                    { id: 'C9', label: 'Authority escalation', weight: 9, keywords: ['authority', 'admin', 'commissioner', 'mayor'] },
+                    { id: 'C10', label: 'Emergency declared', weight: 10, keywords: ['declared', 'emergency'] }
+                ],
+                // --- ADVANCED RISK CATEGORIES (10-20) ---
+                ENVIRONMENTAL: [
+                    { id: 'ENV1', label: 'Groundwater contamination', weight: 14, keywords: ['groundwater', 'aquifer', 'contamination', 'seepage'] },
+                    { id: 'ENV2', label: 'River/Water body pollution', weight: 15, keywords: ['river', 'lake', 'stream', 'polluting', 'effluent', 'sewage'] },
+                    { id: 'ENV3', label: 'Soil contamination', weight: 12, keywords: ['soil', 'land', 'toxic leak'] },
+                    { id: 'ENV4', label: 'Wildlife harm', weight: 10, keywords: ['wildlife', 'animal', 'bird', 'stray'] },
+                    { id: 'ENV5', label: 'Tree damage', weight: 8, keywords: ['tree', 'branch', 'uproot', 'green cover'] },
+                    { id: 'ENV6', label: 'Air pollution', weight: 11, keywords: ['air', 'smog', 'fumes', 'pollution', 'dust'] },
+                    { id: 'ENV7', label: 'Chemical/Oil spill', weight: 15, keywords: ['chemical', 'oil', 'spill', 'acid', 'hazardous'] },
+                    { id: 'ENV8', label: 'Wetland/Protected zone', weight: 13, keywords: ['wetland', 'mangrove', 'protected', 'zone'] }
+                ],
+                FINANCIAL: [
+                    { id: 'FIN1', label: 'High Value Loss (>10L)', weight: 12, keywords: ['high value', 'costly', 'crore', 'lakh', 'expensive'] },
+                    { id: 'FIN2', label: 'Business shutdown risk', weight: 10, keywords: ['shop closed', 'market closed', 'business', 'shutdown'] },
+                    { id: 'FIN3', label: 'Supply chain disruption', weight: 11, keywords: ['supply chain', 'transport', 'logistics', 'delivery'] },
+                    { id: 'FIN4', label: 'Tourism impact', weight: 8, keywords: ['tourism', 'tourist', 'visitor', 'monument'] },
+                    { id: 'FIN5', label: 'Litigation risk', weight: 9, keywords: ['court', 'legal', 'lawsuit', 'case'] },
+                    { id: 'FIN6', label: 'Corruption vulnerability', weight: 9, keywords: ['corruption', 'bribe', 'tender', 'scam'] }
+                ],
+                REPUTATION: [
+                    { id: 'REP1', label: 'Viral potential', weight: 10, keywords: ['viral', 'trending', 'social media', 'video'] },
+                    { id: 'REP2', label: 'Political exploitation', weight: 9, keywords: ['political', 'protest', 'strike', 'union', 'agit'] },
+                    { id: 'REP3', label: 'Media escalation', weight: 9, keywords: ['media', 'press', 'news', 'paper', 'channel'] },
+                    { id: 'REP4', label: 'Public trust breach', weight: 8, keywords: ['trust', 'promise', 'failed', 'neglect'] }
+                ],
+                FRAUD_CHECK: [
+                    { id: 'FRD1', label: 'Fake image suspected', weight: -20, keywords: ['fake image', 'photoshop', 'edited'] },
+                    { id: 'FRD2', label: 'Bot suspected', weight: -20, keywords: ['bot', 'automated', 'spam'] },
+                    { id: 'FRD3', label: 'GPS mismatch', weight: -10, keywords: ['gps mismatch', 'location error'] },
+                    { id: 'FRD4', label: 'Timestamp tamper', weight: -10, keywords: ['wrong time', 'future date'] }
+                ],
+                SYSTEMIC: [
+                    { id: 'SYS1', label: 'Multi-department failure', weight: 13, keywords: ['multi-dept', 'coordination', 'multiple agencies'] },
+                    { id: 'SYS2', label: 'Utility linkage (Water+Power)', weight: 14, keywords: ['water and power', 'cable and pipe'] },
+                    { id: 'SYS3', label: 'Disaster amplification', weight: 15, keywords: ['disaster', 'calamity', 'worsen'] }
+                ],
+                TEMPORAL: [
+                    { id: 'TMP1', label: 'Rapid growth rate', weight: 12, keywords: ['rapid', 'growing', 'spreading', 'fast'] },
+                    { id: 'TMP2', label: 'Irreversible window', weight: 14, keywords: ['irreversible', 'permanent', 'too late', 'now or never'] },
+                    { id: 'TMP3', label: 'Deadline crossed', weight: 10, keywords: ['deadline', 'overdue', 'expired'] }
+                ],
+                SOCIAL: [
+                    { id: 'SOC1', label: 'Marginalized group', weight: 12, keywords: ['slum', 'marginalized', 'poverty', 'low income'] },
+                    { id: 'SOC2', label: 'Women/Child safety', weight: 15, keywords: ['women', 'child', 'girl', 'safety', 'school'] },
+                    { id: 'SOC3', label: 'Disability access', weight: 11, keywords: ['disabled', 'handicap', 'wheelchair', 'ramp'] },
+                    { id: 'SOC4', label: 'Daily wager impact', weight: 10, keywords: ['worker', 'daily wage', 'labor'] }
+                ],
+                INFRASTRUCTURE: [
+                    { id: 'INF1', label: 'Tier-1 Critical Asset', weight: 15, keywords: ['tier-1', 'critical', 'main line', 'highway', 'bridge', 'dam'] },
+                    { id: 'INF2', label: 'No redundancy', weight: 13, keywords: ['single point', 'no backup', 'sole'] },
+                    { id: 'INF3', label: 'Collapse history', weight: 12, keywords: ['history', 'previous collapse', 'repeated'] }
+                ],
+                CONFIDENCE_MODIFIERS: [
+                    { id: 'CFM1', label: 'Conflicting data', score: -10, keywords: ['conflict', 'mismatch', 'disagree'] },
+                    { id: 'CFM2', label: 'Low clarity', score: -5, keywords: ['blur', 'unclear', 'dark'] },
+                    { id: 'CFM3', label: 'Model uncertainty', score: -5, keywords: ['uncertain', 'low confidence'] },
+                    { id: 'CFM4', label: 'Human override', score: 0, keywords: ['override', 'manual'] } // Special handling
+                ],
+                JURISDICTION: [
+                    { id: 'JUR1', label: 'State/Central dependency', weight: 5, keywords: ['state', 'central', 'nhai', 'railway', 'defense'] },
+                    { id: 'JUR2', label: 'Multi-jurisdiction', weight: 8, keywords: ['border', 'boundary', 'shared'] }
+                ],
+                POST_RESOLUTION: [
+                    { id: 'PST1', label: 'Reoccurrence risk', weight: 8, keywords: ['recur', 'again', 'repeat'] },
+                    { id: 'PST2', label: 'Temporary fix', weight: 5, keywords: ['temporary', 'patch', 'jugaad'] }
+                ],
+                // --- INTELLIGENCE LAYERS (21-30) ---
+                DATA_RELIABILITY: [
+                    { id: 'REL1', label: 'Multiple independent reports', score: 10, keywords: ['multiple reports', 'many people', 'crowd source', 'multiple independent reports'] },
+                    { id: 'REL2', label: 'Single source only', score: -5, keywords: ['single', 'one person'] },
+                    { id: 'REL3', label: 'Verified staff report', score: 15, keywords: ['staff', 'official', 'verified user'] },
+                    { id: 'REL4', label: 'Evidence consistency high', score: 10, keywords: ['consistent', 'clear evidence'] },
+                    { id: 'REL5', label: 'Evidence consistency low', score: -10, keywords: ['inconsistent', 'unclear', 'blurry'] }
+                ],
+                HISTORICAL_PATTERN: [
+                    { id: 'HIS1', label: 'Recent recurrence', weight: 8, keywords: ['recurrence', 'again', 'recent'] },
+                    { id: 'HIS2', label: 'Seasonal trend', weight: 5, keywords: ['seasonal', 'monsoon', 'summer'] },
+                    { id: 'HIS3', label: 'Recurring location', weight: 10, keywords: ['same spot', 'always happens'] }
+                ],
+                OPERATIONAL_FEASIBILITY: [
+                    { id: 'OPS1', label: 'Equipment unavailable', score: -15, keywords: ['no equipment', 'unavailable', 'shortage'] },
+                    { id: 'OPS2', label: 'Staff shortage', score: -10, keywords: ['staff shortage', 'no manpower'] },
+                    { id: 'OPS3', label: 'Night op required', score: -5, keywords: ['night', 'dark', 'late'] },
+                    { id: 'OPS4', label: 'Traffic diversion complex', score: -8, keywords: ['traffic', 'diversion', 'road block'] }
+                ],
+                WEATHER_RISK: [
+                    { id: 'WTH1', label: 'Heavy rain forecast', weight: 15, keywords: ['rain', 'heavy rain', 'downpour'] },
+                    { id: 'WTH2', label: 'Flood risk active', weight: 15, keywords: ['flood', 'inundation', 'waterlogging'] },
+                    { id: 'WTH3', label: 'Heatwave', weight: 10, keywords: ['heatwave', 'hot', 'sun'] }
+                ],
+                HUMAN_BEHAVIOR: [
+                    { id: 'HUM1', label: 'Crowd gathering', weight: 12, keywords: ['crowd', 'gathering', 'mob', 'public'] },
+                    { id: 'HUM2', label: 'Festival proximity', weight: 10, keywords: ['festival', 'event', 'celebration'] },
+                    { id: 'HUM3', label: 'Panic potential', weight: 15, keywords: ['panic', 'scare', 'fear'] }
+                ],
+                LEGAL_CONSTRAINTS: [
+                    { id: 'LEG1', label: 'Court stay order', score: -20, keywords: ['stay order', 'court', 'legal case'] },
+                    { id: 'LEG2', label: 'Heritage structure', score: -5, keywords: ['heritage', 'ancient', 'monument'] }
+                ],
+                COORDINATION_LOAD: [
+                    { id: 'CRD1', label: 'Multi-dept required', weight: 10, keywords: ['multi-dept', 'coordination'] },
+                    { id: 'CRD2', label: 'External contractor', weight: 5, keywords: ['contractor', 'external', 'third party'] }
+                ],
+                PUBLIC_INFO_RISK: [
+                    { id: 'PUB1', label: 'Misinformation spread', weight: 12, keywords: ['fake news', 'rumor', 'misinformation'] },
+                    { id: 'PUB2', label: 'Clarification needed', weight: 8, keywords: ['unclear', 'confusion'] }
+                ],
+                POST_ACTION_STABILITY: [
+                    { id: 'PAS1', label: 'Monitoring required', weight: 5, keywords: ['monitor', 'check', 'observe'] },
+                    { id: 'PAS2', label: 'Secondary failure risk', weight: 10, keywords: ['secondary', 'side effect'] }
+                ],
+                META_AI: [
+                    { id: 'META1', label: 'Conflicting inputs', score: -10, keywords: ['conflict', 'contradiction'] },
+                    { id: 'META2', label: 'Low confidence model', score: -10, keywords: ['low confidence', 'unsure'] }
+                ]
+            },
+
+            detectSignals: (issue) => {
+                const F = AI_Engine.FRAMEWORK;
+                let signals = [];
+                const rawText = (issue.title + ' ' + (issue.description || '') + ' ' + (issue.location?.address || '')).toLowerCase();
+
+                // Helper for text matching
+                const scan = (list, categoryName) => {
+                    list.forEach(item => {
+                        if (item.keywords && item.keywords.some(keyword => rawText.includes(keyword))) {
+                            // Check uniqueness
+                            if (!signals.some(s => s.id === item.id)) {
+                                signals.push({ ...item, category: categoryName });
+                            }
+                        }
+                    });
+                };
+
+                // 1. Sector Scan
+                if (issue.sector) {
+                    const direct = F.SECTORS.find(s => s.keywords?.includes(issue.sector) || s.label.toLowerCase() === issue.sector.toLowerCase());
+                    if (direct) signals.push({ ...direct, category: 'SECTOR' });
+                    else scan(F.SECTORS, 'SECTOR');
+                } else {
+                    scan(F.SECTORS, 'SECTOR');
+                }
+
+                // 2. Event Type
+                scan(F.EVENT_TYPES, 'EVENT TYPE');
+
+                // 3. Location
+                scan(F.LOCATIONS, 'LOCATION');
+
+                // 4. Impact
+                scan(F.IMPACTS, 'IMPACT');
+
+                // 5. Time Analysis
+                const reportDate = new Date(issue.reportedAt || Date.now());
+                const hoursOld = (Date.now() - reportDate.getTime()) / (1000 * 60 * 60);
+                F.TIME_FACTORS.forEach(t => {
+                    if (t.check && t.check(hoursOld)) {
+                        signals.push({ ...t, category: 'TIME' });
+                    }
+                    if (t.keywords && t.keywords.some(k => rawText.includes(k))) {
+                        if (!signals.some(s => s.id === t.id)) signals.push({ ...t, category: 'TIME' });
+                    }
+                });
+
+                // 6. Confidence - Infer from data structure
+                if (issue.type === 'citizen') signals.push({ ...F.CONFIDENCE.find(c => c.id === 'C1'), category: 'CONFIDENCE' });
+                if (issue.imageUrl) signals.push({ ...F.CONFIDENCE.find(c => c.id === 'C3'), category: 'CONFIDENCE' });
+
+                // 7. Severity Mapping (Input Severity -> V-Level)
+                const severityMap = { 'low': 'V3', 'medium': 'V5', 'high': 'V8', 'critical': 'V9' };
+                const vId = severityMap[issue.severity || 'low'];
+                if (vId) {
+                    const vItem = F.SEVERITY_LEVELS.find(v => v.id === vId);
+                    if (vItem) signals.push({ ...vItem, category: 'SEVERITY' });
+                }
+
+                scan(F.ENVIRONMENTAL, 'ENVIRONMENTAL');
+                scan(F.FINANCIAL, 'FINANCIAL');
+                scan(F.REPUTATION, 'REPUTATION');
+                scan(F.SYSTEMIC, 'SYSTEMIC');
+                scan(F.TEMPORAL, 'TEMPORAL');
+                scan(F.SOCIAL, 'SOCIAL');
+                scan(F.INFRASTRUCTURE, 'INFRASTRUCTURE');
+                scan(F.JURISDICTION, 'JURISDICTION');
+                scan(F.POST_RESOLUTION, 'POST_RESOLUTION');
+
+                // Intelligence Layers Scan
+                scan(F.DATA_RELIABILITY, 'DATA_RELIABILITY');
+                scan(F.HISTORICAL_PATTERN, 'HISTORICAL_PATTERN');
+                scan(F.OPERATIONAL_FEASIBILITY, 'OPERATIONAL_FEASIBILITY');
+                scan(F.WEATHER_RISK, 'WEATHER_RISK');
+                scan(F.HUMAN_BEHAVIOR, 'HUMAN_BEHAVIOR');
+                scan(F.LEGAL_CONSTRAINTS, 'LEGAL_CONSTRAINTS');
+                scan(F.COORDINATION_LOAD, 'COORDINATION_LOAD');
+                scan(F.PUBLIC_INFO_RISK, 'PUBLIC_INFO_RISK');
+                scan(F.POST_ACTION_STABILITY, 'POST_ACTION_STABILITY');
+                scan(F.META_AI, 'META_AI');
+
+                // Special handling for Fraud & Confidence
+                scan(F.FRAUD_CHECK, 'FRAUD');
+                scan(F.CONFIDENCE_MODIFIERS, 'CONFIDENCE_MOD');
+
+                // 8. Penalties (Negative signals)
+                // We'll detect these but treat weights as negative later or add here
+                if (rawText.includes('duplicate')) signals.push({ id: 'P1', label: 'Duplicate Complaint', weight: -5, category: 'PENALTY' });
+                if (rawText.includes('false alarm') || rawText.includes('fake')) signals.push({ id: 'P2', label: 'Suspected False Alarm', weight: -15, category: 'PENALTY' });
+                if (rawText.includes('cosmetic') || rawText.includes('paint')) signals.push({ id: 'P3', label: 'Cosmetic Issue', weight: -10, category: 'PENALTY' });
+
+                return signals;
+            },
+
+            calculatePriority: (issue) => {
+                const signals = AI_Engine.detectSignals(issue);
+
+                // --- WEIGHTED SCORING SYSTEM ---
+                const CAPS = {
+                    'SECTOR': 15, 'EVENT TYPE': 15, 'SEVERITY': 15, 'LOCATION': 10, 'TIME': 10, 'IMPACT': 15, 'CONFIDENCE': 10,
+                    // Advanced Caps
+                    'ENVIRONMENTAL': 15, 'FINANCIAL': 12, 'REPUTATION': 10, 'SYSTEMIC': 15, 'TEMPORAL': 12, 'SOCIAL': 15, 'INFRASTRUCTURE': 15, 'JURISDICTION': 5, 'POST_RESOLUTION': 5,
+                    // Intelligence Caps
+                    'HISTORICAL_PATTERN': 10, 'WEATHER_RISK': 15, 'HUMAN_BEHAVIOR': 15, 'COORDINATION_LOAD': 10, 'PUBLIC_INFO_RISK': 10
+                };
+
+                const scores = {};
+                let penaltyScore = 0;
+                let confidenceModifier = 0;
+                let evidenceScore = 50;
+                let feasibilityScore = 100;
+
+                // Sum weights per category
+                signals.forEach(s => {
+                    // CATEGORY HANDLING
+                    if (s.category === 'PENALTY' || s.category === 'FRAUD') {
+                        penaltyScore += s.weight;
+                    }
+                    else if (s.category === 'CONFIDENCE_MOD' || s.category === 'META_AI') {
+                        confidenceModifier += s.score || 0;
+                    }
+                    else if (s.category === 'DATA_RELIABILITY') {
+                        evidenceScore += s.score || 0;
+                    }
+                    else if (s.category === 'OPERATIONAL_FEASIBILITY' || s.category === 'LEGAL_CONSTRAINTS') {
+                        feasibilityScore += s.score || 0;
+                    }
+                    else {
+                        // Regular Scoring categories
+                        scores[s.category] = (scores[s.category] || 0) + s.weight;
+                    }
+                });
+
+                // Apply Caps
+                let totalBaseScore = 0;
+                Object.keys(scores).forEach(cat => {
+                    if (CAPS[cat]) {
+                        scores[cat] = Math.min(scores[cat], CAPS[cat]);
+                    }
+                    totalBaseScore += scores[cat];
+                });
+
+                let finalScore = totalBaseScore + penaltyScore;
+                finalScore = Math.max(0, Math.min(100, Math.round(finalScore)));
+
+                // --- METRICS CALCULATION ---
+                evidenceScore = Math.max(0, Math.min(100, evidenceScore));
+
+                const weatherRisk = scores['WEATHER_RISK'] || 0;
+                feasibilityScore -= (weatherRisk * 2);
+                feasibilityScore = Math.max(0, Math.min(100, feasibilityScore));
+
+                // Confidence Level
+                let baseConfidence = 100 + confidenceModifier;
+                if (evidenceScore < 30) baseConfidence -= 30;
+                else if (evidenceScore < 50) baseConfidence -= 15;
+
+                baseConfidence = Math.max(0, Math.min(100, baseConfidence));
+
+                let confidenceLevel = 'High';
+                if (baseConfidence < 60) confidenceLevel = 'Low';
+                else if (baseConfidence < 85) confidenceLevel = 'Medium';
+
+                // --- SAFETY LOCKS ---
+                const hasLifeRisk = signals.some(s => s.id === 'I1' || s.category === 'SOCIAL');
+                const isSystemic = signals.some(s => s.category === 'SYSTEMIC' || s.category === 'ENVIRONMENTAL');
+
+                if (finalScore >= 90) {
+                    if (!hasLifeRisk && !isSystemic) finalScore = 89;
+                }
+
+                // Low Confidence Lock
+                if (confidenceLevel === 'Low' && finalScore > 75) {
+                    finalScore = 75;
+                }
+
+                // RISK LEVEL
+                let riskLevel = 'Operational';
+                let label = 'Low';
+
+                if (finalScore >= 90) { riskLevel = 'Crisis'; label = 'Critical'; }
+                else if (finalScore >= 75) { riskLevel = 'Critical'; label = 'High'; }
+                else if (finalScore >= 50) { riskLevel = 'Major'; label = 'Medium'; }
+                else { riskLevel = 'Operational'; label = 'Low'; }
+
+                // ACTION MODE
+                let actionMode = 'Normal';
+                if (confidenceLevel === 'Low') actionMode = 'Conservative';
+                else if (riskLevel === 'Crisis' && confidenceLevel === 'High') actionMode = 'Aggressive';
+                else if (feasibilityScore < 40) actionMode = 'Conservative';
+
+                // ESCALATION
+                let escalation = 'Department Head';
+                if (riskLevel === 'Crisis') escalation = 'Emergency Response Center (ERC) + City Commissioner';
+                else if (riskLevel === 'Critical') escalation = 'Zonal Commissioner';
+                else if (confidenceLevel === 'Low') escalation = 'Human Verification Required';
+                else if (signals.some(s => s.category === 'JURISDICTION')) escalation = 'Inter-Agency Coordination Committee';
+                else if (signals.some(s => s.category === 'REPUTATION')) escalation = 'Public Relations Office';
+
+                return {
+                    score: finalScore,
+                    label,
+                    riskLevel,
+                    confidenceLevel,
+                    evidenceStrength: evidenceScore,
+                    feasibilityScore: feasibilityScore,
+                    actionMode,
+                    escalation,
+                    signals,
+                    details: scores,
+                    penalties: penaltyScore + confidenceModifier
+                };
+            },
+
+            generateExplanation: (issue, result) => {
+                const explanations = [];
+                explanations.push(`Risk Level: ${result.riskLevel} (${result.score}/100)`);
+                explanations.push(`Confidence: ${result.confidenceLevel} (Evidence: ${result.evidenceStrength}%)`);
+                explanations.push(`Action Mode: ${result.actionMode}`);
+                explanations.push(`Feasibility: ${result.feasibilityScore}%`);
+                explanations.push(`Escalation: ${result.escalation}`);
+
+                // Show breakdown by category
+                Object.entries(result.details).forEach(([cat, score]) => {
+                    if (score > 0) explanations.push(`${cat}: +${score} pts`);
+                });
+
+                if (result.penalties < 0) {
+                    explanations.push(`PENALTIES/MODIFIERS: ${result.penalties} pts`);
+                }
+
+                if (result.confidenceLevel === 'Low') {
+                    explanations.push('WARNING: Low confidence detected. Human review essential.');
+                }
+
+                if (result.riskLevel === 'Crisis' && result.actionMode === 'Normal') {
+                    // Capped?
+                }
+
+                return explanations;
+            },
+
+            suggestSchedule: (issue, result) => {
+                let hours = 168; // 1 week
+                if (result.riskLevel === 'Crisis') hours = 1;
+                else if (result.riskLevel === 'Critical') hours = 4;
+                else if (result.riskLevel === 'Major') hours = 24;
+                else if (result.riskLevel === 'Operational') hours = 72;
+
+                // Adjust based on Feasibility
+                if (result.feasibilityScore < 50 && result.riskLevel !== 'Crisis') {
+                    hours += 24; // Add delay for low feasibility (unless crisis)
+                }
+
+                let team = 'General Maintenance Unit';
+                const s = result.signals.find(sig => sig.category === 'SECTOR');
+                if (s) team = `${s.label} Response Team`;
+
+                if (result.actionMode === 'Aggressive') {
+                    team = `RAPID RESPONSE: ${team}`;
+                    hours = Math.max(1, hours / 2);
+                }
+
+                // Emergency override
+                if (result.riskLevel === 'Crisis' || result.riskLevel === 'Critical') team = `EMERGENCY DISPATCH: ${team}`;
+
+                return { estHours: Math.round(hours), suggestedTeam: team, urgency: result.riskLevel };
+            }
+        };
+
+        // --- COMPONENTS ---
+
+        const Sidebar = () => {
+            const navigate = useNavigate();
+            const handleLogout = () => {
+                localStorage.removeItem('user');
+                localStorage.removeItem('user_role');
+                localStorage.removeItem('is_authenticated');
+                // Reload page to reset state; ProtectedRoute will handle the redirect to login
+                window.location.href = 'index_demo.html';
+            };
+
+            return (
+                <div className="sidebar">
+                    <div style={{ padding: '0 0.5rem 2rem 0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{ width: 32, height: 32, background: 'var(--color-primary)', borderRadius: 8, display: 'grid', placeItems: 'center', color: 'white' }}>
+                            <ShieldAlert size={20} />
+                        </div>
+                        <div>
+                            <h3 style={{ fontSize: '1.1rem' }}>Nagarsevak AI</h3>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Admin Dashboard</span>
+                        </div>
+                    </div>
+
+                    <nav style={{ flex: 1 }}>
+                        <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                            <LayoutDashboard size={20} />
+                            <span>Overview</span>
+                        </NavLink>
+                        {/* HIDDEN to enforce One Calendar Rule
+                        <NavLink to="/calendar" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                            <CalendarIcon size={20} />
+                            <span>Calendar</span>
+                        </NavLink>
+                        */}
+                        <NavLink to="/issues" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                            <ListTodo size={20} />
+                            <span>Issue Management</span>
+                        </NavLink>
+                        <div className="nav-item" style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+                            <Settings size={20} />
+                            <span>Settings (Locked)</span>
+                        </div>
+                    </nav>
+                    <button onClick={handleLogout} className="nav-item" style={{ marginTop: 'auto', border: 'none', background: 'transparent', cursor: 'pointer', width: '100%' }}>
+                        <LogOut size={20} />
+                        <span>Logout</span>
+                    </button>
+                </div>
+            );
+        };
+
+
+
+        class ErrorBoundary extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false, error: null, errorInfo: null };
+            }
+
+            static getDerivedStateFromError(error) {
+                return { hasError: true };
+            }
+
+            componentDidCatch(error, errorInfo) {
+                console.error("Uncaught error:", error, errorInfo);
+                this.setState({ error, errorInfo });
+            }
+
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div style={{ padding: '2rem', color: 'red', background: '#fee2e2', border: '1px solid #ef4444', borderRadius: '8px', margin: '1rem' }}>
+                            <h2 style={{ marginTop: 0 }}>⚠️ Application Error</h2>
+                            <p>Something went wrong in the UI.</p>
+                            <details style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', fontFamily: 'monospace' }}>
+                                {this.state.error && this.state.error.toString()}
+                                <br />
+                                {this.state.errorInfo && this.state.errorInfo.componentStack}
+                            </details>
+                            <button onClick={() => window.location.reload()} className="btn btn-primary" style={{ marginTop: '1rem' }}>Reload Page</button>
+                        </div>
+                    );
+                }
+
+                return this.props.children;
+            }
+        }
+
+        // --- NEW COMPONENTS ---
+
+        const SidePanel = ({ date, tasks, onClose, onAddTask, onUpdateTask, onDeleteTask }) => {
+            const [viewMode, setViewMode] = useState('list');
+            const [editingTask, setEditingTask] = useState(null);
+            const [formData, setFormData] = useState({});
+
+            // Reset when date changes
+            useEffect(() => {
+                setViewMode('list');
+                setEditingTask(null);
+            }, [date]);
+
+            if (!date) return null;
+
+            const formattedDate = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            const getSectorColor = (sectorId) => SECTORS.find(s => s.id === sectorId)?.color || 'var(--color-text-muted)';
+
+            const handleEditClick = (task) => {
+                setEditingTask(task);
+                const start = new Date(task.scheduledStart || task.reportedAt);
+                // Safe date handling
+                const isValidStart = !isNaN(start.getTime());
+                const validStart = isValidStart ? start : new Date();
+
+                const end = task.scheduledEnd ? new Date(task.scheduledEnd) : new Date(validStart.getTime() + 3600000); // Default 1 hour duration
+                const isValidEnd = !isNaN(end.getTime());
+                const validEnd = isValidEnd ? end : new Date(validStart.getTime() + 3600000);
+
+                setFormData({
+                    title: task.title || '',
+                    sector: task.sector || 'water',
+                    assignedTo: task.assignedTo || '',
+                    status: task.status || 'pending',
+                    startTime: validStart.toTimeString().slice(0, 5),
+                    endTime: validEnd.toTimeString().slice(0, 5),
+                    address: task.location?.address || ''
+                });
+                setViewMode('edit');
+            };
+
+            const handleAddClick = () => {
+                setFormData({
+                    title: '',
+                    sector: 'water',
+                    assignedTo: '',
+                    status: 'pending',
+                    startTime: '09:00',
+                    endTime: '10:00',
+                    address: ''
+                });
+                setViewMode('add');
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                // Construct Date objects
+                const startDateTime = new Date(date);
+                const [startH, startM] = formData.startTime.split(':');
+                startDateTime.setHours(parseInt(startH), parseInt(startM));
+
+                const endDateTime = new Date(date);
+                const [endH, endM] = formData.endTime.split(':');
+                endDateTime.setHours(parseInt(endH), parseInt(endM));
+
+                const taskData = {
+                    title: formData.title,
+                    sector: formData.sector,
+                    assignedTo: formData.assignedTo,
+                    status: formData.status,
+                    scheduledStart: startDateTime.toISOString(),
+                    scheduledEnd: endDateTime.toISOString(),
+                    location: { address: formData.address, lat: 0, lng: 0 },
+                    // Defaults
+                    reportedAt: new Date().toISOString(),
+                    description: 'Scheduled via Calendar',
+                    severity: 'medium',
+                    type: 'maintenance'
+                };
+
+                if (viewMode === 'add') {
+                    onAddTask(taskData);
+                } else {
+                    onUpdateTask(editingTask.id, taskData);
+                }
+                setViewMode('list');
+            };
+
+            const handleDelete = () => {
+                if (confirm('Are you sure?')) {
+                    onDeleteTask(editingTask.id);
+                    setViewMode('list');
+                }
+            };
+
+            // FORM RENDER
+            if (viewMode === 'add' || viewMode === 'edit') {
+                return (
+                    <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h3 style={{ fontSize: '1.25rem' }}>{viewMode === 'add' ? 'Schedule Task' : 'Edit Task'}</h3>
+                            <button onClick={() => setViewMode('list')} className="btn btn-outline" style={{ padding: '0.25rem' }}><X size={20} /></button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
+                            <div>
+                                <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Task Title</label>
+                                <input type="text" required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }} />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div><label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Start</label><input type="time" required value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }} /></div>
+                                <div><label style={{ fontSize: '0.8rem', fontWeight: 600 }}>End</label><input type="time" required value={formData.endTime} onChange={e => setFormData({ ...formData, endTime: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }} /></div>
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Sector</label>
+                                <select value={formData.sector} onChange={e => setFormData({ ...formData, sector: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}>
+                                    {SECTORS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Assigned Staff</label>
+                                <select value={formData.assignedTo} onChange={e => setFormData({ ...formData, assignedTo: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}>
+                                    <option value="">-- Unassigned --</option>
+                                    {USERS.filter(u => u.role !== 'admin').map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Status</label>
+                                <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}>
+                                    <option value="pending">Pending</option>
+                                    <option value="in-progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                            <div style={{ marginTop: 'auto', display: 'flex', gap: '1rem', paddingTop: '1rem' }}>
+                                {viewMode === 'edit' && (
+                                    <button type="button" onClick={handleDelete} className="btn btn-outline" style={{ borderColor: '#ef4444', color: '#ef4444' }}><Trash2 size={18} /></button>
+                                )}
+                                <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}><Save size={18} /> Save</button>
+                            </div>
+                        </form>
+                    </div>
+                );
+            }
+
+            // LIST RENDER
+            return (
+                <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1.5rem' }}>
+                        <div><h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>{formattedDate}</h2><p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>{tasks.length} tasks scheduled</p></div>
+                        <button onClick={onClose} className="btn btn-outline" style={{ border: 'none', padding: '0.5rem' }}><X size={20} /></button>
+                    </div>
+
+                    <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {tasks.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--color-text-muted)' }}>
+                                <Clock size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+                                <p>No tasks scheduled.</p>
+                                <button className="btn btn-primary" style={{ marginTop: '1rem' }} onClick={handleAddClick}>Schedule Maintenance</button>
+                            </div>
+                        ) : (
+                            tasks.sort((a, b) => {
+                                const dA = new Date(a.scheduledStart || a.reportedAt);
+                                const dB = new Date(b.scheduledStart || b.reportedAt);
+                                return (isNaN(dA) ? 0 : dA) - (isNaN(dB) ? 0 : dB);
+                            }).map(task => {
+                                const startObj = new Date(task.scheduledStart || task.reportedAt);
+                                const start = !isNaN(startObj) ? startObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
+
+                                let end = '...';
+                                if (task.scheduledEnd) {
+                                    const endObj = new Date(task.scheduledEnd);
+                                    if (!isNaN(endObj)) end = endObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                }
+
+                                const color = getSectorColor(task.sector);
+
+                                return (
+                                    <div key={task.id} style={{ border: '1px solid #e2e8f0', borderRadius: '4px', padding: '1rem', borderLeft: `4px solid ${color}`, position: 'relative' }}>
+                                        <button onClick={(e) => { e.stopPropagation(); handleEditClick(task); }} style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', border: 'none', background: 'transparent', cursor: 'pointer' }}><Edit2 size={14} /></button>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>{start} - {end}</span>
+                                            <span className={`badge badge-${task.status}`} style={{ fontSize: '0.65rem' }}>{task.status}</span>
+                                        </div>
+                                        <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>{task.title}</h4>
+                                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{task.location.address || 'No Location'}</div>
+                                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Staff: {USERS.find(u => u.id === task.assignedTo)?.name || 'Unassigned'}</div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                    {tasks.length > 0 && <button className="btn btn-outline" style={{ marginTop: '1rem', width: '100%', justifyContent: 'center' }} onClick={handleAddClick}><Plus size={18} /> Add Task</button>}
+                </div>
+            );
+        };
+
+        const AnnualCalendar = ({ issues, selectedDate, onDateSelect }) => {
+            const maintenanceTasks = issues.filter(i =>
+                (i.type === 'maintenance' || i.status === 'scheduled' || i.scheduledStart) &&
+                i.status !== 'cancelled'
+            );
+
+            const currentYear = new Date().getFullYear();
+            const months = [
+                'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+                'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
+            ];
+
+            // State for the drill-down view
+            const [viewMode, setViewMode] = useState('year'); // 'year' or 'month'
+            const [activeMonthIndex, setActiveMonthIndex] = useState(new Date().getMonth());
+
+            const getDaysInMonth = (year, monthIndex) => {
+                const date = new Date(year, monthIndex, 1);
+                const days = [];
+                while (date.getMonth() === monthIndex) {
+                    days.push(new Date(date));
+                    date.setDate(date.getDate() + 1);
+                }
+                return days;
+            };
+
+            const isSameDay = (d1, d2) => {
+                return d1.getFullYear() === d2.getFullYear() &&
+                    d1.getMonth() === d2.getMonth() &&
+                    d1.getDate() === d2.getDate();
+            };
+
+            const handleMonthSelect = (index) => {
+                setActiveMonthIndex(index);
+                setViewMode('month');
+            };
+
+            // Render Year Grid (Overview)
+            if (viewMode === 'year') {
+                return (
+                    <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Clock size={20} /> Annual Plan ({currentYear})
+                        </h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '0.5rem' }}>
+                            {months.map((month, idx) => {
+                                const isCurrent = idx === new Date().getMonth();
+                                const tasksCount = maintenanceTasks.filter(t => {
+                                    const d = new Date(t.scheduledStart || t.reportedAt);
+                                    return d.getMonth() === idx && d.getFullYear() === currentYear;
+                                }).length;
+
+                                return (
+                                    <div key={month} onClick={() => handleMonthSelect(idx)}
+                                        style={{
+                                            padding: '1rem', borderRadius: '12px', border: isCurrent ? '2px solid var(--color-primary)' : '1px solid #e2e8f0',
+                                            cursor: 'pointer', textAlign: 'center', background: 'white', transition: 'transform 0.2s',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                                        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                                    >
+                                        <div style={{ fontWeight: 800, color: isCurrent ? 'var(--color-primary)' : '#64748b' }}>{month}</div>
+                                        <div style={{ fontSize: '0.75rem', marginTop: '0.5rem', color: '#94a3b8' }}>{tasksCount > 0 ? `${tasksCount} Tasks` : '-'}</div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            }
+
+            // Render Detailed Month View (Modern Style)
+            const days = getDaysInMonth(currentYear, activeMonthIndex);
+            const startDayOfWeek = days[0].getDay(); // 0 = Sun, 1 = Mon...
+            // Standardizing on Monday start to match image style
+            const monStartDay = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+
+            const prevMonth = activeMonthIndex === 0 ? 11 : activeMonthIndex - 1;
+            const nextMonth = activeMonthIndex === 11 ? 0 : activeMonthIndex + 1;
+
+            return (
+                <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#f8fafc', border: 'none', boxShadow: 'none' }}>
+                    {/* Header / Navigation Pill */}
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem', alignItems: 'center', position: 'relative' }}>
+                        <button onClick={() => setViewMode('year')} style={{ position: 'absolute', left: 0, background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600 }}>
+                            <ChevronLeft size={16} /> Year
+                        </button>
+
+                        <div style={{
+                            background: 'white', padding: '0.25rem', borderRadius: '999px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                            display: 'flex', alignItems: 'center', gap: '0.5rem'
+                        }}>
+                            <button onClick={() => setActiveMonthIndex(prevMonth)} style={{ padding: '0.5rem 1rem', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: 700, cursor: 'pointer' }}>{months[prevMonth]}</button>
+                            <div style={{
+                                background: '#1e40af', color: 'white', padding: '0.5rem 1.5rem', borderRadius: '999px',
+                                fontWeight: 800, boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)', letterSpacing: '0.05em'
+                            }}>
+                                {months[activeMonthIndex]} {currentYear}
+                            </div>
+                            <button onClick={() => setActiveMonthIndex(nextMonth)} style={{ padding: '0.5rem 1rem', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: 700, cursor: 'pointer' }}>{months[nextMonth]}</button>
+                        </div>
+                    </div>
+
+                    {/* Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1rem' }}>
+                        {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(d => (
+                            <div key={d} style={{ textAlign: 'center', color: '#64748b', fontWeight: 700, fontSize: '0.875rem', marginBottom: '0.5rem' }}>{d}</div>
+                        ))}
+
+                        {Array(monStartDay).fill(null).map((_, i) => <div key={`empty-${i}`} />)}
+
+                        {days.map(day => {
+                            const dayTasks = maintenanceTasks.filter(t => {
+                                if (!t.scheduledStart) return false;
+                                return isSameDay(new Date(t.scheduledStart), day);
+                            });
+                            const isSelected = selectedDate && isSameDay(selectedDate, day);
+                            const isToday = isSameDay(new Date(), day);
+
+                            return (
+                                <div key={day.toISOString()} onClick={() => onDateSelect(day)}
+                                    style={{
+                                        background: 'white',
+                                        borderRadius: '12px',
+                                        padding: '0.75rem 0.5rem',
+                                        minHeight: '80px',
+                                        cursor: 'pointer',
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                        boxShadow: isSelected ? '0 0 0 2px #3b82f6' : '0 1px 3px rgba(0,0,0,0.1)',
+                                        transition: 'all 0.2s ease',
+                                        transform: isSelected ? 'scale(1.05)' : 'scale(1)'
+                                    }}
+                                    onMouseEnter={e => !isSelected && (e.currentTarget.style.transform = 'translateY(-2px)')}
+                                    onMouseLeave={e => !isSelected && (e.currentTarget.style.transform = 'translateY(0)')}
+                                >
+                                    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>{months[activeMonthIndex]}</div>
+                                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1e293b' }}>{day.getDate()}</div>
+
+                                    {/* Dots */}
+                                    <div style={{ display: 'flex', gap: '4px', height: '6px' }}>
+                                        {dayTasks.slice(0, 3).map((t, i) => (
+                                            <div key={i} style={{
+                                                width: '6px', height: '6px', borderRadius: '50%',
+                                                background: SECTORS.find(s => s.id === t.sector)?.color || 'gray'
+                                            }} />
+                                        ))}
+                                        {dayTasks.length > 3 && <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#cbd5e1' }} />}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        const CalendarPage = ({ context }) => {
+            if (!context) return <div>Loading...</div>;
+            const { issues, updateIssue, addToast } = context;
+            const [selectedDate, setSelectedDate] = useState(new Date());
+            const [isPanelOpen, setIsPanelOpen] = useState(false);
+            const [currentMonth, setCurrentMonth] = useState(new Date());
+
+            const onDateSelect = (date) => {
+                const now = new Date();
+                // If clicking today or future, allow scheduling
+                // For demo flexibility, allow all.
+                setSelectedDate(date);
+                setIsPanelOpen(true);
+            };
+
+            const getTasksForDate = (date) => {
+                if (!date) return [];
+                return issues.filter(issue => {
+                    const d = new Date(issue.scheduledStart || issue.reportedAt);
+                    return d.getDate() === date.getDate() && d.getMonth() === date.getMonth() && d.getFullYear() === date.getFullYear();
+                });
+            };
+
+            const selectedTasks = getTasksForDate(selectedDate);
+
+            // Handlers
+            const handleAddTask = (newTask) => {
+                const id = `MNT-${Date.now()}`;
+                const newIssue = { ...newTask, id };
+                // We need to use context's update function (actually we need an add function, but updateIssue works if we simulate adding to the list in App, wait App only has update. I should add 'addIssue' to App context. 
+                // For now, I will hack it by treating context.issues as mutable or assume I'll add addIssue to App.
+                // Wait, App logic: setIssues(prev => prev.map... ). That's only for updates.
+                // I need to add an 'addNewIssue' function to the context in App component.
+                // NOTE: Since I can't edit App component easily in this same chunk without conflict (it's further down), I'll check App modification below.
+                // Actually, I can use context.addIssue if I add it.
+                context.addIssue(newIssue);
+                addToast("Task Scheduled Successfully", "success");
+            };
+
+            const handleUpdateTask = (id, updates) => {
+                updateIssue(id, updates);
+                addToast("Task Updated", "success");
+            };
+
+            const handleDeleteTask = (id) => {
+                // Since we don't have delete, I'll set status to 'cancelled' or filter it out? App doesn't support delete.
+                // I'll add delete support to App context or just set status 'cancelled'
+                // Let's set status to filtered out state? Or adding deleteIssue to context.
+                context.deleteIssue(id);
+                addToast("Task Removed", "success");
+            }
+
+
+            // Month Calendar Logic
+            const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+            const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            const daysInMonth = getDaysInMonth(year, month);
+            const firstDay = getFirstDayOfMonth(year, month);
+            const monthName = currentMonth.toLocaleString('default', { month: 'long' });
+
+            const weeks = [];
+            let days = [];
+            for (let i = 0; i < firstDay; i++) days.push(null);
+            for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+            while (days.length > 0) weeks.push(days.splice(0, 7));
+
+
+            return (
+                <div className="animate-fade-in" style={{ height: 'calc(100vh - 4rem)', display: 'flex', flexDirection: 'column' }}>
+                    <header style={{ marginBottom: '1.5rem' }}>
+                        <h1 style={{ fontSize: '1.875rem' }}>Maintenance Schedule</h1>
+                    </header>
+                    <div style={{ flex: 1, display: 'flex', gap: '1.5rem', overflow: 'hidden' }}>
+                        <div style={{ flex: 1, overflowY: 'auto' }}>
+                            <div className="card" style={{ minHeight: '600px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                    <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>{monthName} {year}</h2>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button onClick={() => setCurrentMonth(new Date(year, month - 1, 1))} className="btn btn-outline"><ChevronLeft size={20} /></button>
+                                        <button onClick={() => setCurrentMonth(new Date(year, month + 1, 1))} className="btn btn-outline"><ChevronRight size={20} /></button>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: '#e2e8f0', border: '1px solid #e2e8f0' }}>
+                                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d} style={{ background: '#f8fafc', padding: '1rem', textAlign: 'center', fontWeight: 600 }}>{d}</div>)}
+                                    {weeks.flat().map((date, idx) => {
+                                        const dayTasks = getTasksForDate(date);
+                                        const isSelected = date && selectedDate && date.getDate() === selectedDate.getDate() && date.getMonth() === selectedDate.getMonth();
+                                        const isToday = date && new Date().toDateString() === date.toDateString();
+
+                                        return (
+                                            <div key={idx} onClick={() => date && onDateSelect(date)} style={{ background: isSelected ? '#eff6ff' : 'white', padding: '0.5rem', minHeight: '100px', cursor: date ? 'pointer' : 'default', border: isSelected ? '2px solid #3b82f6' : 'none' }}>
+                                                {date && (
+                                                    <>
+                                                        <div style={{
+                                                            display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem',
+                                                            fontWeight: isToday ? 700 : 400, color: isToday ? '#3b82f6' : 'inherit'
+                                                        }}>
+                                                            <span style={{ width: 24, height: 24, display: 'grid', placeItems: 'center', borderRadius: '50%', background: isToday ? '#3b82f6' : 'transparent', color: isToday ? 'white' : 'inherit' }}>{date.getDate()}</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                            {dayTasks.slice(0, 3).map(task => (
+                                                                <div key={task.id} style={{ fontSize: '0.65rem', padding: '2px 4px', borderRadius: '2px', background: SECTORS.find(s => s.id === task.sector)?.color || '#ccc', color: 'white', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{task.title}</div>
+                                                            ))}
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                        <div style={{
+                            width: isPanelOpen ? '400px' : '0', opacity: isPanelOpen ? 1 : 0, transition: 'all 0.3s ease-in-out', overflow: 'hidden',
+                            borderLeft: isPanelOpen ? '1px solid #e2e8f0' : 'none', paddingLeft: isPanelOpen ? '1.5rem' : '0', display: 'flex', flexDirection: 'column'
+                        }}>
+                            <SidePanel date={selectedDate} tasks={selectedTasks} onClose={() => setIsPanelOpen(false)} onAddTask={handleAddTask} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} />
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- PAGES ---
+
+        const LoginPage = () => {
+            const [username, setUsername] = useState('admin@city.gov');
+            const [password, setPassword] = useState('password');
+            const [role, setRole] = useState('admin');
+            const [isLoading, setIsLoading] = useState(false);
+            const [error, setError] = useState('');
+
+            const navigate = useNavigate();
+            const cardRef = useRef(null);
+            const btnRef = useRef(null);
+
+            // --- 3D TILT EFFECT ---
+            useEffect(() => {
+                const card = cardRef.current;
+                if (!card) return;
+
+                const handleMouseMove = (e) => {
+                    const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+                    const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+                    card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+                };
+
+                const handleMouseLeave = () => {
+                    card.style.transform = `rotateY(0deg) rotateX(0deg)`;
+                };
+
+                document.addEventListener('mousemove', handleMouseMove);
+                return () => {
+                    document.removeEventListener('mousemove', handleMouseMove);
+                };
+            }, []);
+
+            // --- MAGNETIC BUTTON EFFECT ---
+            useEffect(() => {
+                const btn = btnRef.current;
+                if (!btn) return;
+
+                const handleBtnMove = (e) => {
+                    const rect = btn.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+
+                    btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px) translateZ(20px)`;
+                };
+
+                const handleBtnLeave = () => {
+                    btn.style.transform = `translate(0px, 0px) translateZ(20px)`;
+                };
+
+                btn.addEventListener('mousemove', handleBtnMove);
+                btn.addEventListener('mouseleave', handleBtnLeave);
+
+                return () => {
+                    btn.removeEventListener('mousemove', handleBtnMove);
+                    btn.removeEventListener('mouseleave', handleBtnLeave);
+                };
+            }, []);
+
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                setIsLoading(true);
+                setError('');
+
+                try {
+                    // Mock login 
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    const data = { role: role, name: 'Admin User' };
+
+                    localStorage.setItem('user', JSON.stringify(data));
+                    localStorage.setItem('user_role', data.role);
+                    localStorage.setItem('is_authenticated', 'true');
+
+                    navigate('/');
+                } catch (err) {
+                    setError('Login failed');
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            return (
+                <div className="h-screen w-full flex items-center justify-center overflow-hidden relative"
+                    style={{ background: '#0f172a' }}>
+
+                    {/* Background Image & Overlay */}
+                    <div className="absolute inset-0 z-0">
+                        <img
+                            src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop"
+                            className="w-full h-full object-cover opacity-40"
+                            alt="City Background"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-slate-900/40"></div>
+                    </div>
+
+                    {/* Glass Card */}
+                    <div
+                        id="login-card"
+                        ref={cardRef}
+                        className="glass-card z-10 p-10 rounded-2xl w-full max-w-md transform transition-all duration-100 ease-out"
+                        style={{ transformStyle: 'preserve-3d' }}
+                    >
+
+                        {/* Header Section */}
+                        <div className="text-center mb-8 levitate-icon" style={{ transform: 'translateZ(30px)' }}>
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600/20 text-blue-400 mb-4 ring-1 ring-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
+                                <ShieldCheck size={32} />
+                            </div>
+                            <h1 className="text-3xl font-bold text-white tracking-tight mt-2">Nagarsevak AI</h1>
+                            <p className="text-slate-400 text-sm mt-1">Unified Municipal Command</p>
+                        </div>
+
+                        {/* Role Toggle */}
+                        <div className="flex justify-center mb-8" style={{ transform: 'translateZ(20px)' }}>
+                            <div className="bg-slate-800/80 p-1 rounded-full flex relative">
+                                <div
+                                    className="absolute top-1 left-1 w-[calc(50%-4px)] h-[calc(100%-8px)] bg-blue-600 rounded-full transition-all duration-300"
+                                    style={{
+                                        transform: role === 'staff' ? 'translateX(100%)' : 'translateX(0%)',
+                                        width: '92px'  // Fixed width to match button roughly
+                                    }}
+                                ></div>
+                                <button
+                                    onClick={() => setRole('admin')}
+                                    className={`relative z-10 w-24 py-1.5 text-sm font-medium transition-colors ${role === 'admin' ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    Admin
+                                </button>
+                                <button
+                                    onClick={() => setRole('staff')}
+                                    className={`relative z-10 w-24 py-1.5 text-sm font-medium transition-colors ${role === 'staff' ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    Staff
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Form Section */}
+                        <form onSubmit={handleLogin} className="space-y-5" style={{ transform: 'translateZ(10px)' }}>
+
+                            {error && (
+                                <div className="bg-red-500/10 border border-red-500/50 text-red-200 text-sm p-3 rounded-xl text-center">
+                                    {error}
+                                </div>
+                            )}
+
+                            <div className="relative group">
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" size={18} />
+                                <input
+                                    type="text"
+                                    placeholder="Username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full bg-slate-800/50 text-white pl-12 pr-4 py-3.5 rounded-xl border border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-slate-800 transition-all outline-none placeholder:text-slate-500"
+                                />
+                            </div>
+
+                            <div className="relative group">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" size={18} />
+                                <input
+                                    type="password"
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full bg-slate-800/50 text-white pl-12 pr-4 py-3.5 rounded-xl border border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-slate-800 transition-all outline-none placeholder:text-slate-500"
+                                />
+                            </div>
+
+                            <button
+                                ref={btnRef}
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full mt-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 transition-all relative overflow-hidden group disabled:opacity-70 disabled:cursor-not-allowed"
+                                style={{ transform: 'translateZ(20px)' }}
+                            >
+                                <span className="relative z-10">{isLoading ? 'Authenticating...' : 'Initialize System'}</span>
+                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                            </button>
+                        </form>
+
+                    </div>
+                </div>
+            );
+        };
+
+        const StatCard = ({ title, value, icon, color, trend }) => (
+            <div className="card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div><p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>{title}</p><h3>{value}</h3></div>
+                    <div>
+                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>{title}</p>
+                        <h3>{value}</h3>
+                        {trend && <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>{trend}</p>}
+                    </div>
+                    <div style={{ padding: '0.5rem', borderRadius: '0.5rem', background: `${color}15`, color: color }}>{icon}</div>
+                </div>
+            </div>
+        );
+
+        // --- DASHBOARD COMPONENTS ---
+
+
+        const GlobalMapPreview = ({ issues }) => {
+            const mapRef = React.useRef(null);
+            const mapInstanceRef = React.useRef(null);
+
+            useEffect(() => {
+                if (!mapRef.current) return;
+
+                // Initialize Map if not already done
+                if (!mapInstanceRef.current) {
+                    const map = L.map(mapRef.current).setView([19.0760, 72.8777], 13);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(map);
+
+                    mapInstanceRef.current = map;
+                }
+
+                // Add pins
+                const map = mapInstanceRef.current;
+
+                // Clear existing markers (simple way for demo: verify if we need to track them to remove)
+                // For this demo, we just add them. In real app, we'd manage the layer group.
+
+                // Custom Icons
+                const createIcon = (color) => L.divIcon({
+                    className: 'custom-pin',
+                    html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                    iconSize: [12, 12],
+                    iconAnchor: [6, 6]
+                });
+
+                issues.forEach(issue => {
+                    const color = issue.severity === 'high' ? '#ef4444' : (issue.severity === 'medium' ? '#f59e0b' : '#10b981');
+                    if (issue.location && issue.location.lat) {
+                        L.marker([issue.location.lat, issue.location.lng], { icon: createIcon(color) })
+                            .addTo(map)
+                            .bindPopup(`<b>${issue.title}</b><br>${issue.status}`);
+                    }
+                });
+
+                // Cleanup on unmount (optional for this simple demo, but good practice)
+                return () => {
+                    // map.remove(); // Causing issues in React StrictMode sometimes, safe to leave for single page demo
+                };
+            }, [issues]);
+
+            return (
+                <div className="card" style={{ padding: 0, overflow: 'hidden', height: '400px' }}>
+                    <div ref={mapRef} style={{ width: '100%', height: '100%', zIndex: 0 }}></div>
+                </div>
+            );
+        };
+
+        const EmergencyAlerts = ({ issues, onDispatch }) => {
+            const emergencies = issues.filter(i => i.type === 'emergency' || i.severity === 'high');
+            if (emergencies.length === 0) return null;
+
+            return (
+                <div className="card" style={{ background: '#fef2f2', border: '1px solid #fecaca', marginBottom: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#dc2626' }}>
+                        <AlertTriangle size={24} /> Emergency Response Required
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+                        {emergencies.map(issue => (
+                            <div key={issue.id} style={{ background: 'white', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #dc2626', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <div style={{ fontWeight: 700, color: '#1f2937' }}>{issue.title}</div>
+                                    <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{issue.location.address} • {issue.sector.toUpperCase()}</div>
+                                </div>
+                                <button
+                                    className="btn"
+                                    style={{ background: '#dc2626', color: 'white', cursor: issue.status === 'in-progress' ? 'not-allowed' : 'pointer', opacity: issue.status === 'in-progress' ? 0.6 : 1 }}
+                                    onClick={() => onDispatch && onDispatch(issue.id)}
+                                    disabled={issue.status === 'in-progress'}
+                                >
+                                    {issue.status === 'in-progress' ? 'Dispatched' : 'Dispatch'}
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const CitizenReportQueue = ({ issues, onVerify }) => {
+            const reports = issues.filter(i => i.type === 'citizen');
+            const [verifying, setVerifying] = useState(null);
+            const [aiResult, setAiResult] = useState(null);
+
+            const handleVerifyClick = (id) => {
+                setVerifying(id);
+                setAiResult(null);
+                // Simulate AI Agent Verification
+                setTimeout(() => {
+                    const isReal = Math.random() > 0.3; // 70% chance of being real
+                    const confidence = Math.floor(Math.random() * 20) + 80; // 80-99% confidence
+                    setAiResult({
+                        isReal,
+                        confidence,
+                        message: isReal ? `✅ Verified Real (${confidence}%)` : `⚠️ Potential AI/Fake (${confidence}%)`
+                    });
+
+                    if (isReal && onVerify) {
+                        // Auto-approve if real (simulated delay for user to read)
+                        setTimeout(() => onVerify(id, 'verified'), 2000);
+                    }
+                }, 1500);
+            };
+
+            return (
+                <div className="card">
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Users size={20} /> Citizen Reports (Pending Verification)
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {reports.map(issue => (
+                            <div key={issue.id} style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '1rem' }}>
+                                <div style={{ width: '80px', height: '80px', background: '#f1f5f9', borderRadius: '8px', display: 'grid', placeItems: 'center', flexShrink: 0, overflow: 'hidden', position: 'relative' }}>
+                                    {/* Mock Image Placeholder */}
+                                    <div style={{ textAlign: 'center', fontSize: '0.7rem', color: '#94a3b8' }}>
+                                        📷 <br /> Analysis
+                                    </div>
+                                    {verifying === issue.id && !aiResult && (
+                                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.8)', display: 'grid', placeItems: 'center', fontSize: '0.6rem', color: '#3b82f6', fontWeight: 700 }}>
+                                            Scanning...
+                                        </div>
+                                    )}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                                        <div style={{ fontWeight: 600 }}>{issue.title}</div>
+                                        <span style={{ fontSize: '0.75rem', background: '#eff6ff', color: '#3b82f6', padding: '2px 6px', borderRadius: '4px' }}>New</span>
+                                    </div>
+                                    <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0, marginBottom: '0.5rem' }}>{issue.description}</p>
+
+                                    {/* AI Agent Result */}
+                                    {verifying === issue.id && aiResult && (
+                                        <div style={{
+                                            marginBottom: '0.5rem',
+                                            padding: '0.5rem',
+                                            borderRadius: '4px',
+                                            background: aiResult.isReal ? '#f0fdf4' : '#fef2f2',
+                                            color: aiResult.isReal ? '#15803d' : '#dc2626',
+                                            fontSize: '0.75rem', fontWeight: 600,
+                                            border: `1px solid ${aiResult.isReal ? '#bbf7d0' : '#fecaca'}`
+                                        }}>
+                                            🤖 AI Agent: {aiResult.message}
+                                        </div>
+                                    )}
+
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button
+                                            onClick={() => handleVerifyClick(issue.id)}
+                                            disabled={verifying === issue.id}
+                                            style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: 'white', cursor: 'pointer' }}
+                                        >
+                                            {verifying === issue.id ? 'Analyzing...' : 'AI Verify'}
+                                        </button>
+                                        <button style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid #dc2626', background: 'white', color: '#dc2626', cursor: 'pointer' }}>Reject</button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {reports.length === 0 && <div style={{ color: '#94a3b8', fontStyle: 'italic' }}>No pending citizen reports.</div>}
+                    </div>
+                </div>
+            );
+        };
+
+        const Dashboard = ({ context }) => {
+            const { issues, updateIssue, addIssue, deleteIssue, addToast } = context;
+            const [selectedDate, setSelectedDate] = useState(null);
+            const [isPanelOpen, setIsPanelOpen] = useState(false);
+
+            const handleDispatch = (id) => {
+                updateIssue(id, { status: 'in-progress' });
+                addToast('Unit Dispatched Successfully', 'success');
+            };
+
+            const handleVerify = (id) => {
+                updateIssue(id, { status: 'pending', type: 'maintenance' });
+                addToast('Issue Verified & Assigned', 'success');
+            };
+
+            // Calendar Interaction Handlers
+            const onDateSelect = (date) => {
+                setSelectedDate(date);
+                setIsPanelOpen(true);
+            };
+
+            const getTasksForDate = (date) => {
+                if (!date) return [];
+                return issues.filter(issue => {
+                    if (!issue.scheduledStart) return false;
+                    const d = new Date(issue.scheduledStart);
+                    return d.getDate() === date.getDate() &&
+                        d.getMonth() === date.getMonth() &&
+                        d.getFullYear() === date.getFullYear();
+                });
+            };
+
+            const handleAddTask = (newTask) => {
+                const id = `MNT-${Date.now()}`;
+                addIssue({ ...newTask, id, status: 'scheduled' });
+                addToast("Maintenance Task Scheduled", "success");
+            };
+
+            const handleUpdateTask = (updatedTask) => {
+                updateIssue(updatedTask.id, updatedTask);
+                addToast("Task Updated", "success");
+            };
+
+            const handleDeleteTask = (id) => {
+                deleteIssue(id);
+                addToast("Task Removed", "success");
+            };
+
+            const stats = useMemo(() => {
+                return {
+                    total: issues.length,
+                    pending: issues.filter(i => i.status === 'pending').length,
+                    inProgress: issues.filter(i => i.status === 'in-progress').length,
+                    completed: issues.filter(i => i.status === 'completed').length,
+                    critical: issues.filter(i => i.severity === 'high').length
+                };
+            }, [issues]);
+
+            const sensorStats = useMemo(() => getSensorStats(), []);
+            const criticalSensors = useMemo(() => SENSORS.filter(s => s.status !== 'normal'), []);
+
+            return (
+                <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    <header>
+                        <h1 style={{ fontSize: '1.875rem', fontWeight: 800, color: '#1e293b' }}>City Command Center</h1>
+                        <p style={{ color: '#64748b' }}>Intelligent Operations: Emergency • Maintenance • Citizen</p>
+                    </header>
+
+                    {/* TIER 1: EMERGENCY */}
+                    <EmergencyAlerts issues={issues} onDispatch={handleDispatch} />
+
+                    {/* Stats Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+                        <StatCard title="Active Issues" value={stats.pending + stats.inProgress} icon={<AlertCircle color="white" />} color="var(--color-primary)" trend="+5% from yesterday" />
+                        <StatCard title="Active Sensors" value={sensorStats.total} icon={<Activity color="white" />} color="var(--color-slate-500)" trend="Live Monitoring" />
+                        <StatCard title="Critical Alerts" value={sensorStats.critical} icon={<AlertTriangle color="white" />} color="var(--color-red-500)" trend="Sensor Anomalies" />
+                        <StatCard title="Resolved (24h)" value={stats.completed} icon={<CheckCircle2 color="white" />} color="var(--color-emerald-500)" trend="+12% Efficiency" />
+                    </div>
+
+                    {/* Infrastructure Health Sensor Section */}
+                    <div className="card" style={{ borderLeft: '4px solid var(--color-red-500)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem', fontWeight: 700 }}>
+                                <Activity size={20} /> Infrastructure Health
+                            </h3>
+                            <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Live Monitoring</span>
+                        </div>
+
+                        {criticalSensors.length > 0 ? (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+                                {criticalSensors.map(sensor => (
+                                    <div key={sensor.id} style={{
+                                        padding: '1rem',
+                                        background: sensor.status === 'critical' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                                        border: `1px solid ${sensor.status === 'critical' ? 'var(--color-red-500)' : 'var(--color-amber-500)'}`,
+                                        borderRadius: 'var(--radius-md)',
+                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                                    }}>
+                                        <div>
+                                            <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.25rem' }}>{sensor.label}</div>
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                                                {sensor.type.toUpperCase()} • {sensor.location.address}
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{
+                                                fontWeight: 700, fontSize: '1.25rem',
+                                                color: sensor.status === 'critical' ? 'var(--color-red-500)' : 'var(--color-amber-600)'
+                                            }}>
+                                                {sensor.value} <span style={{ fontSize: '0.8rem' }}>{sensor.unit}</span>
+                                            </div>
+                                            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600 }}>
+                                                {sensor.status}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{ padding: '1rem', background: 'var(--color-bg-body)', borderRadius: 'var(--radius-md)', textAlign: 'center', color: 'var(--color-emerald-500)' }}>
+                                All systems nominal. No critical sensor readings.
+                            </div>
+                        )}
+                    </div>
+
+                    {/* TIER 2: MAINTENANCE (The "Annual" Layer) */}
+                    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', overflow: 'hidden' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <AnnualCalendar
+                                issues={issues}
+                                selectedDate={selectedDate}
+                                onDateSelect={onDateSelect}
+                            />
+                        </div>
+                        <div style={{
+                            width: isPanelOpen ? '400px' : '0',
+                            opacity: isPanelOpen ? 1 : 0,
+                            visibility: isPanelOpen ? 'visible' : 'hidden', // Optimization
+                            transform: isPanelOpen ? 'translateX(0)' : 'translateX(20px)',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            borderLeft: '1px solid #e2e8f0',
+                            height: '100%',
+                            flexShrink: 0
+                        }}>
+                            <SidePanel
+                                date={selectedDate}
+                                tasks={getTasksForDate(selectedDate)}
+                                onClose={() => setIsPanelOpen(false)}
+                                onAddTask={handleAddTask}
+                                onUpdateTask={handleUpdateTask}
+                                onDeleteTask={handleDeleteTask}
+                            />
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+                        {/* Map View */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <MapIcon size={20} /> Live Operation Map
+                            </h3>
+                            <GlobalMapPreview issues={issues} />
+                        </div>
+
+                        {/* TIER 3: CITIZEN */}
+                        <CitizenReportQueue issues={issues} onVerify={handleVerify} />
+                    </div>
+                </div>
+            );
+        };
+
+        const IssueList = ({ context }) => {
+            const navigate = useNavigate();
+            const [searchTerm, setSearchTerm] = useState('');
+            const [filterStatus, setFilterStatus] = useState('all');
+            const [filterSector, setFilterSector] = useState('all');
+
+            const issues = context ? context.issues : ISSUES;
+
+            const filtered = useMemo(() => {
+                return issues.filter(i => {
+                    const matchesSearch = i.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        i.id.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesStatus = filterStatus === 'all' || i.status === filterStatus;
+                    const matchesSector = filterSector === 'all' || i.sector === filterSector;
+                    return matchesSearch && matchesStatus && matchesSector;
+                });
+            }, [searchTerm, filterStatus, filterSector, issues]);
+
+            const getSectorLabel = (id) => SECTORS.find(s => s.id === id)?.label || id;
+
+            return (
+                <div className="animate-fade-in">
+                    <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <h1>Issue Management</h1>
+                            <p style={{ color: 'var(--color-text-muted)' }}>Track and manage civic complaints.</p>
+                        </div>
+                        <button className="btn btn-primary">+ Log Manual Issue</button>
+                    </header>
+
+                    <div className="card" style={{ padding: 0 }}>
+                        {/* Toolbar */}
+                        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--color-border)', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                            <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
+                                <Search size={18} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                                <input
+                                    type="text"
+                                    placeholder="Search ID, title, address..."
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                    style={{
+                                        padding: '0.5rem 0.5rem 0.5rem 2.5rem', width: '100%',
+                                        borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', outline: 'none', boxSizing: 'border-box'
+                                    }}
+                                />
+                            </div>
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+                                    <option value="all">All Statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="in-progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                                <select value={filterSector} onChange={e => setFilterSector(e.target.value)} style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+                                    <option value="all">All Sectors</option>
+                                    {SECTORS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Table */}
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                                <thead style={{ background: '#f8fafc', textAlign: 'left', color: 'var(--color-text-muted)' }}>
+                                    <tr>
+                                        <th style={{ padding: '1rem' }}>ID</th>
+                                        <th style={{ padding: '1rem' }}>Issue</th>
+                                        <th style={{ padding: '1rem' }}>Sector</th>
+                                        <th style={{ padding: '1rem' }}>Status</th>
+                                        <th style={{ padding: '1rem' }}>Priority</th>
+                                        <th style={{ padding: '1rem' }}></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filtered.map(i => (
+                                        <tr key={i.id} onClick={() => navigate(`/issues/${i.id}`)} style={{ cursor: 'pointer', borderBottom: '1px solid #eee', transition: 'background 0.2s' }}
+                                            onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                        >
+                                            <td style={{ padding: '1rem', fontFamily: 'monospace', fontWeight: 500 }}>{i.id}</td>
+                                            <td style={{ padding: '1rem' }}>
+                                                <div style={{ fontWeight: 500 }}>{i.title}</div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{i.location.address}</div>
+                                            </td>
+                                            <td style={{ padding: '1rem' }}>{getSectorLabel(i.sector)}</td>
+                                            <td style={{ padding: '1rem' }}><span className={`badge badge-${i.status}`}>{i.status}</span></td>
+                                            <td style={{ padding: '1rem' }}>
+                                                <span style={{
+                                                    display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: '0.5rem',
+                                                    background: i.severity === 'high' ? 'var(--color-red-500)' : i.severity === 'medium' ? 'var(--color-yellow-500)' : 'var(--color-emerald-500)'
+                                                }}></span>
+                                                {i.severity}
+                                            </td>
+                                            <td style={{ padding: '1rem' }}><ChevronRight size={16} color="var(--color-text-muted)" /></td>
+                                        </tr>
+                                    ))}
+                                    {filtered.length === 0 && <tr><td colSpan="6" style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No issues found.</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const StaffAssignmentModal = ({ isOpen, onClose, onAssign }) => {
+            if (!isOpen) return null;
+
+            const staffMembers = USERS.filter(u => u.role === 'staff');
+
+            return (
+                <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+                    display: 'grid', placeItems: 'center', zIndex: 50, backdropFilter: 'blur(4px)'
+                }}>
+                    <div className="glass-panel" style={{
+                        background: 'white', width: '100%', maxWidth: '400px', padding: '1.5rem',
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+                    }}>
+                        <h3 style={{ marginBottom: '1rem' }}>Assign Maintenance Staff</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '300px', overflowY: 'auto' }}>
+                            {staffMembers.map(staff => (
+                                <button key={staff.id} onClick={() => onAssign(staff.id)} style={{
+                                    display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem',
+                                    border: '1px solid var(--color-border)', borderRadius: '0.5rem',
+                                    background: 'var(--color-bg-body)', cursor: 'pointer', textAlign: 'left'
+                                }}>
+                                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--color-primary-light)', color: 'white', display: 'grid', placeItems: 'center', fontSize: '0.875rem' }}>
+                                        {staff.name.charAt(0)}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 500 }}>{staff.name}</div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{staff.department ? staff.department.toUpperCase() : 'GENERAL'}</div>
+                                    </div>
+                                    <ChevronRight size={16} />
+                                </button>
+                            ))}
+                        </div>
+                        <button onClick={onClose} style={{
+                            marginTop: '1rem', width: '100%', padding: '0.75rem',
+                            border: 'none', background: 'transparent', color: 'var(--color-text-muted)', cursor: 'pointer'
+                        }}>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const FeedbackModal = ({ isOpen, onClose }) => {
+            if (!isOpen) return null;
+            return (
+                <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+                    display: 'grid', placeItems: 'center', zIndex: 60, backdropFilter: 'blur(4px)'
+                }}>
+                    <div className="glass-panel" style={{
+                        background: 'white', width: '100%', maxWidth: '400px', padding: '2rem',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', textAlign: 'center'
+                    }}>
+                        <div style={{ width: 48, height: 48, background: '#f0f9ff', color: 'var(--color-accent)', borderRadius: '50%', display: 'grid', placeItems: 'center', margin: '0 auto 1rem auto' }}>
+                            <Zap size={24} />
+                        </div>
+                        <h3 style={{ marginBottom: '0.5rem' }}>Help AI Learn</h3>
+                        <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>Was the priority score and suggested schedule accurate for this issue?</p>
+
+                        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+                            <button onClick={onClose} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #ddd', background: 'white', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                                <span style={{ fontSize: '1.5rem' }}>👎</span>
+                                <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>No</span>
+                            </button>
+                            <button onClick={onClose} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-accent)', background: '#eff6ff', color: 'var(--color-accent)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                                <span style={{ fontSize: '1.5rem' }}>👍</span>
+                                <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Yes</span>
+                            </button>
+                        </div>
+
+                        <button onClick={onClose} style={{ color: 'var(--color-text-muted)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}>
+                            Skip Feedback
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const IssueDetail = ({ context }) => {
+            const { id } = ReactRouterDOM.useParams();
+            const navigate = useNavigate();
+
+            const issues = context ? context.issues : ISSUES;
+            const updateIssue = context ? context.updateIssue : () => { };
+            const addToast = context ? context.addToast : () => { };
+
+            const issue = issues.find(i => i.id === id);
+
+            // Local state for UI only
+            const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+            const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false); // New State
+            const [comment, setComment] = useState('');
+            const [aiStatus, setAiStatus] = useState('idle'); // idle, analyzing, complete
+            const [aiData, setAiData] = useState(null);
+
+            // Sensor Integration
+            const nearbySensors = useMemo(() => {
+                if (!issue || !issue.location) return [];
+                return getNearbySensors(issue.location.lat, issue.location.lng, issue.sector);
+            }, [issue]);
+
+            if (!issue) return <div className="card">Issue not found</div>;
+
+            const runAiAnalysis = () => {
+                setAiStatus('analyzing');
+                setTimeout(() => {
+                    try {
+                        // Use V2 AI Engine Logic
+                        const priorityLoop = AI_Engine.calculatePriority(issue);
+
+                        // Enhanced AI Explanation with Sensor Context
+                        const criticalSensors = nearbySensors.filter(s => s.status === 'critical' || s.status === 'warning');
+                        let sensorNote = "";
+                        if (criticalSensors.length > 0) {
+                            const sensor = criticalSensors[0];
+                            sensorNote = `Priority escalated due to abnormal ${sensor.label} readings (${sensor.value} ${sensor.unit}).`;
+                        }
+
+                        const explanations = AI_Engine.generateExplanation(issue, priorityLoop);
+                        if (sensorNote) explanations.unshift(sensorNote);
+
+                        const schedule = AI_Engine.suggestSchedule(issue, priorityLoop);
+
+                        setAiData({
+                            priorityLoop,
+                            explanations,
+                            schedule
+                        });
+                        setAiStatus('complete');
+                    } catch (err) {
+                        console.error("AI Analysis Failed:", err);
+                        addToast("Analysis Failed: " + err.message, "error"); // Assuming addToast handles error type or just string
+                        setAiStatus('idle');
+                    }
+                }, 1500);
+            };
+
+            const handleAssign = (staffId) => {
+                const staff = USERS.find(u => u.id === staffId);
+                updateIssue(issue.id, { assignedTo: staffId, status: 'in-progress' });
+                setIsAssignModalOpen(false);
+                addToast(`Assigned to ${staff ? staff.name : 'Staff'}`);
+            };
+
+            const handleStatusChange = (newStatus) => {
+                updateIssue(issue.id, { status: newStatus });
+                addToast(`Issue marked as ${newStatus}`);
+
+                // Trigger Feedback Loop if completed
+                if (newStatus === 'completed') {
+                    setIsFeedbackModalOpen(true);
+                }
+            };
+
+            const getAssignedStaffName = () => {
+                const staff = USERS.find(u => u.id === issue.assignedTo);
+                return staff ? staff.name : 'Unassigned';
+            };
+
+            return (
+                <div className="animate-fade-in">
+                    <button onClick={() => navigate('/issues')} className="btn btn-outline" style={{ marginBottom: '1rem', border: 'none', paddingLeft: 0 }}>
+                        &larr; Back to Issues
+                    </button>
+
+                    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                                <h1 style={{ fontSize: '1.875rem' }}>{issue.title}</h1>
+                                <span className={`badge badge-${issue.status}`}>{issue.status}</span>
+                            </div>
+                            <p style={{ color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span>ID: {issue.id}</span> • <span>{new Date(issue.reportedAt).toLocaleDateString()}</span>
+                            </p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            {issue.status !== 'completed' && <button className="btn btn-primary" onClick={() => handleStatusChange('completed')} style={{ background: 'var(--color-emerald-500)' }}><CheckCircle2 size={18} /> Mark Resolved</button>}
+                            <button className="btn btn-outline" onClick={() => setIsAssignModalOpen(true)}><UserCog size={18} /> {issue.assignedTo ? 'Reassign' : 'Assign Staff'}</button>
+                        </div>
+                    </header>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+                        {/* Left Column: Details */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                            <div className="card">
+                                <h3>Description</h3>
+                                <p style={{ marginTop: '0.5rem', lineHeight: 1.6 }}>{issue.description}</p>
+
+                                <div style={{ marginTop: '1.5rem', display: 'flex', gap: '2rem' }}>
+                                    <div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>SECTOR</div>
+                                        <div style={{ fontWeight: 500 }}>{SECTORS.find(s => s.id === issue.sector)?.label}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>SEVERITY</div>
+                                        <div style={{ fontWeight: 500, textTransform: 'capitalize' }}>{issue.severity}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>ASSIGNED TO</div>
+                                        <div style={{ fontWeight: 500, color: issue.assignedTo ? 'var(--color-accent)' : 'inherit' }}>{getAssignedStaffName()}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Activity Log / Comments */}
+                            <div className="card">
+                                <h3>Activity & Comments</h3>
+                                <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    <div style={{ display: 'flex', gap: '0.75rem', opacity: 0.7 }}>
+                                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#eee' }}></div>
+                                        <div>
+                                            <div style={{ fontSize: '0.875rem', fontWeight: 500 }}>System <span style={{ fontWeight: 400, color: '#888' }}>• {new Date(issue.reportedAt).toLocaleDateString()}</span></div>
+                                            <div style={{ fontSize: '0.875rem' }}>Issue reported via Citizen App.</div>
+                                        </div>
+                                    </div>
+                                    {issue.assignedTo && (
+                                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--color-accent)', color: 'white', display: 'grid', placeItems: 'center' }}><UserCog size={16} /></div>
+                                            <div>
+                                                <div style={{ fontSize: '0.875rem', fontWeight: 500 }}>System <span style={{ fontWeight: 400, color: '#888' }}>• Just now</span></div>
+                                                <div style={{ fontSize: '0.875rem' }}>Assigned to <strong>{getAssignedStaffName()}</strong></div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {/* Input */}
+                                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+                                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#0f172a' }}></div>
+                                        <div style={{ flex: 1 }}>
+                                            <textarea
+                                                placeholder="Add an internal note or update..."
+                                                value={comment}
+                                                onChange={e => setComment(e.target.value)}
+                                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #ddd', minHeight: '80px', marginBottom: '0.5rem' }}
+                                            />
+                                            <button className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>Post Comment</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Column: Map & AI */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                            {/* Map Placeholder */}
+                            {/* Map Section */}
+                            <div className="card" style={{ padding: 0, overflow: 'hidden', height: '300px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                                <div id="map-container" style={{ flex: 1, zIndex: 1 }}></div>
+                                <div style={{
+                                    position: 'absolute', bottom: '1rem', left: '1rem', right: '1rem',
+                                    background: 'rgba(255,255,255,0.9)', padding: '0.75rem', borderRadius: '0.5rem',
+                                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', zIndex: 400, display: 'flex', alignItems: 'center', gap: '0.75rem',
+                                    backdropFilter: 'blur(4px)'
+                                }}>
+                                    <div style={{ width: 12, height: 12, background: 'var(--color-red-500)', borderRadius: '50%', border: '2px solid white', boxShadow: '0 0 0 2px var(--color-red-500)' }}></div>
+                                    <span style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text-main)' }}>{issue.location.address}</span>
+                                </div>
+                            </div>
+
+                            {/* Map Initialization Effect */}
+                            {React.useEffect(() => {
+                                // Wait for container to be ready and Leaflet to load
+                                if (!document.getElementById('map-container') || !window.L) return;
+
+                                // SAFETY CHECK: Ensure coordinates exist
+                                if (!issue.location || !issue.location.lat || !issue.location.lng) {
+                                    document.getElementById('map-container').innerHTML = '<div style="height:100%; display:grid; place-items:center; color:#64748b; background:#f8fafc;">No map coordinates available</div>';
+                                    return;
+                                }
+
+                                const { lat, lng } = issue.location;
+                                // Unique ID handling for React re-renders is tricky with pure DOM libs, usually use useRef but this is quick in global script
+                                const container = document.getElementById('map-container');
+                                if (container._leaflet_id) {
+                                    container._leaflet_id = null; // Force clear for demo simplicity (cleaner is map.remove() in cleanup)
+                                }
+
+                                try {
+                                    const map = window.L.map('map-container').setView([lat, lng], 15);
+
+                                    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                        attribution: '&copy; OpenStreetMap contributors'
+                                    }).addTo(map);
+
+                                    window.L.marker([lat, lng]).addTo(map)
+                                        .bindPopup(`<b>${issue.title}</b><br>${issue.location.address}`)
+                                        .openPopup();
+
+                                    return () => {
+                                        map.remove();
+                                    };
+                                } catch (e) {
+                                    console.error("Map Init Failed", e);
+                                    container.innerHTML = '<div style="height:100%; display:grid; place-items:center; color:#ef4444;">Map Error</div>';
+                                }
+                            }, [issue.location, issue.id])} // Removed lat/lng from dep array as we check inside
+
+                            {/* Real-time Sensor Readings */}
+                            <div className="card">
+                                <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <Activity size={18} /> Nearby Sensors
+                                </h3>
+                                {nearbySensors.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                        {nearbySensors.map(sensor => (
+                                            <div key={sensor.id} style={{
+                                                padding: '0.75rem',
+                                                border: `1px solid ${sensor.status === 'normal' ? '#e2e8f0' : sensor.status === 'warning' ? '#fcd34d' : '#fca5a5'}`,
+                                                background: sensor.status === 'normal' ? 'white' : sensor.status === 'warning' ? '#fffbeb' : '#fef2f2',
+                                                borderRadius: '0.5rem'
+                                            }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                                                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>{sensor.label}</span>
+                                                    {sensor.status !== 'normal' && <AlertCircle size={14} color={sensor.status === 'critical' ? 'var(--color-red-500)' : 'var(--color-amber-500)'} />}
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                                                    <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#1e293b' }}>
+                                                        {sensor.value} <span style={{ fontSize: '0.75rem', fontWeight: 400, color: '#64748b' }}>{sensor.unit}</span>
+                                                    </div>
+                                                    <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                                                        Trend: <span style={{ fontWeight: 600 }}>{sensor.trend}</span> • {sensor.lastUpdated}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div style={{ color: '#94a3b8', fontSize: '0.875rem', fontStyle: 'italic' }}>No sensors detected in immediate vicinity.</div>
+                                )}
+                            </div>
+
+                            {/* AI Decision Panel (V2) */}
+                            <div className="card" style={{ border: '1px solid var(--color-accent)', background: 'linear-gradient(to bottom right, #f0f9ff, #e0f2fe)', position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--color-accent)' }}>
+                                    <Zap size={18} fill="currentColor" />
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Decision Support</h4>
+                                </div>
+
+                                {aiStatus === 'idle' && (
+                                    <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                                        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
+                                            Run analysis to calculate priority score and generate scheduling suggestions.
+                                        </p>
+                                        <button type="button" onClick={runAiAnalysis} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', background: 'var(--color-accent)', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
+                                            <Zap size={16} fill="white" /> Analyze Issue
+                                        </button>
+                                    </div>
+                                )}
+
+                                {aiStatus === 'analyzing' && (
+                                    <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <Activity size={32} className="spin" style={{ color: 'var(--color-accent)', animation: 'spin 1s linear infinite' }} />
+                                            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+                                        </div>
+                                        <p style={{ fontSize: '0.875rem', fontWeight: 500 }}>Consulting Knowledge Base...</p>
+                                        <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Scanning 145 Priority Rules...</p>
+                                    </div>
+                                )}
+
+                                {aiStatus === 'complete' && aiData && (
+                                    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                        {/* Score Header */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                                            <div style={{
+                                                position: 'relative', width: 60, height: 60, borderRadius: '50%',
+                                                background: `conic-gradient(${aiData.priorityLoop.score >= 85 ? '#ef4444' : aiData.priorityLoop.score >= 60 ? '#f59e0b' : '#10b981'} ${aiData.priorityLoop.score}%, #e2e8f0 0)`,
+                                                display: 'grid', placeItems: 'center'
+                                            }}>
+                                                <div style={{ width: 50, height: 50, background: 'white', borderRadius: '50%', display: 'grid', placeItems: 'center', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                                    {aiData.priorityLoop.score}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Priority Level</div>
+                                                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-primary)' }}>{aiData.priorityLoop.label}</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Explainability */}
+                                        <div style={{ background: 'rgba(255,255,255,0.6)', padding: '0.75rem', borderRadius: '0.5rem' }}>
+                                            <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>Why this score?</h5>
+                                            <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.8rem', color: '#475569' }}>
+                                                {aiData.explanations.map((exp, idx) => <li key={idx}>{exp}</li>)}
+                                            </ul>
+                                        </div>
+
+                                        {/* Scheduling Recommendation */}
+                                        <div>
+                                            <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>Suggested Action</h5>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
+                                                <span>Team:</span> <span style={{ fontWeight: 600 }}>{aiData.schedule.suggestedTeam}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                                                <span>Est. Time:</span> <span style={{ fontWeight: 600 }}>{aiData.schedule.estHours} Hours</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Controls */}
+                                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                            <button className="btn btn-primary" style={{ flex: 1, padding: '0.5rem', fontSize: '0.875rem', background: 'var(--color-emerald-500)' }} onClick={() => addToast('Schedule Approved & Optimized')}>
+                                                Accept
+                                            </button>
+                                            <button className="btn btn-outline" style={{ flex: 1, padding: '0.5rem', fontSize: '0.875rem', background: 'white' }} onClick={() => {
+                                                const reason = prompt("Override Justification (Required for Audit Log):");
+                                                if (reason) addToast("Override Logged: " + reason);
+                                            }}>
+                                                Override
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <StaffAssignmentModal
+                        isOpen={isAssignModalOpen}
+                        onClose={() => setIsAssignModalOpen(false)}
+                        onAssign={handleAssign}
+                    />
+
+                    <FeedbackModal
+                        isOpen={isFeedbackModalOpen}
+                        onClose={() => {
+                            setIsFeedbackModalOpen(false);
+                            // In a real app, we would log the distinct Yes/No choice here
+                            console.log('Feedback captured');
+                        }}
+                    />
+                </div>
+            );
+        };
+
+        // --- STAFF VIEW (Field Worker Mode) ---
+        const StaffDashboard = ({ context }) => {
+            const { issues, updateIssue, addToast } = context;
+            // Mock logged in user ID - in real app this comes from auth
+            const CURRENT_STAFF_ID = 'u2';
+
+            const myTasks = issues.filter(i => i.assignedTo === CURRENT_STAFF_ID);
+
+            return (
+                <div className="animate-fade-in" style={{ maxWidth: '600px', margin: '0 auto' }}>
+                    <header style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>My Tasks</h1>
+                            <p style={{ color: '#64748b' }}>Field Unit: Alpha</p>
+                        </div>
+                        <div style={{ background: '#eff6ff', padding: '0.5rem 1rem', borderRadius: '2rem', fontWeight: 600, color: '#1d4ed8' }}>
+                            {myTasks.length} Active
+                        </div>
+                    </header>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {myTasks.length === 0 && (
+                            <div className="card" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                                <div style={{ marginBottom: '1rem' }}>☕</div>
+                                <h3 style={{ fontSize: '1.1rem' }}>All Caught Up!</h3>
+                                <p>No tasks assigned to you right now.</p>
+                            </div>
+                        )}
+
+                        {myTasks.map(issue => (
+                            <div key={issue.id} className="card" style={{ borderLeft: `4px solid ${issue.priority === 'High' ? '#ef4444' : '#3b82f6'}` }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                    <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 600 }}>{issue.id} • {issue.sector}</span>
+                                    <span className={`badge badge-${issue.status}`}>{issue.status}</span>
+                                </div>
+                                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>{issue.title}</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#475569', marginBottom: '1rem' }}>
+                                    <MapPin size={16} /> {issue.location.address}
+                                </div>
+
+                                {/* Quick Actions */}
+                                {issue.status !== 'completed' && (
+                                    <div style={{ display: 'flex', gap: '0.5rem', borderTop: '1px solid #f1f5f9', paddingTop: '0.75rem', marginTop: '0.5rem' }}>
+                                        <button className="btn" style={{ flex: 1, background: '#f8fafc', border: '1px solid #cbd5e1', color: '#334155' }}
+                                            onClick={() => {
+                                                updateIssue(issue.id, { status: 'in-progress' });
+                                                addToast('Started working on ' + issue.id);
+                                            }}
+                                        >
+                                            Start Job
+                                        </button>
+                                        <button className="btn btn-primary" style={{ flex: 1 }}
+                                            onClick={() => {
+                                                updateIssue(issue.id, { status: 'completed' });
+                                                addToast('Job Done! Great work.');
+                                            }}
+                                        >
+                                            Mark Done
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const DashboardLayout = () => {
+            const navigate = useNavigate();
+            const [userRole, setUserRole] = useState(localStorage.getItem('user_role') || 'admin');
+
+            const handleLogout = () => {
+                localStorage.removeItem('is_authenticated');
+                localStorage.removeItem('user_role');
+                navigate('/login');
+            };
+
+            return (
+                <div className="layout">
+                    <Sidebar />
+                    <main className="main-content">
+                        {/* Only show Admin functionality if Admin */}
+                        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                            <Outlet context={{ userRole }} />
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        const ProtectedRoute = ({ children }) => {
+            const isAuth = localStorage.getItem('is_authenticated');
+            if (!isAuth) return <Navigate to="/login" />;
+            return children;
+        };
+
+        // Wrapper to decide which Dashboard to show
+        const DashboardRouter = ({ context }) => {
+            const userRole = localStorage.getItem('user_role');
+            return userRole === 'staff' ? <StaffDashboard context={context} /> : <Dashboard context={context} />;
+        };
+
+
+
+        const ToastContainer = ({ toasts }) => (
+            <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {toasts.map(t => (
+                    <div key={t.id} className="animate-fade-in" style={{
+                        background: '#1e293b', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '0.5rem',
+                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: '300px'
+                    }}>
+                        <CheckCircle2 size={18} color="#4ade80" />
+                        <span>{t.message}</span>
+                    </div>
+                ))}
+            </div>
+        );
+
+        const App = () => {
+            // Persistence
+            const [issues, setIssues] = useState(() => {
+                const saved = localStorage.getItem('municipal_issues_v2');
+                return saved ? JSON.parse(saved) : ISSUES;
+            });
+
+            // Toasts context
+            const [toasts, setToasts] = useState([]);
+
+            useEffect(() => {
+                localStorage.setItem('municipal_issues_v2', JSON.stringify(issues));
+            }, [issues]);
+
+            const addToast = (message) => {
+                const id = Date.now();
+                setToasts(prev => [...prev, { id, message }]);
+                setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
+            };
+
+            const updateIssue = (id, updates) => {
+                setIssues(prev => prev.map(issue =>
+                    issue.id === id ? { ...issue, ...updates } : issue
+                ));
+            };
+
+            const addIssue = (newIssue) => {
+                setIssues(prev => [...prev, newIssue]);
+            };
+
+            const deleteIssue = (id) => {
+                setIssues(prev => prev.filter(i => i.id !== id));
+            };
+
+            const contextValue = { issues, updateIssue, addIssue, deleteIssue, addToast };
+
+            return (
+                <ErrorBoundary>
+                    <HashRouter>
+                        <Routes>
+                            <Route path="/login" element={<LoginPage />} />
+                            <Route path="/" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+                                {/* Conditional Role View */}
+                                <Route index element={<DashboardRouter context={contextValue} />} />
+                                <Route path="calendar" element={<CalendarPage context={contextValue} />} />
+                                <Route path="issues" element={<IssueList context={contextValue} />} />
+                                <Route path="issues/:id" element={<IssueDetail context={contextValue} />} />
+                            </Route>
+                        </Routes>
+                        <ToastContainer toasts={toasts} />
+                    </HashRouter>
+                </ErrorBoundary>
+            );
+        };
+
+        console.log('Mounting App...');
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+    </script>
+</body>
+
+</html>

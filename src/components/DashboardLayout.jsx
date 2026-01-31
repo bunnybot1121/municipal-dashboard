@@ -1,13 +1,13 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ListTodo, LogOut, Settings, ShieldAlert, Calendar as CalendarIcon } from 'lucide-react';
+import { LayoutDashboard, ListTodo, LogOut, Settings, ShieldAlert, Calendar as CalendarIcon, Smartphone } from 'lucide-react';
 
 const Sidebar = () => {
     const navigate = useNavigate();
     // Mock logout
     const handleLogout = () => {
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        window.location.href = '/municipal-dashboard/login';
     };
 
     return (
@@ -35,6 +35,10 @@ const Sidebar = () => {
                     <ListTodo size={20} />
                     <span>Issue Management</span>
                 </NavLink>
+                <a href="/municipal-dashboard/citizen.html" className="nav-item" target="_blank" rel="noopener noreferrer">
+                    <Smartphone size={20} />
+                    <span>Citizen App Demo</span>
+                </a>
                 <div className="nav-item" style={{ opacity: 0.5, cursor: 'not-allowed' }}>
                     <Settings size={20} />
                     <span>Settings (Locked)</span>
@@ -49,12 +53,17 @@ const Sidebar = () => {
     );
 };
 
+import { ISSUES } from '../services/mockData';
+
 export const DashboardLayout = () => {
+    // State to hold issues (simulating backend)
+    const [issues, setIssues] = React.useState(ISSUES);
+
     return (
         <div className="layout-container">
             <Sidebar />
             <main className="main-content">
-                <Outlet />
+                <Outlet context={{ issues, setIssues }} />
             </main>
         </div>
     );

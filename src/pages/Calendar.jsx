@@ -9,13 +9,13 @@ const CalendarPage = () => {
 
     // Initialize state from localStorage or mock data
     const [issues, setIssues] = useState(() => {
-        const savedIssues = localStorage.getItem('municipal_issues');
+        const savedIssues = localStorage.getItem('municipal_issues_v3');
         return savedIssues ? JSON.parse(savedIssues) : ISSUES;
     });
 
     // Persist to localStorage whenever issues change
     useEffect(() => {
-        localStorage.setItem('municipal_issues', JSON.stringify(issues));
+        localStorage.setItem('municipal_issues_v3', JSON.stringify(issues));
     }, [issues]);
 
     const onDateSelect = (date) => {

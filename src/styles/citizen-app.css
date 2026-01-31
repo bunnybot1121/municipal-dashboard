@@ -1,0 +1,233 @@
+/* Tailwin-ish Utility Classes for Citizen App */
+/* Z-Index Layers */
+.z-map {
+    z-index: 100;
+}
+
+.z-overlay {
+    z-index: 500;
+}
+
+.z-fab {
+    z-index: 1000;
+}
+
+.z-modal {
+    z-index: 2000;
+}
+
+/* Positioning */
+.fixed {
+    position: fixed;
+}
+
+.absolute {
+    position: absolute;
+}
+
+.relative {
+    position: relative;
+}
+
+.inset-0 {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.top-4 {
+    top: 1rem;
+}
+
+.left-4 {
+    left: 1rem;
+}
+
+.right-4 {
+    right: 1rem;
+}
+
+.bottom-4 {
+    bottom: 1rem;
+}
+
+.bottom-24 {
+    bottom: 6rem;
+}
+
+/* Space for FAB */
+.left-1\/2 {
+    left: 50%;
+}
+
+.-translate-x-1\/2 {
+    transform: translateX(-50%);
+}
+
+/* Sizing */
+.w-full {
+    width: 100%;
+}
+
+.h-full {
+    height: 100vh;
+}
+
+/* Mobile viewport */
+.w-16 {
+    width: 4rem;
+}
+
+.h-16 {
+    height: 4rem;
+}
+
+.w-12 {
+    width: 3rem;
+}
+
+.h-12 {
+    height: 3rem;
+}
+
+/* Flexbox */
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    flex-direction: column;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.gap-4 {
+    gap: 1rem;
+}
+
+/* Styling */
+.bg-white {
+    background-color: white;
+}
+
+.bg-orange-500 {
+    background-color: #f97316;
+}
+
+.bg-yellow-400 {
+    background-color: #facc15;
+}
+
+.text-white {
+    color: white;
+}
+
+.text-black {
+    color: black;
+}
+
+.text-orange-500 {
+    color: #f97316;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.rounded-full {
+    border-radius: 9999px;
+}
+
+.rounded-2xl {
+    border-radius: 1rem;
+}
+
+.rounded-t-3xl {
+    border-top-left-radius: 1.5rem;
+    border-top-right-radius: 1.5rem;
+}
+
+.shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-up {
+    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Glassmorphism */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Animations */
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: .5;
+    }
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: black;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Bottom Sheet */
+.bottom-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top-left-radius: 1.5rem;
+    border-top-right-radius: 1.5rem;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 900;
+    transition: height 0.3s ease;
+    overflow: hidden;
+}
+
+.bottom-sheet-collapsed {
+    height: 80px;
+}
+
+.bottom-sheet-expanded {
+    height: 50vh;
+}

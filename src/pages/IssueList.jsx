@@ -1,18 +1,32 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ISSUES, SECTORS } from '../services/mockData';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import { SECTORS, ISSUES } from '../services/mockData'; // Statically import ISSUES for reliability
 import { Filter, Search, ChevronRight, ArrowUpDown } from 'lucide-react';
 
 const IssueList = () => {
     const navigate = useNavigate();
+    // Initialize with static data immediately to prevent flash of empty content
+    const [issues, setIssues] = useState(ISSUES);
+    const [loading, setLoading] = useState(false);
+
+    // Filter Logic State
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterSector, setFilterSector] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: 'reportedAt', direction: 'desc' });
 
+    const { issues: contextIssues } = useOutletContext() || {};
+
+    // Sync with context if available (e.g. if global state changes)
+    useEffect(() => {
+        if (contextIssues && contextIssues.length > 0) {
+            setIssues(contextIssues);
+        }
+    }, [contextIssues]);
+
     // Filter and Sort Logic
     const filteredIssues = useMemo(() => {
-        let result = [...ISSUES];
+        let result = [...issues];
 
         // Filter
         if (filterStatus !== 'all') {
@@ -55,51 +69,53 @@ const IssueList = () => {
     const getSectorLabel = (id) => SECTORS.find(s => s.id === id)?.label || id;
 
     return (
-        <div className="animate-fade-in">
-            <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="animate-fade-in flex-col h-full">
+            <header className="page-header">
                 <div>
-                    <h1 style={{ fontSize: '1.875rem', marginBottom: '0.5rem' }}>Issue Management</h1>
-                    <p style={{ color: 'var(--color-text-muted)' }}>Track and manage civic complaints.</p>
+                    <h1 className="page-title">Issue Management</h1>
+                    <p className="text-muted">Track, verify, and resolve civic complaints.</p>
                 </div>
-                <button className="btn btn-primary">
+                <button className="btn btn-primary" onClick={() => navigate('/issues/new')}>
                     + Log Manual Issue
                 </button>
             </header>
 
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="data-grid-container">
                 {/* Toolbar */}
-                <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--color-border)', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--cc-border)', background: '#F9FAFB' }} className="flex-row items-center gap-md">
                     <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
-                        <Search size={18} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                        <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} className="text-muted" />
                         <input
                             type="text"
-                            placeholder="Search issues by ID, title, or location..."
+                            placeholder="Search issues..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{
-                                width: '100%', padding: '0.5rem 0.5rem 0.5rem 2.5rem',
-                                borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)',
-                                outline: 'none'
-                            }}
+                            className="input-std"
+                            style={{ paddingLeft: '40px' }}
                         />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                        <select
-                            value={filterStatus}
-                            onChange={(e) => setFilterStatus(e.target.value)}
-                            style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}
-                        >
-                            <option value="all">All Statuses</option>
-                            <option value="pending">Pending</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                        </select>
+                    <div className="flex-row gap-sm">
+                        <div style={{ position: 'relative' }}>
+                            <select
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                                className="input-std"
+                                style={{ paddingRight: '32px', cursor: 'pointer', appearance: 'none' }}
+                            >
+                                <option value="all">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                            <Filter size={14} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} className="text-muted" />
+                        </div>
 
                         <select
                             value={filterSector}
                             onChange={(e) => setFilterSector(e.target.value)}
-                            style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}
+                            className="input-std"
+                            style={{ cursor: 'pointer' }}
                         >
                             <option value="all">All Sectors</option>
                             {SECTORS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
@@ -108,74 +124,105 @@ const IssueList = () => {
                 </div>
 
                 {/* Table */}
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-                        <thead style={{ background: 'var(--color-bg-body)', color: 'var(--color-text-muted)', textAlign: 'left' }}>
+                <div style={{ overflow: 'auto', flex: 1 }}>
+                    <table className="data-grid">
+                        <thead>
                             <tr>
-                                <th style={{ padding: '1rem' }}>ID</th>
-                                <th style={{ padding: '1rem', cursor: 'pointer' }} onClick={() => handleSort('title')}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                        Issue <ArrowUpDown size={14} />
-                                    </div>
-                                </th>
-                                <th style={{ padding: '1rem' }}>Sector</th>
-                                <th style={{ padding: '1rem', cursor: 'pointer' }} onClick={() => handleSort('status')}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                        Status <ArrowUpDown size={14} />
-                                    </div>
-                                </th>
-                                <th style={{ padding: '1rem' }}>Priority</th>
-                                <th style={{ padding: '1rem', cursor: 'pointer' }} onClick={() => handleSort('reportedAt')}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                        Reported <ArrowUpDown size={14} />
-                                    </div>
-                                </th>
-                                <th style={{ padding: '1rem' }}></th>
+                                {[
+                                    { key: 'id', label: 'ID', width: '100px' },
+                                    { key: 'title', label: 'Issue Details', flex: true },
+                                    { key: 'ai', label: 'Verification', width: '140px' },
+                                    { key: 'sector', label: 'Sector', width: '150px' },
+                                    { key: 'risk', label: 'Risk Level', width: '130px' }, // NEW
+                                    { key: 'status', label: 'Status', width: '120px' },
+                                    { key: 'reportedAt', label: 'Reported', width: '100px' },
+                                    { key: 'action', label: '', width: '50px' }
+                                ].map((col) => (
+                                    <th key={col.key}
+                                        style={{ width: col.width || 'auto', cursor: col.flex ? 'pointer' : 'default' }}
+                                        onClick={() => col.flex && handleSort(col.key)}
+                                    >
+                                        <div className="flex-row items-center gap-sm">
+                                            {col.label}
+                                            {col.flex && <ArrowUpDown size={12} />}
+                                        </div>
+                                    </th>
+                                ))}
                             </tr>
                         </thead>
                         <tbody>
                             {filteredIssues.map((issue) => (
-                                <tr key={issue.id}
-                                    style={{ borderBottom: '1px solid var(--color-border)', cursor: 'pointer', transition: 'background 0.2s' }}
-                                    onClick={() => navigate(`/issues/${issue.id}`)}
-                                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-bg-body)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                                >
-                                    <td style={{ padding: '1rem', fontWeight: 500, fontFamily: 'monospace' }}>{issue.id}</td>
-                                    <td style={{ padding: '1rem' }}>
-                                        <div style={{ fontWeight: 500 }}>{issue.title}</div>
-                                        <div style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>{issue.location.address}</div>
+                                <tr key={issue.id} onClick={() => navigate(`/issues/${issue.id}`)}>
+                                    <td className="font-bold" style={{ fontFamily: 'monospace', color: 'var(--cc-info)' }}>{issue.id}</td>
+                                    <td>
+                                        <div style={{ fontWeight: 600, color: 'var(--cc-text-primary)', marginBottom: '4px' }}>{issue.title}</div>
+                                        <div className="text-muted" style={{ fontSize: '12px' }}>
+                                            {issue.location.address}
+                                        </div>
                                     </td>
-                                    <td style={{ padding: '1rem' }}>{getSectorLabel(issue.sector)}</td>
-                                    <td style={{ padding: '1rem' }}>
+                                    <td>
+                                        {issue.aiAnalysis ? (
+                                            <span className={`badge ${issue.aiAnalysis.isReal ? 'badge-completed' : 'badge-rejected'}`}>
+                                                {issue.aiAnalysis.isReal ? 'REAL' : 'FAKE'}
+                                            </span>
+                                        ) : (
+                                            <span className="text-muted" style={{ fontSize: '12px', fontStyle: 'italic' }}>Pending</span>
+                                        )}
+                                    </td>
+                                    <td>
+                                        <span className="flex-row items-center gap-sm" style={{ fontSize: '13px' }}>
+                                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: SECTORS.find(s => s.id === issue.sector)?.color || 'gray' }}></div>
+                                            {getSectorLabel(issue.sector)}
+                                        </span>
+                                    </td>
+                                    <td>
                                         <span className={`badge badge-${issue.status}`}>{issue.status.replace('-', ' ')}</span>
                                     </td>
-                                    <td style={{ padding: '1rem' }}>
-                                        <span style={{
-                                            display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-                                            background: issue.severity === 'high' ? 'var(--color-red-500)' :
-                                                issue.severity === 'medium' ? 'var(--color-yellow-500)' : 'var(--color-emerald-500)',
-                                            marginRight: '0.5rem'
-                                        }}></span>
-                                        {issue.severity.charAt(0).toUpperCase() + issue.severity.slice(1)}
+                                    <td>
+                                        <div className="flex-row items-center gap-xs">
+                                            {/* Risk Level Badge */}
+                                            <span style={{
+                                                padding: '4px 8px',
+                                                borderRadius: '4px',
+                                                fontSize: '12px',
+                                                fontWeight: 700,
+                                                textTransform: 'uppercase',
+                                                backgroundColor: issue.riskLevel === 'Crisis' ? '#FEF2F2' :
+                                                    issue.riskLevel === 'Critical' ? '#FFF7ED' : '#F0FDF4',
+                                                color: issue.riskLevel === 'Crisis' ? '#DC2626' :
+                                                    issue.riskLevel === 'Critical' ? '#EA580C' : '#16A34A',
+                                                border: `1px solid ${issue.riskLevel === 'Crisis' ? '#FECACA' :
+                                                    issue.riskLevel === 'Critical' ? '#FED7AA' : '#BBF7D0'}`
+                                            }}>
+                                                {issue.riskLevel || 'Normal'}
+                                            </span>
+                                        </div>
                                     </td>
-                                    <td style={{ padding: '1rem' }}>
+                                    <td className="text-muted" style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>
                                         {new Date(issue.reportedAt).toLocaleDateString()}
                                     </td>
-                                    <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                        <ChevronRight size={16} color="var(--color-text-muted)" />
+                                    <td style={{ textAlign: 'right' }}>
+                                        <ChevronRight size={18} className="text-muted" />
                                     </td>
                                 </tr>
                             ))}
                             {filteredIssues.length === 0 && (
                                 <tr>
-                                    <td colSpan="7" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                                        No issues found matching your filters.
+                                    <td colSpan="8" style={{ padding: '64px', textAlign: 'center' }}>
+                                        <div style={{ background: '#F3F4F6', width: 64, height: 64, borderRadius: '50%', display: 'grid', placeItems: 'center', margin: '0 auto 16px auto' }}>
+                                            <Search size={24} className="text-muted" />
+                                        </div>
+                                        <p style={{ fontWeight: 500, marginBottom: '8px' }}>No issues found</p>
+                                        <p className="text-muted" style={{ fontSize: '13px' }}>Try adjusting your search or filters.</p>
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
+                </div>
+                <div style={{ padding: '12px 24px', borderTop: '1px solid var(--cc-border)', background: '#F9FAFB', fontSize: '12px' }} className="flex-row justify-between text-muted">
+                    <span>Showing {filteredIssues.length} issues</span>
+                    <span>Page 1 of 1</span>
                 </div>
             </div>
         </div>

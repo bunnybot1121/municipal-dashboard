@@ -1,0 +1,517 @@
+/* Command Center Specific Styles */
+:root {
+    /* Status Colors */
+    --cc-critical: #DC2626;
+    /* Red-600 */
+    --cc-warning: #F59E0B;
+    /* Yellow-500 */
+    --cc-success: #10B981;
+    /* Green-500 */
+    --cc-info: #3B82F6;
+    /* Blue-500 */
+
+    /* UI Colors */
+    --cc-bg: #F9FAFB;
+    /* Gray-50 */
+    --cc-card-bg: #FFFFFF;
+    /* White */
+    --cc-border: #E5E7EB;
+    /* Gray-200 */
+    --cc-text-primary: #111827;
+    /* Gray-900 */
+    --cc-text-secondary: #6B7280;
+    /* Gray-500 */
+    --cc-red-bg: #FEE2E2;
+    /* Red-100 */
+    --cc-red-text: #991B1B;
+    /* Red-800 */
+
+    /* Spacing */
+    --p-sm: 16px;
+    --p-md: 20px;
+    --gap-md: 16px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+}
+
+.cc-container {
+    display: flex;
+    height: calc(100vh - 80px);
+    width: 100%;
+    gap: 24px;
+    padding: 24px;
+    background-color: var(--cc-bg);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Left Column: Map */
+.cc-left-col {
+    flex: 0 0 55%;
+    /* Explicit width logic */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    /* Critical for nested flex scrolling */
+}
+
+.cc-map-container {
+    background: white;
+    border: 1px solid var(--cc-border);
+    border-radius: var(--radius-lg);
+    padding: 0;
+    /* Removed padding to let map overlay fill corner-to-corner */
+    flex: 1;
+    /* Grow to fill column */
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    /* Ensure inner content fills */
+    flex-direction: column;
+}
+
+/* Right Column: Metrics & Alerts */
+.cc-right-col {
+    flex: 45;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 4px;
+    /* Scrollbar space */
+}
+
+/* Metrics Grid */
+.cc-metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gap-md);
+    margin-bottom: 24px;
+}
+
+.cc-metric-card {
+    background: var(--cc-card-bg);
+    border: 1px solid var(--cc-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s;
+}
+
+.cc-metric-card:hover {
+    transform: translateY(-2px);
+}
+
+.cc-metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.cc-metric-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--cc-text-primary);
+    line-height: 1;
+}
+
+.cc-metric-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--cc-text-secondary);
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.cc-metric-sub {
+    font-size: 11px;
+    color: var(--cc-text-secondary);
+}
+
+/* Emergency Alerts */
+.cc-emergency-section {
+    background: var(--cc-card-bg);
+    border: 1px solid #FCA5A5;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 24px;
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.cc-emergency-header {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--cc-critical);
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cc-emergency-list {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.cc-alert-card {
+    background: white;
+    border: 1px solid var(--cc-border);
+    border-left: 4px solid var(--cc-critical);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 0.3s ease;
+}
+
+.cc-alert-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.cc-alert-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--cc-text-primary);
+}
+
+.cc-time-badge {
+    background: var(--cc-red-bg);
+    color: var(--cc-red-text);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.cc-alert-details {
+    font-size: 13px;
+    color: var(--cc-text-secondary);
+    margin-bottom: 12px;
+}
+
+.cc-dispatch-btn {
+    background: var(--cc-critical);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+}
+
+.cc-dispatch-btn:hover {
+    background: #B91C1C;
+}
+
+/* Infrastructure Health */
+.cc-infra-section {
+    background: var(--cc-card-bg);
+    border: 1px solid #FEF3C7;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    overflow-x: auto;
+}
+
+.cc-infra-header {
+    font-size: 16px;
+    font-weight: 700;
+    color: #92400E;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cc-infra-scroll {
+    display: flex;
+    gap: 16px;
+    padding-bottom: 8px;
+}
+
+.cc-sensor-card {
+    min-width: 260px;
+    background: #FAFAFA;
+    border: 1px solid var(--cc-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+}
+
+.cc-sensor-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 12px 0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .cc-container {
+        flex-direction: column;
+        height: auto;
+        overflow-y: auto;
+    }
+
+    .cc-left-col,
+    .cc-right-col {
+        flex: none;
+        height: 600px;
+    }
+}
+
+@media (max-width: 768px) {
+    .cc-left-col {
+        display: none;
+        /* Hide map on mobile as per spec */
+    }
+
+    .cc-right-col {
+        height: auto;
+    }
+
+    .cc-metrics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes radarScan {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.radar-sweep {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent 0deg, transparent 300deg, rgba(16, 185, 129, 0.1) 360deg);
+    border-radius: 50%;
+    transform-origin: 0 0;
+    animation: radarScan 10s linear infinite;
+    pointer-events: none;
+}
+
+/* --- UI POLISH & UTILITIES (Phase 7) --- */
+
+/* 1. Global Utilities */
+.flex-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.gap-sm {
+    gap: 8px;
+}
+
+.gap-md {
+    gap: 16px;
+}
+
+.text-muted {
+    color: var(--cc-text-secondary);
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.h-full {
+    height: 100%;
+}
+
+/* 2. Standardized Tables (Data Grid) */
+.data-grid-container {
+    background: white;
+    border: 1px solid var(--cc-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
+}
+
+.data-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.data-grid th {
+    background: #F9FAFB;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--cc-text-secondary);
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--cc-border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.data-grid td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #F3F4F6;
+    color: var(--cc-text-primary);
+}
+
+.data-grid tr:hover {
+    background-color: #F9FAFB;
+    cursor: pointer;
+}
+
+.data-grid tr:last-child td {
+    border-bottom: none;
+}
+
+/* 3. Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    /* Pill */
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-pending {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+/* Amber */
+.badge-in-progress {
+    background: #DBEAFE;
+    color: #2563EB;
+}
+
+/* Blue */
+.badge-completed {
+    background: #D1FAE5;
+    color: #059669;
+}
+
+/* Green */
+.badge-rejected {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+/* Red */
+
+/* 4. Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-primary {
+    background: var(--cc-info);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563EB;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--cc-text-secondary);
+}
+
+.btn-ghost:hover {
+    background: #F3F4F6;
+    color: var(--cc-text-primary);
+}
+
+/* 5. Inputs */
+.input-std {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--cc-border);
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--cc-text-primary);
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-std:focus {
+    outline: none;
+    border-color: var(--cc-info);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 6. Layout Helpers */
+.page-header {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--cc-text-primary);
+    margin: 0 0 4px 0;
+}
+
+.highlight-row {
+    background-color: #EFF6FF !important;
+}

@@ -1,3 +1,40 @@
+/* --- ANTIGRAVITY ANIMATIONS --- */
+@keyframes levitate {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.levitate-icon {
+  animation: levitate 4s ease-in-out infinite;
+}
+
+/* --- GLASSMORPHISM --- */
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Input Autofill Fix */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: white;
+  -webkit-box-shadow: 0 0 0px 1000px #0f172a inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 :root {
   /* Premium Dark/Light Palette - Defaulting to modern light/dark hybrid or clean UI */
   /* Using Inter font for clean look */
@@ -6,20 +43,24 @@
   font-weight: 400;
 
   /* Colors */
-  --color-primary: #0f172a; /* Slate 900 */
-  --color-primary-light: #334155; /* Slate 700 */
-  --color-accent: #3b82f6; /* Blue 500 */
+  --color-primary: #0f172a;
+  /* Slate 900 */
+  --color-primary-light: #334155;
+  /* Slate 700 */
+  --color-accent: #3b82f6;
+  /* Blue 500 */
   --color-accent-hover: #2563eb;
-  
-  --color-bg-body: #f8fafc; /* Slate 50 */
+
+  --color-bg-body: #f8fafc;
+  /* Slate 50 */
   --color-bg-card: #ffffff;
   --color-bg-nav: #ffffff;
-  
+
   --color-text-main: #0f172a;
   --color-text-muted: #64748b;
-  
+
   --color-border: #e2e8f0;
-  
+
   /* Sector/Status Colors */
   --color-blue-500: #3b82f6;
   --color-slate-500: #64748b;
@@ -40,28 +81,32 @@
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
-  
+
   /* Radius */
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 1rem;
 }
 
+html,
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  /* Prevent double scrollbars */
   background-color: var(--color-bg-body);
   color: var(--color-text-main);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 #root {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Utilities */
@@ -113,9 +158,20 @@ body {
   text-transform: uppercase;
 }
 
-.badge-pending { background-color: #fee2e2; color: #991b1b; }
-.badge-in-progress { background-color: #fef3c7; color: #92400e; }
-.badge-completed { background-color: #d1fae5; color: #065f46; }
+.badge-pending {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-in-progress {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badge-completed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
 
 /* Layouts */
 .layout-container {
@@ -135,6 +191,8 @@ body {
 
 .main-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   padding: var(--spacing-xl);
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -166,7 +224,8 @@ body {
   margin-bottom: 0.25rem;
 }
 
-.nav-item:hover, .nav-item.active {
+.nav-item:hover,
+.nav-item.active {
   background-color: var(--color-bg-body);
   color: var(--color-title);
   font-weight: 500;
@@ -179,8 +238,15 @@ body {
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
@@ -188,9 +254,186 @@ body {
 }
 
 /* Premium Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
   color: var(--color-text-main);
   font-weight: 600;
-  letter-spacing: -0.025em;
+}
+
+/* --- GRID SYSTEM --- */
+.grid-container {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, 1fr);
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.grid-cols-auto-fit {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.grid-sidebar-main {
+  grid-template-columns: 260px 1fr;
+}
+
+@media (max-width: 1024px) {
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-sidebar-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- UTILITIES --- */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-between {
+  justify-content: space-between;
+}
+
+.flex-center {
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-start {
+  justify-content: flex-start;
+}
+
+.flex-end {
+  justify-content: flex-end;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.gap-sm {
+  gap: var(--spacing-sm);
+}
+
+.gap-md {
+  gap: var(--spacing-md);
+}
+
+.gap-lg {
+  gap: var(--spacing-lg);
+}
+
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.p-md {
+  padding: var(--spacing-md);
+}
+
+.p-lg {
+  padding: var(--spacing-lg);
+}
+
+.mb-sm {
+  margin-bottom: var(--spacing-sm);
+}
+
+.mb-md {
+  margin-bottom: var(--spacing-md);
+}
+
+.mb-lg {
+  margin-bottom: var(--spacing-lg);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+/* Dashboard Specifics */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.dashboard-sections {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-lg);
+  align-items: start;
+  /* Prevent stretching if inconsistent content */
+}
+
+@media (max-width: 1200px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dashboard-sections {
+    grid-template-columns: 1fr;
+  }
 }

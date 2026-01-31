@@ -6,7 +6,7 @@ import Dashboard from './pages/Dashboard';
 import IssueList from './pages/IssueList';
 import IssueDetail from './pages/IssueDetail';
 import CalendarPage from './pages/Calendar';
-
+// Citizen Module removed from Admin App (Strict Separation)
 // Mock Protected Route wrapper
 const ProtectedRoute = ({ children }) => {
     const user = localStorage.getItem('user');
@@ -29,11 +29,13 @@ function App() {
                 }>
                     <Route index element={<Dashboard />} />
                     <Route path="calendar" element={<CalendarPage />} />
+                    <Route path="schedule" element={<CalendarPage />} />
                     <Route path="issues" element={<IssueList />} />
                     <Route path="issues/:id" element={<IssueDetail />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
-            </Routes>
-        </BrowserRouter>
+            </Routes >
+        </BrowserRouter >
     );
 }
 

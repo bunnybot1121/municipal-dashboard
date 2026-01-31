@@ -1,153 +1,117 @@
-import React, { useMemo } from 'react';
-import { getStats, getSensorStats, SECTORS, ISSUES, SENSORS } from '../services/mockData';
-import { AlertCircle, CheckCircle2, Clock, Activity, Droplets, Zap, Truck, Waves } from 'lucide-react';
+import React from 'react';
+import '../styles/command-center.css';
 
-const StatCard = ({ title, value, icon: Icon, color, trend }) => (
-    <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-            <div>
-                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>{title}</p>
-                <h3 style={{ fontSize: '1.75rem', fontWeight: 700, marginTop: '0.25rem' }}>{value}</h3>
-            </div>
-            <div style={{ padding: '0.5rem', borderRadius: '0.5rem', background: `${color}15`, color: color }}>
-                <Icon size={24} />
-            </div>
-        </div>
-        <div style={{ fontSize: '0.75rem', color: trend > 0 ? 'var(--color-emerald-500)' : 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-            {trend && <span>+{trend}% from last week</span>}
-        </div>
-    </div>
-);
+// Components
+import OperationsMap from '../components/CommandCenter/OperationsMap';
+import KeyMetrics from '../components/CommandCenter/KeyMetrics';
+import EmergencyAlerts from '../components/CommandCenter/EmergencyAlerts';
+import InfraHealth from '../components/CommandCenter/InfraHealth';
+import CitizenReportFeed from '../components/CommandCenter/CitizenReportFeed';
+
+import { useOutletContext } from 'react-router-dom';
 
 const Dashboard = () => {
-    const stats = useMemo(() => getStats(), []);
+    // Access global issues state via Outlet Context
+    const { issues, setIssues } = useOutletContext() || { issues: [], setIssues: () => { } };
+    const [selectedSector, setSelectedSector] = React.useState('ALL');
 
-    // Get recent 3 issues
-    const recentIssues = ISSUES.slice(0, 3);
-
-    const getSectorIcon = (id) => {
-        switch (id) {
-            case 'water': return <Waves size={16} />;
-            case 'drainage': return <Droplets size={16} />;
-            case 'lighting': return <Zap size={16} />;
-            case 'roads': return <Truck size={16} />;
-            default: return <Activity size={16} />;
-        }
-    };
-
-    const sensorStats = useMemo(() => getSensorStats(), []);
-    const criticalSensors = useMemo(() => SENSORS.filter(s => s.status !== 'normal'), []);
+    // Filter logic
+    const filteredIssues = React.useMemo(() => {
+        if (selectedSector === 'ALL') return issues;
+        return issues.filter(i => i.sector?.toUpperCase() === selectedSector);
+    }, [issues, selectedSector]);
 
     return (
-        <div className="animate-fade-in">
-            <header style={{ marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '1.875rem', marginBottom: '0.5rem' }}>Dashboard Overview</h1>
-                <p style={{ color: 'var(--color-text-muted)' }}>Welcome back, Authority. Here is what's happening in your city.</p>
-            </header>
+        <div className="flex flex-col h-full bg-white">
+            {/* Top Header (matches design) */}
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-20">
+                <div>
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-500/30">
+                            {/* Simple logo icon */}
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900 tracking-tight leading-none">City Command Center</h1>
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-1">Intelligent Operations • Emergency • Maintenance</p>
+                        </div>
+                    </div>
+                </div>
 
-            {/* Stats Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                <StatCard title="Total Issues" value={stats.total} icon={AlertCircle} color="var(--color-blue-500)" trend={12} />
-                <StatCard title="Pending" value={stats.pending} icon={Clock} color="var(--color-amber-600)" />
-                <StatCard title="Active Sensors" value={sensorStats.total} icon={Activity} color="var(--color-slate-500)" />
-                <StatCard title="Critical Alerts" value={sensorStats.critical} icon={AlertCircle} color="var(--color-red-500)" />
+                {/* Header Actions */}
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full border border-green-200">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs font-bold">SYSTEM ONLINE</span>
+                    </div>
+                    <div className="h-8 w-px bg-gray-200"></div>
+                    <div className="flex items-center gap-3">
+                        <select
+                            value={selectedSector}
+                            onChange={(e) => setSelectedSector(e.target.value)}
+                            className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+                            style={{ fontWeight: 600 }}
+                        >
+                            <option value="ALL">All Sectors</option>
+                            <option value="WATER">Water Supply</option>
+                            <option value="POWER">Power Grid</option>
+                            <option value="ROADS">Roads & Traffic</option>
+                            <option value="WASTE">Waste Management</option>
+                        </select>
+                        <div className="h-8 w-px bg-gray-200"></div>
+                        <div className="text-right hidden md:block">
+                            <div className="text-sm font-bold text-gray-900">Admin Authority</div>
+                            <div className="text-xs text-gray-500">Ward A-4 Control</div>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center border border-slate-300">
+                            <span className="font-bold text-slate-600">AA</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {/* Infrastructure Health Sensor Section */}
-            <div className="card" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--color-red-500)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Activity size={20} /> Infrastructure Health
-                    </h3>
-                    <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Live Monitoring</span>
+            {/* Main Command Center Container */}
+            <div className="cc-container pt-6">
+
+                {/* LEFT COLUMN: Operations Map (55%) */}
+                <div className="cc-left-col">
+                    <OperationsMap issues={filteredIssues} />
                 </div>
 
-                {criticalSensors.length > 0 ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-                        {criticalSensors.map(sensor => (
-                            <div key={sensor.id} style={{
-                                padding: '1rem',
-                                background: sensor.status === 'critical' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                                border: `1px solid ${sensor.status === 'critical' ? 'var(--color-red-500)' : 'var(--color-amber-500)'}`,
-                                borderRadius: 'var(--radius-md)',
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                            }}>
-                                <div>
-                                    <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.25rem' }}>{sensor.label}</div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                                        {sensor.type.toUpperCase()} • {sensor.location.address}
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{
-                                        fontWeight: 700, fontSize: '1.25rem',
-                                        color: sensor.status === 'critical' ? 'var(--color-red-500)' : 'var(--color-amber-600)'
-                                    }}>
-                                        {sensor.value} <span style={{ fontSize: '0.8rem' }}>{sensor.unit}</span>
-                                    </div>
-                                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600 }}>
-                                        {sensor.status}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div style={{ padding: '1rem', background: 'var(--color-bg-body)', borderRadius: 'var(--radius-md)', textAlign: 'center', color: 'var(--color-emerald-500)' }}>
-                        All systems nominal. No critical sensor readings.
-                    </div>
-                )}
-            </div>
+                {/* RIGHT COLUMN: Metrics & Alerts (45%) */}
+                <div className="cc-right-col">
+                    <KeyMetrics issues={filteredIssues} />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-                {/* Recent Activity */}
-                <div className="card">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <h3>Recent Reports</h3>
-                        <button className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>View All</button>
+                    {/* Citizen Feed Widget (New) */}
+                    <div style={{ marginBottom: '1rem' }}>
+                        <CitizenReportFeed
+                            issues={filteredIssues}
+                            onVerify={(id) => {
+                                // Update issue status to 'in-progress' and mark verified
+                                const updated = issues.map(i => {
+                                    if (i.id === id) {
+                                        return { ...i, status: 'in-progress', aiAnalysis: { ...i.aiAnalysis, isReal: true } };
+                                    }
+                                    return i;
+                                });
+                                setIssues(updated);
+                            }}
+                            onReject={(id) => {
+                                const updated = issues.map(i => {
+                                    if (i.id === id) return { ...i, status: 'rejected' };
+                                    return i;
+                                });
+                                setIssues(updated);
+                            }}
+                        />
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {recentIssues.map(issue => (
-                            <div key={issue.id} style={{ display: 'flex', gap: '1rem', padding: '1rem', background: 'var(--color-bg-body)', borderRadius: 'var(--radius-md)', alignItems: 'center' }}>
-                                <div style={{
-                                    width: 40, height: 40, borderRadius: '50%',
-                                    background: SECTORS.find(s => s.id === issue.sector).color + '20',
-                                    color: SECTORS.find(s => s.id === issue.sector).color,
-                                    display: 'grid', placeItems: 'center'
-                                }}>
-                                    {getSectorIcon(issue.sector)}
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <h4 style={{ fontSize: '0.9rem', marginBottom: '0.25rem' }}>{issue.title}</h4>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{issue.location.address} • {new Date(issue.reportedAt).toLocaleDateString()}</span>
-                                </div>
-                                <span className={`badge badge-${issue.status}`}>{issue.status.replace('-', ' ')}</span>
-                            </div>
-                        ))}
-                    </div>
+
+                    <EmergencyAlerts issues={filteredIssues} />
+                    <InfraHealth />
                 </div>
 
-                {/* Sector Breakdown */}
-                <div className="card">
-                    <h3 style={{ marginBottom: '1.5rem' }}>Sector Breakdown</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                        {SECTORS.map(sector => {
-                            const count = ISSUES.filter(i => i.sector === sector.id).length;
-                            const percentage = (count / ISSUES.length) * 100;
-                            return (
-                                <div key={sector.id}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
-                                        <span style={{ fontWeight: 500 }}>{sector.label}</span>
-                                        <span>{count}</span>
-                                    </div>
-                                    <div style={{ height: 6, width: '100%', background: 'var(--color-bg-body)', borderRadius: 99 }}>
-                                        <div style={{ height: '100%', width: `${percentage}%`, background: sector.color, borderRadius: 99 }}></div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
             </div>
         </div>
     );
