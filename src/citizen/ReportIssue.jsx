@@ -1,462 +1,327 @@
 import React, { useState, useRef, useEffect } from 'react';
-import '../styles/citizen-camera.css';
+import { api } from '../services/apiClient';
 
-const SECTORS = ['roads', 'water', 'drainage', 'lighting', 'waste'];
+export default function ReportIssue() {
+    const [step, setStep] = useState('camera'); // camera, form, success
+    const [photo, setPhoto] = useState(null);
+    const [gps, setGps] = useState(null);
+    const [address, setAddress] = useState('Loading address...');
+    const [formData, setFormData] = useState({
+        sector: '',
+        severity: '',
+        description: ''
+    });
 
-const ReportIssue = () => {
     const videoRef = useRef(null);
-    const canvasRef = useRef(null);
     const streamRef = useRef(null);
-    const [stream, setStream] = useState(null);
 
-    // GPS & Metadata State
-    const [location, setLocation] = useState(null);
-    const [addressDetails, setAddressDetails] = useState(null);
-    const [fullAddress, setFullAddress] = useState('Acquiring GPS Signal...');
-    const [gpsAccuracy, setGpsAccuracy] = useState(null);
-    const [gpsTier, setGpsTier] = useState('searching');
-    const [deviceOrientation, setDeviceOrientation] = useState('portrait');
-    const [failsafeTriggered, setFailsafeTriggered] = useState(false);
-
-    // Submission State
-    const [capturedImage, setCapturedImage] = useState(null);
-    const [capturedMetadata, setCapturedMetadata] = useState(null);
-    const [formData, setFormData] = useState({ sector: 'roads', description: '', severity: 'Low' });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState('');
-
-    // Failsafe Timer
-    useEffect(() => {
-        const timer = setTimeout(() => setFailsafeTriggered(true), 5000);
-        return () => clearTimeout(timer);
-    }, []);
-
-    // Initialize Camera, GPS, and Orientation
+    // Start camera on mount
     useEffect(() => {
         startCamera();
-        const cleanupGPS = startGPS();
+        getCurrentLocation();
 
-        // Orientation Listener
-        const handleOrientation = () => {
-            const type = screen.orientation ? screen.orientation.type : 'portrait-primary';
-            setDeviceOrientation(type.includes('landscape') ? 'landscape' : 'portrait');
-        };
-        window.addEventListener('orientationchange', handleOrientation);
-
-        return () => {
-            stopCamera();
-            if (cleanupGPS) cleanupGPS();
-            window.removeEventListener('orientationchange', handleOrientation);
-        };
+        return () => stopCamera();
     }, []);
 
-    const startCamera = async () => {
+    async function startCamera() {
         try {
-            const mediaStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' },
                 audio: false
             });
-            setStream(mediaStream);
-            streamRef.current = mediaStream;
-            if (videoRef.current) videoRef.current.srcObject = mediaStream;
-        } catch (err) {
-            setError('Camera access denied. Please allow permissions.');
+
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                streamRef.current = stream;
+            }
+        } catch (error) {
+            console.error('Camera error:', error);
+            alert('Camera access denied. Please enable camera permissions.');
         }
-    };
+    }
 
-    const stopCamera = () => {
-        const s = streamRef.current || stream;
-        if (s) s.getTracks().forEach(track => track.stop());
-        setStream(null);
-        streamRef.current = null;
-    };
+    function stopCamera() {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+        }
+    }
 
-    const startGPS = () => {
+    async function getCurrentLocation() {
         if (!navigator.geolocation) {
-            setFullAddress('GPS Hardware Not Found');
+            setAddress('Geolocation not supported');
             return;
         }
-        const id = navigator.geolocation.watchPosition(
-            (position) => {
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
                 const { latitude, longitude, accuracy } = position.coords;
-                setLocation({ latitude, longitude, accuracy, timestamp: position.timestamp });
-                setGpsAccuracy(accuracy);
+                setGps({ lat: latitude, lng: longitude, accuracy });
 
-                if (accuracy <= 15) setGpsTier('high');
-                else if (accuracy <= 50) setGpsTier('medium');
-                else setGpsTier('low');
-
-                if (accuracy < 200) fetchAddress(latitude, longitude);
+                // Reverse geocode
+                try {
+                    const response = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+                    );
+                    const data = await response.json();
+                    setAddress(data.display_name || `${latitude}, ${longitude}`);
+                } catch {
+                    setAddress(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+                }
             },
-            (err) => {
-                console.error(err);
-                setError('GPS Signal Lost. Move outdoors.');
-                setGpsTier('searching');
+            (error) => {
+                console.error('GPS error:', error);
+                setAddress('Location unavailable');
             },
-            { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
+            { enableHighAccuracy: true, timeout: 10000 }
         );
-        return () => navigator.geolocation.clearWatch(id);
-    };
+    }
 
-    const mapTileRef = useRef(null);
-
-    // Fetch Map Tile when location updates
-    useEffect(() => {
-        if (!location) return;
-
-        const loadMapTile = () => {
-            // Calculate Tile X/Y (Zoom 15)
-            const zoom = 15;
-            const latRad = location.latitude * Math.PI / 180;
-            const n = Math.pow(2, zoom);
-            const xTile = Math.floor((location.longitude + 180) / 360 * n);
-            const yTile = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
-
-            // Esri World Imagery (Satellite) - Premium Look, Free Usage
-            // Note: Esri tile server uses /{z}/{y}/{x} format
-            const url = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${yTile}/${xTile}`;
-
-            const img = new Image();
-            img.crossOrigin = "Anonymous";
-            img.onload = () => {
-                mapTileRef.current = img;
-            };
-            img.src = url;
-        };
-
-        loadMapTile();
-    }, [location?.latitude, location?.longitude]);
-
-    const fetchAddress = async (lat, lng) => {
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`);
-            const data = await res.json();
-            if (data && data.address) {
-                setAddressDetails(data.address);
-                setFullAddress(data.display_name);
-            }
-        } catch (e) { }
-    };
-
-    const capturePhoto = () => {
-        if (!videoRef.current || !canvasRef.current || !location) return;
-
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-        // 1. Draw Video Frame
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // 2. Prepare Overlay Data
-        const timestamp = new Date().toLocaleString();
-        const latRef = location.latitude.toFixed(6);
-        const lngRef = location.longitude.toFixed(6);
-        const addressLine1 = addressDetails?.suburb || addressDetails?.city || addressDetails?.town || 'Unknown Location';
-        const addressLine2 = `${addressDetails?.state || ''}, ${addressDetails?.country || ''}`;
-        const addressFull = fullAddress.substring(0, 60) + (fullAddress.length > 60 ? '...' : '');
-
-        // 3. Draw Professional Map Camera Overlay (Bottom Section)
-        const overlayHeight = Math.min(300, canvas.height * 0.25);
-        const margin = 20;
-        const overlayY = canvas.height - overlayHeight - margin;
-
-        // --- A. Left: Mini-Map (Real Static Tile) ---
-        const mapWidth = overlayHeight; // Square
-        const mapX = margin;
-
-        if (mapTileRef.current) {
-            // Draw Real Map Tile
-            ctx.drawImage(mapTileRef.current, mapX, overlayY, mapWidth, overlayHeight);
-        } else {
-            // Fallback: GPS Grid
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(mapX, overlayY, mapWidth, overlayHeight);
-            ctx.strokeStyle = '#1e293b';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            // Grid lines
-            for (let i = 0; i <= 4; i++) {
-                ctx.moveTo(mapX + (i * mapWidth / 4), overlayY);
-                ctx.lineTo(mapX + (i * mapWidth / 4), overlayY + overlayHeight);
-                ctx.moveTo(mapX, overlayY + (i * overlayHeight / 4));
-                ctx.lineTo(mapX + mapWidth, overlayY + (i * overlayHeight / 4));
-            }
-            ctx.stroke();
+    function capturePhoto() {
+        if (!videoRef.current || !gps) {
+            alert('Waiting for GPS lock...');
+            return;
         }
 
-        // Draw Crosshair on Map center
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        const centerX = mapX + mapWidth / 2;
-        const centerY = overlayY + overlayHeight / 2;
-        ctx.moveTo(centerX - 10, centerY);
-        ctx.lineTo(centerX + 10, centerY);
-        ctx.moveTo(centerX, centerY - 10);
-        ctx.lineTo(centerX, centerY + 10);
-        ctx.stroke();
+        const canvas = document.createElement('canvas');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
 
-        // Pin Pulse Effect (Static in image)
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
-        ctx.beginPath();
-        ctx.arc(mapX + mapWidth / 2, overlayY + overlayHeight / 2, 20, 0, Math.PI * 2);
-        ctx.fill();
+        const ctx = canvas.getContext('2d');
 
-        // Map Pin Icon
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.arc(mapX + mapWidth / 2, overlayY + overlayHeight / 2, 6, 0, Math.PI * 2);
-        ctx.fill();
+        // Draw video frame
+        ctx.drawImage(videoRef.current, 0, 0);
 
-        // Compass
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(mapX + mapWidth - 20, overlayY + 20, 10, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.fillStyle = 'red';
-        ctx.textAlign = 'center';
-        ctx.font = 'bold 8px sans-serif';
-        ctx.fillText('N', mapX + mapWidth - 20, overlayY + 24);
-        ctx.textAlign = 'left'; // Reset
-
-        // --- B. Right: Address & Data Panel ---
-        const infoX = mapX + mapWidth + 10;
-        const infoWidth = canvas.width - infoX - margin;
-
-        ctx.fillStyle = 'rgba(20, 20, 20, 0.85)';
-        ctx.beginPath();
-        ctx.roundRect(infoX, overlayY, infoWidth, overlayHeight, 10);
-        ctx.fill();
-
-        // Text Styles
+        // Burn in GPS overlay
+        ctx.font = 'bold 24px Inter, sans-serif';
         ctx.fillStyle = 'white';
-        ctx.textBaseline = 'top';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 4;
 
-        // 1. Header (Location Name)
-        ctx.font = 'bold 36px sans-serif';
-        ctx.fillText(addressLine1, infoX + 20, overlayY + 20);
+        // Address (top-left)
+        const addressText = address.substring(0, 50);
+        ctx.strokeText(addressText, 20, 40);
+        ctx.fillText(addressText, 20, 40);
 
-        // 2. Sub-Header (Full Address)
-        ctx.font = '24px sans-serif';
-        ctx.fillStyle = '#d1d5db';
-        ctx.fillText(addressFull, infoX + 20, overlayY + 70);
+        // GPS coords (top-right)
+        const coordsText = `${gps.lat.toFixed(4)}, ${gps.lng.toFixed(4)}`;
+        ctx.strokeText(coordsText, canvas.width - 250, 40);
+        ctx.fillText(coordsText, canvas.width - 250, 40);
 
-        // 3. Coordinates & Date Block
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 20px monospace';
-        const metaY = overlayY + overlayHeight - 80;
+        // Timestamp (bottom-right)
+        const timestamp = new Date().toLocaleString('en-IN');
+        ctx.strokeText(timestamp, canvas.width - 300, canvas.height - 20);
+        ctx.fillText(timestamp, canvas.width - 300, canvas.height - 20);
 
-        ctx.fillText(`Lat  ${latRef}°`, infoX + 20, metaY);
-        ctx.fillText(`Long ${lngRef}°`, infoX + 20, metaY + 30);
-
-        ctx.font = '18px monospace';
-        ctx.fillStyle = '#fbbf24'; // Amber for date
-        ctx.fillText(timestamp, infoX + 20, metaY + 60);
-
-        // 4. Capture Metadata (The "Golden Record")
-        const metadata = {
-            captureTimestamp: new Date().toISOString(),
-            gps: {
-                lat: location.latitude,
-                lng: location.longitude,
-                accuracy: location.accuracy,
-                timestamp: new Date(location.timestamp).toISOString()
-            },
-            device: {
-                userAgent: navigator.userAgent,
-                orientation: deviceOrientation,
-                screen: `${window.screen.width}x${window.screen.height}`
-            },
-            validation: {
-                isGpsAccurate: location.accuracy <= 50,
-                isRecent: (Date.now() - location.timestamp) < 60000 // GPS fix < 1 min old
-            }
-        };
-        setCapturedMetadata(metadata);
-        setCapturedImage(canvas.toDataURL('image/jpeg', 0.9));
+        const photoData = canvas.toDataURL('image/jpeg', 0.9);
+        setPhoto(photoData);
         stopCamera();
-    };
+        setStep('form');
+    }
 
-    const retake = () => {
-        setCapturedImage(null);
-        setCapturedMetadata(null);
+    function retakePhoto() {
+        setPhoto(null);
+        setStep('camera');
         startCamera();
-    };
+    }
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsSubmitting(true);
+    async function submitReport() {
+        if (!formData.sector || !formData.severity) {
+            alert('Please select sector and severity');
+            return;
+        }
 
-        const payload = {
-            title: `${formData.sector.toUpperCase()} Issue`,
-            description: formData.description,
-            sector: formData.sector,
-            severity: 'Medium', // AI will re-evaluate this
-            source: 'citizen',
-            imageUrl: capturedImage,
-            metadata: capturedMetadata, // CRITICAL: Sending the separate metadata object
-            location: {
-                lat: location.latitude,
-                lng: location.longitude,
-                address: fullAddress
-            },
-            timestamp: capturedMetadata.captureTimestamp
-        };
+        try {
+            const issueData = {
+                title: `${formData.sector} - ${formData.severity}`,
+                description: formData.description,
+                sector: formData.sector,
+                severity: formData.severity,
+                photo: photo,
+                location: {
+                    lat: gps.lat,
+                    lng: gps.lng,
+                    address: address
+                },
+                rawGps: gps,
+                createdAt: new Date().toISOString()
+            };
 
-        // Mock Submission
-        setTimeout(() => {
-            alert('Verified Report Submitted Successfully!');
-            window.location.reload();
-        }, 1500);
-    };
+            await api.createIssue(issueData);
+            setStep('success');
+        } catch (error) {
+            console.error('Submit error:', error);
+            alert('Failed to submit report. Please try again.');
+        }
+    }
 
-    const isCaptureReady = gpsTier === 'high' || gpsTier === 'medium' || (gpsTier === 'low' && failsafeTriggered);
+    // RENDER: Camera Step
+    if (step === 'camera') {
+        return (
+            <div className="min-h-screen bg-gray-100 flex flex-col">
+                <div className="bg-blue-600 text-white p-4 text-center">
+                    <h1 className="text-xl font-bold">Report Issue</h1>
+                    <p className="text-sm opacity-90">Capture photo with GPS</p>
+                </div>
 
-    return (
-        <div style={{ background: '#000', minHeight: '100vh', color: 'white', fontFamily: 'sans-serif' }}>
-            {!capturedImage ? (
-                // --- LIVE CAMERA VIEW ---
-                <div style={{ position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column', background: 'black' }}>
-
-                    {/* Visual FX Layers */}
-                    <div className="grid-overlay"></div>
-                    <div className="scan-line"></div>
-                    <div className="hud-corner hud-tl"></div>
-                    <div className="hud-corner hud-tr"></div>
-                    <div className="hud-corner hud-bl"></div>
-                    <div className="hud-corner hud-br"></div>
-
+                <div className="flex-1 relative bg-black">
                     <video
                         ref={videoRef}
                         autoPlay
                         playsInline
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }}
+                        className="w-full h-full object-cover"
                     />
 
-                    {/* Error Overlay */}
-                    {error && (
-                        <div style={{
-                            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                            background: 'rgba(239, 68, 68, 0.9)', color: 'white', padding: '1rem',
-                            borderRadius: '8px', zIndex: 100, textAlign: 'center', maxWidth: '80%'
-                        }}>
-                            <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚠️</div>
-                            <b>System Error</b>
-                            <div style={{ fontSize: '14px', marginTop: '4px' }}>{error}</div>
-                        </div>
-                    )}
-
-                    {/* LIVE OVERLAY (Before Capture) */}
-                    <div className="camera-overlay">
-                        <div className="overlay-section">
-                            <div className="data-label">DETECTED LOCATION</div>
-                            <div className="data-value">{addressDetails?.suburb || addressDetails?.residential || 'Scanning Sector...'}</div>
-                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', fontFamily: 'sans-serif', marginTop: '4px' }}>
-                                {fullAddress.substring(0, 45)}...
-                            </div>
-                        </div>
-                        <div className="overlay-section" style={{ alignItems: 'flex-end' }}>
-                            <div className="data-label">GPS TELEMETRY</div>
-                            <div className="data-large">
-                                {location ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}` : 'ACQUIRING...'}
-                            </div>
-                            <div className={`tier-badge tier-${gpsTier}`}>
-                                {gpsTier === 'high' ? 'LOCKED: OPTIMAL' : gpsTier === 'medium' ? 'SIGNAL: GOOD' : 'SIGNAL: POOR'}
-                            </div>
-                            <div style={{ fontSize: '10px', marginTop: '4px', letterSpacing: '1px', color: '#9ca3af' }}>
-                                PRECISION: ±{location ? Math.round(location.accuracy) : '--'}M
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* CAPTURE BUTTON */}
-                    <div style={{ position: 'absolute', bottom: '120px', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 20 }}>
-                        <button
-                            onClick={capturePhoto}
-                            disabled={!isCaptureReady}
-                            style={{
-                                width: '80px', height: '80px', borderRadius: '50%',
-                                background: isCaptureReady ? 'rgba(255,255,255,0.2)' : 'rgba(50,50,50,0.5)',
-                                border: isCaptureReady ? '4px solid white' : '4px solid #666',
-                                cursor: isCaptureReady ? 'pointer' : 'not-allowed',
-                                backdropFilter: 'blur(4px)',
-                                boxShadow: '0 0 20px rgba(0,0,0,0.5)',
-                                display: 'grid', placeItems: 'center',
-                                transition: 'all 0.3s ease'
-                            }}
-                        >
-                            <div style={{ width: '60px', height: '60px', background: isCaptureReady ? 'white' : '#888', borderRadius: '50%' }}></div>
-                        </button>
+                    <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-3 py-2 rounded text-sm">
+                        {gps ? (
+                            <span>📍 GPS: ±{gps.accuracy.toFixed(0)}m</span>
+                        ) : (
+                            <span>📍 Acquiring GPS...</span>
+                        )}
                     </div>
                 </div>
-            ) : (
-                // --- REVIEW & SUBMIT VIEW (Scrollable) ---
-                <div style={{ height: '100vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '20px', paddingBottom: '120px', background: '#111' }}>
-                    <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', marginBottom: '20px' }}>
-                        <img src={capturedImage} style={{ width: '100%', display: 'block' }} />
-                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', padding: '10px', fontSize: '10px' }}>
-                            METADATA LOCKED: {capturedMetadata?.captureTimestamp}
-                        </div>
-                    </div>
 
-                    {/* Metadata Preview (Trusted UI) */}
-                    <div style={{ background: '#1f2937', padding: '15px', borderRadius: '8px', marginBottom: '20px', fontSize: '12px' }}>
-                        <div style={{ color: '#9ca3af', marginBottom: '4px' }}>EVIDENCE METADATA</div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                            <div>
-                                <span style={{ color: '#6b7280' }}>Device:</span> {capturedMetadata?.device.orientation}
-                            </div>
-                            <div>
-                                <span style={{ color: '#6b7280' }}>Acc:</span> ±{Math.round(capturedMetadata?.gps.accuracy)}m
-                            </div>
-                            <div style={{ gridColumn: 'span 2' }}>
-                                <span style={{ color: '#6b7280' }}>Time:</span> {capturedMetadata?.captureTimestamp}
-                            </div>
-                        </div>
-                    </div>
-
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <div>
-                            <label className="data-label">Sector</label>
-                            <select
-                                value={formData.sector}
-                                onChange={e => setFormData({ ...formData, sector: e.target.value })}
-                                style={{ width: '100%', padding: '12px', background: '#374151', color: 'white', border: '1px solid #4b5563', borderRadius: '6px' }}
-                            >
-                                {SECTORS.map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="data-label">Description</label>
-                            <textarea
-                                value={formData.description}
-                                onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                required
-                                style={{ width: '100%', padding: '12px', background: '#374151', color: 'white', border: '1px solid #4b5563', borderRadius: '6px', minHeight: '80px' }}
-                            />
-                        </div>
-
-
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            <button type="button" onClick={retake} style={{ flex: 1, padding: '15px', background: '#4b5563', color: 'white', border: 'none', borderRadius: '8px' }}>
-                                Retake
-                            </button>
-                            <button type="submit" style={{ flex: 2, padding: '15px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold' }}>
-                                SUBMIT REPORT
-                            </button>
-                        </div>
-                    </form>
+                <div className="p-6 bg-white">
+                    <button
+                        onClick={capturePhoto}
+                        disabled={!gps}
+                        className="w-full bg-blue-600 text-white py-4 rounded-lg text-lg font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                        📷 CAPTURE
+                    </button>
                 </div>
-            )}
-            <canvas ref={canvasRef} style={{ display: 'none' }} />
+            </div>
+        );
+    }
+
+    // RENDER: Form Step
+    if (step === 'form') {
+        return (
+            <div className="min-h-screen bg-gray-100">
+                <div className="bg-blue-600 text-white p-4 text-center">
+                    <h1 className="text-xl font-bold">Describe Issue</h1>
+                </div>
+
+                <div className="p-4 space-y-6">
+                    {/* Photo Preview */}
+                    <div className="bg-white rounded-lg overflow-hidden shadow">
+                        <img src={photo} alt="Captured" className="w-full" />
+                    </div>
+
+                    <button
+                        onClick={retakePhoto}
+                        className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold"
+                    >
+                        ← Retake Photo
+                    </button>
+
+                    {/* Sector Selection */}
+                    <div className="bg-white rounded-lg p-4 shadow">
+                        <label className="block font-semibold mb-3">What type of issue?</label>
+                        <div className="space-y-2">
+                            {['Roads', 'Water', 'Drainage', 'Lighting', 'Waste'].map(sector => (
+                                <label key={sector} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                    <input
+                                        type="radio"
+                                        name="sector"
+                                        value={sector}
+                                        onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
+                                        className="w-5 h-5"
+                                    />
+                                    <span className="text-2xl">
+                                        {sector === 'Roads' ? '🛣️' : sector === 'Water' ? '💧' : sector === 'Drainage' ? '🚰' : sector === 'Lighting' ? '💡' : '🗑️'}
+                                    </span>
+                                    <span className="font-medium">{sector}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Severity Selection */}
+                    <div className="bg-white rounded-lg p-4 shadow">
+                        <label className="block font-semibold mb-3">How severe is it?</label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {[
+                                { label: 'Minor', size: 'text-sm' },
+                                { label: 'Moderate', size: 'text-base' },
+                                { label: 'Severe', size: 'text-lg' },
+                                { label: 'Critical', size: 'text-xl' }
+                            ].map(({ label, size }) => (
+                                <label key={label} className="flex items-center justify-center gap-2 p-4 border-2 rounded-lg cursor-pointer hover:border-blue-500">
+                                    <input
+                                        type="radio"
+                                        name="severity"
+                                        value={label}
+                                        onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
+                                        className="w-5 h-5"
+                                    />
+                                    <span className={`font-semibold ${size}`}>{label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Description */}
+                    <div className="bg-white rounded-lg p-4 shadow">
+                        <label className="block font-semibold mb-3">Describe (optional)</label>
+                        <textarea
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            placeholder="E.g., Large pothole near main gate"
+                            maxLength={500}
+                            rows={4}
+                            className="w-full border rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <p className="text-sm text-gray-500 mt-2">
+                            {formData.description.length} / 500 characters
+                        </p>
+                    </div>
+
+                    {/* GPS Display */}
+                    <div className="bg-white rounded-lg p-4 shadow">
+                        <p className="text-sm font-semibold text-gray-700">📍 Location Verified</p>
+                        <p className="text-xs text-gray-600 mt-1">{address}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Lat: {gps?.lat.toFixed(6)} | Lng: {gps?.lng.toFixed(6)} | ±{gps?.accuracy.toFixed(0)}m
+                        </p>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                        onClick={submitReport}
+                        className="w-full bg-blue-600 text-white py-4 rounded-lg text-lg font-bold shadow-lg"
+                    >
+                        SUBMIT REPORT
+                    </button>
+
+                    <p className="text-center text-sm text-gray-600">
+                        Your report will be reviewed within 24 hours
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    // RENDER: Success Step
+    return (
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg p-8 text-center max-w-md shadow-lg">
+                <div className="text-6xl mb-4">✓</div>
+                <h2 className="text-2xl font-bold mb-2">Report Submitted!</h2>
+                <p className="text-gray-600 mb-6">
+                    Your issue has been recorded and will be reviewed by the municipal team.
+                </p>
+                <button
+                    onClick={() => {
+                        setStep('camera');
+                        setPhoto(null);
+                        setFormData({ sector: '', severity: '', description: '' });
+                        startCamera();
+                    }}
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold"
+                >
+                    Report Another Issue
+                </button>
+            </div>
         </div>
     );
-};
-
-export default ReportIssue;
-
+}

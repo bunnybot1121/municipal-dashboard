@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { login } from '../services/authService';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, User, Lock } from 'lucide-react';
 
 const LoginPage = () => {
+    const { login } = useAuth();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('admin');
@@ -68,14 +69,12 @@ const LoginPage = () => {
         setIsLoading(true);
         setError('');
 
-        try {
-            await login(username, password);
-            // Login successful (token stored in authService)
+        const result = await login(username, password);
+
+        if (result && result.success) {
             navigate('/');
-        } catch (err) {
-            console.error(err);
-            setError(err.message || 'Login failed');
-        } finally {
+        } else {
+            setError(result?.error || 'Invalid credentials');
             setIsLoading(false);
         }
     };

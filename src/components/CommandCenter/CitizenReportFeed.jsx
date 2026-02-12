@@ -5,6 +5,11 @@ import { useNavigate } from 'react-router-dom';
 const CitizenReportFeed = ({ issues = [], onVerify, onReject }) => {
     const navigate = useNavigate();
 
+    // Helper to handle navigation without triggering buttons
+    const handleNavigate = (id) => {
+        navigate(`/issues/${id}`);
+    };
+
     // Filter for pending citizen issues
     // In a real app, 'pending' status + 'citizen' source
     const pendingReports = issues.filter(i =>
@@ -45,6 +50,7 @@ const CitizenReportFeed = ({ issues = [], onVerify, onReject }) => {
                             report={report}
                             onVerify={() => onVerify(report.id)}
                             onReject={() => onReject(report.id)}
+                            onClick={() => handleNavigate(report.id || report._id)}
                         />
                     ))
                 )}
@@ -53,16 +59,22 @@ const CitizenReportFeed = ({ issues = [], onVerify, onReject }) => {
     );
 };
 
-const ReportCard = ({ report, onVerify, onReject }) => {
+const ReportCard = ({ report, onVerify, onReject, onClick }) => {
     const [isVerifying, setIsVerifying] = useState(false);
 
-    const handleVerify = async () => {
+    const handleVerify = async (e) => {
+        e.stopPropagation();
         setIsVerifying(true);
         // Simulate AI Delay
         setTimeout(() => {
             onVerify();
             setIsVerifying(false);
         }, 1500);
+    };
+
+    const handleReject = (e) => {
+        e.stopPropagation();
+        onReject();
     };
 
     return (
@@ -74,7 +86,10 @@ const ReportCard = ({ report, onVerify, onReject }) => {
             background: '#F9FAFB', // Light Gray Card
             border: '1px solid #E5E7EB',
             transition: 'transform 0.2s',
-        }}>
+            cursor: 'pointer'
+        }}
+            onClick={onClick}
+        >
             {/* Image Thumbnail Placeholder / Analysis View */}
             <div style={{
                 width: '80px',
@@ -149,7 +164,7 @@ const ReportCard = ({ report, onVerify, onReject }) => {
                     </button>
 
                     <button
-                        onClick={onReject}
+                        onClick={handleReject}
                         style={{
                             padding: '6px 12px',
                             fontSize: '0.8rem',

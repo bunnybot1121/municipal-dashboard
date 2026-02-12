@@ -1,7 +1,9 @@
 import React from 'react';
 import { AlertTriangle, ArrowRight, Activity, ShieldAlert } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const EmergencyAlerts = ({ issues = [] }) => {
+    const navigate = useNavigate();
     // Filter for critical/high priority items
     const criticalIssues = issues.filter(i =>
         i.riskLevel === 'Crisis' ||
@@ -70,8 +72,12 @@ const EmergencyAlerts = ({ issues = [] }) => {
                             border: '1px solid #374151',
                             borderLeft: `4px solid ${alert.status === 'CRITICAL' ? '#ef4444' : '#f59e0b'}`,
                             marginBottom: '10px',
-                            boxShadow: 'none'
-                        }}>
+                            marginBottom: '10px',
+                            boxShadow: 'none',
+                            cursor: 'pointer'
+                        }}
+                            onClick={() => navigate(`/issues/${alert.id || alert._id}`)}
+                        >
                             <div className="cc-alert-header" style={{ marginBottom: '8px' }}>
                                 <div className="flex items-center gap-2">
                                     <span style={{

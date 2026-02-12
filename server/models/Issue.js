@@ -2,39 +2,26 @@ const mongoose = require('mongoose');
 
 const IssueSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    description: { type: String, required: true },
-    sector: { type: String, enum: ['roads', 'water', 'drainage', 'lighting'], required: true },
+    description: { type: String },
+    type: { type: String, enum: ['emergency', 'maintenance', 'citizen'], required: true },
+    sector: { type: String, required: true },
+    status: { type: String, enum: ['pending', 'in-progress', 'resolved', 'scheduled', 'completed'], default: 'pending' },
+    severity: { type: String, enum: ['low', 'medium', 'high', 'critical'], default: 'low' },
+    priority: { type: String, enum: ['low', 'medium', 'high', 'critical'], default: 'low' },
     location: {
-        lat: { type: Number, required: true },
-        lng: { type: Number, required: true },
-        address: { type: String, required: true }
+        lat: Number,
+        lng: Number,
+        address: String
     },
-    severity: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Low' },
-    status: { type: String, enum: ['Pending', 'In-Progress', 'Completed'], default: 'Pending' },
-    source: { type: String, enum: ['citizen', 'staff', 'system'], default: 'citizen' },
-
-    // Citizen Module Fields
-    imageUrl: { type: String }, // Base64 or URL
-    rawGps: {
-        latitude: Number,
-        longitude: Number,
-        accuracy: Number,
-        timestamp: Number
-    },
-    isGeoVerified: { type: Boolean, default: false },
-
-    // Seasonal Logic Field
-    seasonalFactor: { type: Number, default: 1.0 }, // 1.0 = Normal, 1.5 = High Priority etc.
-
-    // Evidence Consistency Validation (Stage B)
-    evidenceCheck: {
-        consistencyScore: { type: Number, default: 0 }, // 0-100
-        isInconsistent: { type: Boolean, default: false }, // Replaces isFake
-        flags: [{ type: String }], // e.g. ["GPS_DATA_MISMATCH"]
-        validatedAt: { type: Date }
-    },
-
-    createdAt: { type: Date, default: Date.now }
+    reportedAt: { type: Date, default: Date.now },
+    scheduledStart: { type: Date },
+    scheduledEnd: { type: Date },
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    imageUrl: { type: String },
+    seasonalFactor: { type: Number },
+    aiAnalysis: { type: Object } // Store AI Engine results
+}, {
+    timestamps: true
 });
 
 module.exports = mongoose.model('Issue', IssueSchema);

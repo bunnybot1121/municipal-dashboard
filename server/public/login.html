@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - NagarSevak AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            background: #0f172a;
+        }
+
+        /* Background Image & Overlay */
+        .background {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+
+        .background img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.4;
+        }
+
+        .background-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, #0f172a 0%, rgba(15, 23, 42, 0.8) 50%, rgba(15, 23, 42, 0.4) 100%);
+        }
+
+        /* Glass Card */
+        .login-card {
+            position: relative;
+            z-index: 10;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 450px;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Header Section */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            transform: translateZ(30px);
+        }
+
+        .icon-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 4rem;
+            height: 4rem;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+        }
+
+        .icon-container svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.025em;
+            margin-top: 0.5rem;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Form Section */
+        .form-container {
+            transform: translateZ(10px);
+        }
+
+        .form-group {
+            position: relative;
+            margin-bottom: 1.25rem;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            transition: color 0.2s;
+        }
+
+        .form-group:focus-within .input-icon {
+            color: #60a5fa;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.5);
+            color: white;
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            border-radius: 0.75rem;
+            border: 1px solid #334155;
+            outline: none;
+            transition: all 0.2s;
+            font-size: 0.9375rem;
+        }
+
+        input::placeholder {
+            color: #64748b;
+        }
+
+        input:focus {
+            border-color: #3b82f6;
+            background: rgba(30, 41, 59, 0.8);
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+
+        .error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+            font-size: 0.875rem;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        /* Button */
+        .btn-login {
+            width: 100%;
+            margin-top: 2rem;
+            background: linear-gradient(to right, #3b82f6, #2563eb);
+            color: white;
+            font-weight: 700;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            transform: translateZ(20px);
+            font-size: 1rem;
+        }
+
+        .btn-login:hover {
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5);
+            transform: translateZ(25px);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(100%);
+            transition: transform 0.3s;
+        }
+
+        .btn-login:hover::before {
+            transform: translateY(0);
+        }
+
+        .btn-login span {
+            position: relative;
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Background Image & Overlay -->
+    <div class="background">
+        <img src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop"
+            alt="City Background">
+        <div class="background-overlay"></div>
+    </div>
+
+    <!-- Glass Card -->
+    <div class="login-card" id="login-card">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="icon-container">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+            </div>
+            <h1>Nagarsevak AI</h1>
+            <p class="subtitle">Unified Municipal Command</p>
+        </div>
+
+        <!-- Form Section -->
+        <form id="login-form" class="form-container">
+            <div id="error-msg" class="error-msg">Invalid credentials</div>
+
+            <div class="form-group">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <input type="text" id="username" placeholder="Username" required>
+            </div>
+
+            <div class="form-group">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <input type="password" id="password" placeholder="Password" required>
+            </div>
+
+            <button type="submit" class="btn-login" id="login-btn">
+                <span>Initialize System</span>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // 3D Tilt Effect
+        const card = document.getElementById('login-card');
+
+        document.addEventListener('mousemove', (e) => {
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+
+        // Magnetic Button Effect
+        const btn = document.getElementById('login-btn');
+
+        btn.addEventListener('mousemove', (e) => {
+            const rect = btn.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px) translateZ(20px)`;
+        });
+
+        btn.addEventListener('mouseleave', () => {
+            btn.style.transform = 'translate(0px, 0px) translateZ(20px)';
+        });
+    </script>
+
+    <script src="js/login.js"></script>
+</body>
+
+</html>

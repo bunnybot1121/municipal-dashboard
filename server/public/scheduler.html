@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Resource Scheduler - Nagarsevak AI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3c3cf6",
+                        "background-light": "#f5f5f8",
+                        "background-dark": "#101022",
+                    },
+                    fontFamily: {
+                        display: "Inter",
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            overflow: hidden;
+            vertical-align: middle;
+        }
+
+        .active-nav {
+            background-color: #3c3cf6;
+            color: white;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #374151;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Main Application Sidebar -->
+        <aside
+            class="w-64 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between z-20">
+            <div class="flex flex-col gap-6 p-6">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary rounded-lg p-2 text-white">
+                        <span class="material-symbols-outlined text-2xl">account_balance</span>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold leading-tight tracking-tight">Nagarsevak AI</h1>
+                        <p class="text-xs text-slate-500 font-medium">Municipal Admin</p>
+                    </div>
+                </div>
+                <nav class="flex flex-col gap-1">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        href="dashboard.html">
+                        <span class="material-symbols-outlined text-[22px]">dashboard</span>
+                        <span class="text-sm font-semibold">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        href="issues.html">
+                        <span class="material-symbols-outlined text-[22px]">report_problem</span>
+                        <span class="text-sm font-semibold">Issues</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg active-nav" href="scheduler.html">
+                        <span class="material-symbols-outlined text-[22px]">assignment</span>
+                        <span class="text-sm font-semibold">Tasks</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        href="#">
+                        <span class="material-symbols-outlined text-[22px]">analytics</span>
+                        <span class="text-sm font-semibold">Analytics</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        href="#">
+                        <span class="material-symbols-outlined text-[22px]">badge</span>
+                        <span class="text-sm font-semibold">Staff</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+                <button
+                    class="w-full py-2.5 bg-primary hover:bg-primary/90 text-white rounded-lg flex items-center justify-center gap-2 font-bold text-sm shadow-sm transition-all">
+                    <span class="material-symbols-outlined text-sm">add</span>
+                    <span>New Report</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <!-- Standard Header -->
+            <header
+                class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 sticky top-0 z-10 flex-shrink-0">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-xl font-bold">Resource Scheduler</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <span
+                            class="material-symbols-outlined text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 text-xl">search</span>
+                        <input
+                            class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/20 transition-all"
+                            placeholder="Search tasks..." type="text" />
+                    </div>
+                    <button class="relative p-2 text-slate-400 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span
+                            class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 border-2 border-white rounded-full"></span>
+                    </button>
+                    <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2"></div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-sm font-bold">Admin User</p>
+                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Super Admin</p>
+                        </div>
+                        <img alt="User Profile" class="w-10 h-10 rounded-full border-2 border-slate-100"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQgm40mVQLLCI7asmn_76KeAC6LfvsKPO8ot82b2aouKnQLh-VcA2Eutf2Wvnuu4hYwkN_4orKY2o8p7TQbJfScd52DEezD9eEVUQJ7Ld3bxCbOQXZ7tlQfj20hjMshXr5R6D52Tart0cfhWVD6vWJIv4YEHx4v-Q2bG7x72G8kmf2glq8TGYACc3wJ66fj0y4ueyBPVCGcNDJhakj4ApcV9sFDX-DPfuOGxs2oOrizfAgiaLyHA4KKpkby4eYDLtn26ZOiekjZ40I" />
+                    </div>
+                </div>
+            </header>
+
+            <!-- Toolbar for Scheduler -->
+            <div
+                class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <span class="material-symbols-outlined text-sm text-slate-500">calendar_month</span>
+                        <span class="text-sm font-semibold">October 2023</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex -space-x-2">
+                        <img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 ring-2 ring-transparent"
+                            data-alt="Team Member 1"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQgm40mVQLLCI7asmn_76KeAC6LfvsKPO8ot82b2aouKnQLh-VcA2Eutf2Wvnuu4hYwkN_4orKY2o8p7TQbJfScd52DEezD9eEVUQJ7Ld3bxCbOQXZ7tlQfj20hjMshXr5R6D52Tart0cfhWVD6vWJIv4YEHx4v-Q2bG7x72G8kmf2glq8TGYACc3wJ66fj0y4ueyBPVCGcNDJhakj4ApcV9sFDX-DPfuOGxs2oOrizfAgiaLyHA4KKpkby4eYDLtn26ZOiekjZ40I" />
+                        <img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 ring-2 ring-transparent"
+                            data-alt="Team Member 2"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDi1WhDayxBZGRgklYy8EDtoqUHuSko3GXuAFt5jepNX5qDiMRtd7oaQtZV0bNe-kunS1bHZ3vZHEfsJHv75jF5BxWr9BfoNtCxpGAY5HKIIloXkSCQZeSEcrjAMCJq1KHfZk0C9IrE1ARftA-2NayG4ol7R1NJXB8NYgnXMl6g566XgeCImOZAMazWvtAnBUAh4PtFBoEEhIqaNq4l5xL3tEgBWAi5GVC6Szhyjhc5XV84lXtAiSbfpGte1vXhZk3feFVF63eoESGj" />
+                        <div
+                            class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300">
+                            +4</div>
+                    </div>
+                    <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+                    <button
+                        class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                        New Task
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scheduler Content -->
+            <div class="flex-1 flex overflow-hidden">
+                <!-- Sidebar: Resources -->
+                <aside
+                    class="w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col z-10 overflow-y-auto">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-800">
+                        <div class="relative">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                            <input
+                                class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg py-2 pl-9 pr-4 text-sm focus:ring-2 focus:ring-primary/20"
+                                placeholder="Search teams or equipment..." type="text" />
+                        </div>
+                    </div>
+                    <div class="p-4 space-y-6">
+                        <!-- Teams Section -->
+                        <div>
+                            <h3 class="text-xs font-bold uppercase text-slate-500 mb-3 px-2">Field Units</h3>
+                            <div class="space-y-2">
+                                <div
+                                    class="flex items-center gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-primary transition-colors group">
+                                    <div class="w-2 h-10 rounded-full bg-emerald-500"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-bold text-slate-900 dark:text-white">Road Repair Unit A
+                                        </p>
+                                        <p class="text-xs text-slate-500">4 Members • Available</p>
+                                    </div>
+                                    <span
+                                        class="material-symbols-outlined text-slate-300 group-hover:text-primary">drag_indicator</span>
+                                </div>
+                                <div
+                                    class="flex items-center gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-primary transition-colors group">
+                                    <div class="w-2 h-10 rounded-full bg-blue-500"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-bold text-slate-900 dark:text-white">Water Works Unit 2
+                                        </p>
+                                        <p class="text-xs text-slate-500">6 Members • Busy</p>
+                                    </div>
+                                    <span
+                                        class="material-symbols-outlined text-slate-300 group-hover:text-primary">drag_indicator</span>
+                                </div>
+                                <div
+                                    class="flex items-center gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-primary transition-colors group">
+                                    <div class="w-2 h-10 rounded-full bg-amber-500"></div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-bold text-slate-900 dark:text-white">Electrical Team 1
+                                        </p>
+                                        <p class="text-xs text-slate-500">3 Members • On Break</p>
+                                    </div>
+                                    <span
+                                        class="material-symbols-outlined text-slate-300 group-hover:text-primary">drag_indicator</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Equipment Section -->
+                        <div>
+                            <h3 class="text-xs font-bold uppercase text-slate-500 mb-3 px-2">Heavy Equipment</h3>
+                            <div class="space-y-2">
+                                <div
+                                    class="flex items-center gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-primary transition-colors group">
+                                    <div
+                                        class="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-slate-500">directions_bus</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-bold text-slate-900 dark:text-white">Excavator JCB-04</p>
+                                        <p class="text-xs text-slate-500">Maintenance Due: 2 days</p>
+                                    </div>
+                                </div>
+                                <div
+                                    class="flex items-center gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-primary transition-colors group">
+                                    <div
+                                        class="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-slate-500">local_shipping</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-bold text-slate-900 dark:text-white">Dump Truck DT-01</p>
+                                        <p class="text-xs text-slate-500">Available</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+                <!-- Calendar View -->
+                <div class="flex-1 flex flex-col min-w-0 bg-slate-50/50 dark:bg-slate-900/50">
+                    <!-- Calendar Header with Navigation -->
+                    <div
+                        class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <h3 id="calendar-month-year" class="text-lg font-bold">October 2023</h3>
+                            <div class="flex items-center gap-2">
+                                <button id="calendar-prev"
+                                    class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                                </button>
+                                <button id="calendar-today"
+                                    class="px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                                    Today
+                                </button>
+                                <button id="calendar-next"
+                                    class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Day Names Header -->
+                    <div
+                        class="grid grid-cols-7 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                        <div class="p-3 text-center border-r border-slate-200 dark:border-slate-800">
+                            <p class="text-xs font-bold uppercase text-slate-500">Sun</p>
+                        </div>
+                        <div class="p-3 text-center border-r border-slate-200 dark:border-slate-800">
+                            <p class="text-xs font-bold uppercase text-slate-500">Mon</p>
+                        </div>
+                        <div class="p-3 text-center border-r border-slate-200 dark:border-slate-800">
+                            <p class="text-xs font-bold uppercase text-slate-500">Tue</p>
+                        </div>
+                        <div class="p-3 text-center border-r border-slate-200 dark:border-slate-800">
+                            <p class="text-xs font-bold uppercase text-slate-500">Wed</p>
+                        </div>
+                        <div class="p-3 text-center border-r border-slate-200 dark:border-slate-800">
+                            <p class="text-xs font-bold uppercase text-slate-500">Thu</p>
+                        </div>
+                        <div class="p-3 text-center border-r border-slate-200 dark:border-slate-800">
+                            <p class="text-xs font-bold uppercase text-slate-500">Fri</p>
+                        </div>
+                        <div class="p-3 text-center">
+                            <p class="text-xs font-bold uppercase text-slate-500">Sat</p>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Grid -->
+                    <div id="calendar-grid" class="grid grid-cols-7 flex-1 overflow-y-auto">
+                        <!-- Calendar cells will be rendered here by JS -->
+                    </div>
+                </div>
+
+                <!-- Task Details Panel -->
+                <aside
+                    class="w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col overflow-y-auto">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-800">
+                        <h3 id="selected-date-title" class="font-bold text-lg">Select a date</h3>
+                        <p class="text-xs text-slate-500 mt-1">Click on a calendar date to view scheduled tasks</p>
+                    </div>
+                    <div id="selected-date-tasks" class="p-4 space-y-3">
+                        <!-- Tasks will be rendered here by JS -->
+                        <div class="text-center py-8 text-slate-500">
+                            <span class="material-symbols-outlined text-4xl mb-2 opacity-50">event</span>
+                            <p class="text-sm">No date selected</p>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+    <script src="js/app.js"></script>
+    <script src="js/scheduler.js"></script>
+</body>
+
+</html>

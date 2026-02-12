@@ -6,9 +6,7 @@ export const login = async (username, password) => {
     try {
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password }),
         });
 
@@ -17,13 +15,36 @@ export const login = async (username, password) => {
         if (response.ok) {
             if (data.token) {
                 localStorage.setItem('user', JSON.stringify(data.user));
-                localStorage.setItem('token', data.token); // Store JWT
+                localStorage.setItem('token', data.token);
             }
             return data;
         } else {
             throw new Error(data.message || 'Login failed');
         }
     } catch (error) {
+        // --- MOCK FALLBACK FOR GITHUB PAGES ---
+        console.warn('Backend unreachable (likely Demo Mode). Failing over to Mock Login.');
+
+        // Check for Demo Credentials
+        if (username === 'admin' && password === 'admin123') {
+            const mockUser = {
+                id: 'mock-admin-id',
+                username: 'admin',
+                role: 'admin',
+                name: 'Demo Admin',
+                sector: 'Headquarters'
+            };
+            const mockToken = 'mock-demo-token-12345';
+
+            localStorage.setItem('user', JSON.stringify(mockUser));
+            localStorage.setItem('token', mockToken);
+
+            // Artificial delay to simulate network
+            await new Promise(r => setTimeout(r, 800));
+
+            return { user: mockUser, token: mockToken };
+        }
+
         throw error;
     }
 };

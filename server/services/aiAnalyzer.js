@@ -3,6 +3,9 @@
  * This runs SERVER-SIDE to analyze submitted evidence.
  */
 
+const { determinePriority } = require('../utils/priorityList');
+const { getSeasonalPriority } = require('../utils/seasonalLogic');
+
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371e3; // metres
     const φ1 = lat1 * Math.PI / 180;
@@ -23,17 +26,20 @@ const analyzeEvidence = (issueData) => {
         confidenceScore: 100,
         isFake: false,
         flags: [],
+        priority: 'Medium', // Default
+        riskFactors: {
+            lifeSafety: 5,
+            infrastructure: 5
+        },
+        seasonalFactor: 1.0,
         verifiedAt: new Date()
     };
 
-    const { rawGps, location, imageUrl } = issueData;
+    const { rawGps, location, imageUrl, title, description, sector } = issueData;
 
     // 1. GPS Consistency Check
-    // If rawGps exists, check if it matches the 'location' field (which might have been user-adjusted/resolved)
     if (rawGps && rawGps.latitude && location && location.lat) {
         const dist = calculateDistance(rawGps.latitude, rawGps.longitude, location.lat, location.lng);
-
-        // If distance > 100m, flag it
         if (dist > 100) {
             analysis.flags.push('GPS_MISMATCH_HIGH');
             analysis.confidenceScore -= 40;
@@ -42,7 +48,6 @@ const analyzeEvidence = (issueData) => {
             analysis.confidenceScore -= 10;
         }
     } else {
-        // Missing raw GPS is suspicious for a Citizen report
         if (issueData.source === 'citizen') {
             analysis.flags.push('MISSING_RAW_GPS');
             analysis.confidenceScore -= 50;
@@ -50,12 +55,10 @@ const analyzeEvidence = (issueData) => {
     }
 
     // 2. Image Metadata check (Simulated)
-    // In a real system, we'd check EXIF data or run deepfake detection models
     if (!imageUrl) {
         analysis.flags.push('NO_IMAGE');
         analysis.confidenceScore -= 80;
     } else {
-        // Mock check: if image string is too short (bad base64)
         if (imageUrl.length < 1000 && !imageUrl.startsWith('http')) {
             analysis.flags.push('INVALID_IMAGE_DATA');
             analysis.confidenceScore = 0;
@@ -75,10 +78,44 @@ const analyzeEvidence = (issueData) => {
         }
     }
 
-    // 4. Clamp score
+    // 4. PRIORITY & CATEGORY ANALYSIS (New)
+    // Combine text from title and description for analysis
+    const textToAnalyze = `${title || ''} ${description || ''} ${sector || ''}`;
+    const priorityResult = determinePriority(textToAnalyze);
+
+    if (priorityResult.details) {
+        analysis.priority = priorityResult.priority;
+        analysis.riskFactors.lifeSafety = priorityResult.details.lifeSafety;
+        analysis.riskFactors.infrastructure = priorityResult.details.infrastructure;
+        analysis.explanation = priorityResult.explanation; // Include detailed reason
+        // Boost confidence if we found a matching keyword
+        if (priorityResult.confidence > 0.8) {
+            analysis.confidenceScore += 5;
+        }
+    } else {
+        analysis.explanation = priorityResult.explanation || "Standard priority assessment.";
+    }
+
+    // 5. SEASONAL LOGIC INTEGRATION
+    const seasonal = getSeasonalPriority(sector || 'other');
+    analysis.seasonalFactor = seasonal.factor;
+
+    // Adjust priority score based on season
+    // If seasonal factor is high (>1.2), we might bump the priority
+    if (seasonal.factor >= 1.5 && analysis.priority !== 'Critical') {
+        if (analysis.priority === 'High') analysis.priority = 'Critical';
+        else if (analysis.priority === 'Medium') analysis.priority = 'High';
+        else if (analysis.priority === 'Low') analysis.priority = 'Medium';
+
+        const escalationMsg = `Escalated to ${analysis.priority} due to critical ${seasonal.season} factors.`;
+        analysis.flags.push(`SEASONAL_ESCALATION: ${seasonal.season}`);
+        analysis.explanation += ` ${escalationMsg}`;
+    }
+
+    // 6. Clamp score
     analysis.confidenceScore = Math.max(0, Math.min(100, analysis.confidenceScore));
 
-    // 5. Final Fake Verdict
+    // 7. Final Fake Verdict
     if (analysis.confidenceScore < 40) {
         analysis.isFake = true;
     }

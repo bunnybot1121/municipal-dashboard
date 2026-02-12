@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { useNavigate } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -46,6 +47,7 @@ const RecenterAutomatically = ({ lat, lng }) => {
 };
 
 const OperationsMap = ({ issues, selectedIssueId, onIssueSelect }) => {
+    const navigate = useNavigate();
     // Default Center (Mumbai)
     const [center, setCenter] = useState([19.0760, 72.8777]);
 
@@ -102,6 +104,12 @@ const OperationsMap = ({ issues, selectedIssueId, onIssueSelect }) => {
                                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                         <span className={`badge badge-${issue.status}`}>{issue.status}</span>
                                         {issue.riskLevel && <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: 700 }}>{issue.riskLevel}</span>}
+                                    </div>
+                                    <div
+                                        style={{ marginTop: '0.5rem', color: '#3b82f6', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                                        onClick={() => navigate(`/issues/${issue.id || issue._id}`)}
+                                    >
+                                        View Details &rarr;
                                     </div>
                                 </div>
                             </Popup>
