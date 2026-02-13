@@ -23,6 +23,29 @@ export const AuthProvider = ({ children }) => {
         console.log('%c[AuthContext] Loading complete, rendering children', 'color: green; font-weight: bold');
     }, []);
 
+    // Login function
+    const login = async (username, password) => {
+        try {
+            const response = await api.login(username, password);
+            if (response.token && response.user) {
+                localStorage.setItem('token', response.token);
+                localStorage.setItem('user', JSON.stringify(response.user));
+                setUser(response.user);
+                return { success: true };
+            }
+        } catch (error) {
+            console.error('Login failed:', error);
+            return { success: false, error: error.message };
+        }
+    };
+
+    // Logout function
+    const logout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+    };
+
     console.log('%c[AuthContext] Render called', 'color: purple', { loading, hasUser: !!user });
 
     return (

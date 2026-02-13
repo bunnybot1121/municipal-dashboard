@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Add, FilterList } from '@mui/icons-material';
+import { CalendarMonth as CalendarIcon, Add, FilterList } from '@mui/icons-material';
 
 const Calendar = ({ selectedDate, onDateSelect, tasks = [] }) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());

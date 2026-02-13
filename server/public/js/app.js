@@ -449,6 +449,10 @@ const app = {
                 }, 500);
             }
 
+            // TRIGGER 7D FRAMEWORK CALCULATION
+            // Dispatch custom event to trigger 7D priority calculation
+            window.dispatchEvent(new CustomEvent('issueLoaded', { detail: issue }));
+
         } catch (err) {
             console.error("Error loading issue detail", err);
             // Show error message on page
