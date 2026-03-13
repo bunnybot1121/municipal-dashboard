@@ -22,7 +22,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
 
     const navItems = [
         { path: '/', icon: DashboardIcon, label: 'Dashboard' },
-        { path: '/issues', icon: Assignment, label: 'Issues' },
+        { path: '/issues', icon: Assignment, label: 'Scheduled Tasks' },
         { path: '/citizen-reports', icon: ReportProblem, label: 'Citizen Reports' },
         { path: '/notifications', icon: NotificationsOutlined, label: 'Notifications' },
         { path: '/scheduler', icon: CalendarMonth, label: 'Maintenance' },

@@ -42,29 +42,31 @@ const IssueList = () => {
         try {
             setLoading(true);
 
-            // Fetch Issues only (citizen reports)
-            const issuesData = await api.getIssues();
+            // Fetch scheduled tasks (NOT citizen reports)
+            const tasksData = await api.getTasks();
 
             let combinedData = [];
 
-            if (issuesData && Array.isArray(issuesData)) {
-                combinedData = issuesData.map(issue => ({
-                    ...issue,
-                    uniqueId: `iss-${issue.id}`,
-                    type: 'issue',
-                    id: issue.id,
-                    priority: (issue.priority || issue.severity || 'low').toLowerCase(),
-                    status: (issue.status || 'open').toLowerCase(),
-                    sector: (issue.sector || 'other').toLowerCase(),
+            if (tasksData && Array.isArray(tasksData)) {
+                combinedData = tasksData.map(task => ({
+                    ...task,
+                    uniqueId: `tsk-${task.id}`,
+                    type: 'task',
+                    id: task.id,
+                    title: task.title || 'Untitled Task',
+                    description: task.description || '',
+                    priority: (task.priority || 'low').toLowerCase(),
+                    status: (task.status || 'pending').toLowerCase(),
+                    sector: (task.sector || 'other').toLowerCase(),
                     location: {
-                        lat: issue.location?.lat ?? issue.lat ?? issue.latitude ?? null,
-                        lng: issue.location?.lng ?? issue.lng ?? issue.longitude ?? null,
-                        address: issue.location?.address || issue.location_address || issue.address || 'Location not provided',
-                        accuracy: issue.location?.accuracy ?? null
+                        lat: null,
+                        lng: null,
+                        address: task.location_address || 'Scheduled Location',
+                        accuracy: null
                     },
-                    createdAt: issue.created_at || issue.createdAt || new Date().toISOString(),
-                    aiAnalysis: issue.aiAnalysis || { confidence: issue.ai_confidence || 0.88 },
-                    imageUrl: issue.photo_url || issue.imageUrl
+                    createdAt: task.created_at || task.scheduledStart || new Date().toISOString(),
+                    aiAnalysis: null,
+                    imageUrl: null
                 }));
             }
 
@@ -106,16 +108,15 @@ const IssueList = () => {
         }));
     };
 
-    const handleStatusUpdate = async (e, issueId, newStatus) => {
+    const handleStatusUpdate = async (e, taskId, newStatus) => {
         e.stopPropagation(); // Prevent row click navigation
         try {
-            await api.updateIssue(issueId, { status: newStatus });
+            await api.updateTask(taskId, { status: newStatus });
             setIssues(prevIssues =>
                 prevIssues.map(issue =>
-                    issue.id === issueId ? { ...issue, status: newStatus } : issue
+                    issue.id === taskId ? { ...issue, status: newStatus } : issue
                 )
             );
-            // Optional: Add toast notification here if available
         } catch (error) {
             console.error("Failed to update status", error);
             alert("Failed to update status");
@@ -166,15 +167,15 @@ const IssueList = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-xl font-bold text-gray-800">Issue Management</h1>
-                    <p className="text-sm text-gray-500 font-medium">Track, verify, and resolve civic complaints</p>
+                    <h1 className="text-xl font-bold text-gray-800">Scheduled Tasks</h1>
+                    <p className="text-sm text-gray-500 font-medium">Manage scheduled maintenance tasks and work orders</p>
                 </div>
                 <button
                     className="px-5 py-2.5 bg-[#5B52FF] hover:bg-[#4338CA] text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
-                    onClick={() => navigate('/issues/new')}
+                    onClick={() => navigate('/scheduler')}
                 >
                     <PlusCircle sx={{ fontSize: 18 }} />
-                    <span>Log Manual Issue</span>
+                    <span>New Task</span>
                 </button>
             </div>
 
@@ -226,15 +227,12 @@ const IssueList = () => {
                         <thead className="bg-gray-50 text-gray-500 uppercase text-[10px] font-extrabold tracking-widest border-b border-gray-200">
                             <tr>
                                 {[
-                                    { key: 'id', label: 'Issue ID', width: 'w-28' },
-                                    { key: 'image', label: 'Preview', width: 'w-20' },
+                                    { key: 'id', label: 'Task ID', width: 'w-28' },
                                     { key: 'title', label: 'Title & Desc', width: 'w-auto' },
                                     { key: 'sector', label: 'Sector', width: 'w-32' },
                                     { key: 'priority', label: 'Priority', width: 'w-28' },
                                     { key: 'status', label: 'Status', width: 'w-32' },
-                                    { key: 'location', label: 'Location', width: 'w-40' },
-                                    { key: 'verified', label: 'AI Verified', width: 'w-32' },
-                                    { key: 'confidence', label: 'Evidence Score', width: 'w-32' },
+                                    { key: 'createdAt', label: 'Scheduled', width: 'w-40' },
                                     { key: 'action', label: '', width: 'w-16' }
                                 ].map((col) => (
                                     <th
@@ -244,7 +242,7 @@ const IssueList = () => {
                                     >
                                         <div className="flex items-center gap-1">
                                             {col.label}
-                                            {col.key !== 'image' && col.key !== 'action' && <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />}
+                                            {col.key !== 'action' && <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />}
                                         </div>
                                     </th>
                                 ))}
@@ -253,7 +251,7 @@ const IssueList = () => {
                         <tbody className="divide-y divide-gray-100">
                             {filteredIssues.length === 0 ? (
                                 <tr>
-                                    <td colSpan="9" className="px-6 py-12 text-center">
+                                    <td colSpan="7" className="px-6 py-12 text-center">
                                         <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
                                             <SearchX sx={{ fontSize: 32 }} className="text-gray-300" />
                                         </div>
@@ -265,24 +263,15 @@ const IssueList = () => {
                                 filteredIssues.map((issue) => (
                                     <tr
                                         key={issue.uniqueId || issue.id}
-                                        onClick={() => navigate(`/issues/${issue.id}`)}
+                                        onClick={() => navigate(`/issues/TSK-${issue.id}`)}
                                         className="hover:bg-blue-50/30 transition-colors cursor-pointer group"
                                     >
                                         <td className="px-6 py-4">
                                             <span className="text-[#5B52FF] font-bold text-xs group-hover:underline">
-                                                #{issue.id && issue.id.length > 6 ? issue.id.substring(issue.id.length - 6).toUpperCase() : issue.id}
+                                                TSK-{issue.id && issue.id.length > 6 ? issue.id.substring(issue.id.length - 6).toUpperCase() : issue.id}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border border-gray-200 flex items-center justify-center shadow-sm">
-                                                {issue.imageUrl ? (
-                                                    <img src={issue.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <ImageIcon className="text-gray-400" sx={{ fontSize: 20 }} />
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 max-w-[240px]">
+                                        <td className="px-6 py-4 max-w-[300px]">
                                             <div className="font-bold text-sm text-gray-800 truncate mb-0.5">{issue.title}</div>
                                             <div className="text-xs text-gray-500 truncate">{issue.description || 'No description provided.'}</div>
                                         </td>
@@ -300,68 +289,28 @@ const IssueList = () => {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
                                                 <span className={`w-2 h-2 rounded-full ${(issue.status === 'resolved' || issue.status === 'completed') ? 'bg-green-500' :
-                                                    issue.status === 'in-progress' ? 'bg-blue-500' :
+                                                    issue.status === 'in-progress' || issue.status === 'assigned' ? 'bg-blue-500' :
                                                         issue.status === 'rejected' ? 'bg-gray-400' :
-                                                            'bg-amber-500' // Default / Open
+                                                            'bg-amber-500'
                                                     }`}></span>
                                                 <span className="text-sm font-medium text-gray-700 capitalize">
-                                                    {(issue.status || 'Open').replace('-', ' ')}
+                                                    {(issue.status || 'Pending').replace(/[-_]/g, ' ')}
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-xs text-gray-500 max-w-[200px]">
-                                            <div className="flex items-center gap-1.5" title={issue.location?.address}>
-                                                <MapPin sx={{ fontSize: 14 }} className="text-gray-400" />
-                                                <span className="truncate">{issue.location?.address || 'Unknown Location'}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {(() => {
-                                                const pv = issue.aiAnalysis?.photoVerification;
-                                                if (!pv) return (
-                                                    <span className="text-gray-300 text-xs">—</span>
-                                                );
-                                                return pv.isValid ? (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-green-100 text-green-700" title={pv.reason}>
-                                                        ✅ Verified
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700" title={pv.reason}>
-                                                        ⚠️ Suspicious
-                                                    </span>
-                                                );
-                                            })()}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="w-24">
-                                                <div className="flex justify-between text-[10px] font-bold text-gray-600 mb-1">
-                                                    <span>{(issue.aiAnalysis?.confidence * 100 || 88).toFixed(0)}%</span>
-                                                </div>
-                                                <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                                                    <div
-                                                        className={`h-full rounded-full ${(issue.aiAnalysis?.confidence * 100 || 88) > 90 ? 'bg-green-500' : 'bg-blue-500'}`}
-                                                        style={{ width: `${(issue.aiAnalysis?.confidence * 100 || 88)}%` }}
-                                                    ></div>
-                                                </div>
-                                            </div>
+                                        <td className="px-6 py-4 text-xs text-gray-500">
+                                            {issue.scheduledStart ? new Date(issue.scheduledStart).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                {issue.type === 'issue' && issue.status === 'open' && (
+                                                {(issue.status === 'pending' || issue.status === 'assigned') && (
                                                     <>
                                                         <button
-                                                            onClick={(e) => handleStatusUpdate(e, issue.id, 'accepted')}
+                                                            onClick={(e) => handleStatusUpdate(e, issue.id, 'completed')}
                                                             className="p-1.5 rounded-full bg-green-50 text-green-600 hover:bg-green-100 transition-colors shadow-sm border border-green-100"
-                                                            title="Accept Issue"
+                                                            title="Mark Completed"
                                                         >
                                                             <CheckIcon sx={{ fontSize: 16 }} />
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => handleStatusUpdate(e, issue.id, 'rejected')}
-                                                            className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors shadow-sm border border-red-100"
-                                                            title="Reject Issue"
-                                                        >
-                                                            <CloseIcon sx={{ fontSize: 16 }} />
                                                         </button>
                                                     </>
                                                 )}
@@ -378,7 +327,7 @@ const IssueList = () => {
                 </div>
                 {/* Pagination (Visual Only for now) */}
                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500 font-medium">
-                    <span>Showing {filteredIssues.length} issues</span>
+                    <span>Showing {filteredIssues.length} tasks</span>
                     <div className="flex gap-2">
                         <button className="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors" disabled>
                             <ChevronLeft sx={{ fontSize: 16 }} />
