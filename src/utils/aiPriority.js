@@ -25,7 +25,7 @@ const CAT_1_SAFETY = [
     { id: 15, name: 'Pedestrian risk', points: 25, keywords: ['pedestrian', 'footpath', 'walking'] },
     { id: 16, name: 'Public panic', points: 20, keywords: ['panic', 'stampede', 'crowd', 'chaos'] },
     { id: 17, name: 'Toxic exposure', points: 45, keywords: ['toxic', 'chemical', 'poison', 'hazardous'] },
-    { id: 18, name: 'Poor night visibility', points: 15, keywords: ['dark', 'no light', 'pitch black', 'blind', 'light', 'lights', 'streetlight', 'not working', 'broken light'] },
+    { id: 18, name: 'Poor night visibility', points: 15, keywords: ['dark', 'no light', 'pitch black', 'blind', 'light not working', 'street dark', 'broken light', 'lamp not working'] },
     { id: 19, name: 'Accident-prone', points: 18, keywords: ['accident', 'crash', 'collision'] },
     { id: 20, name: 'Weather escalation', points: 12, keywords: ['storm', 'rain', 'wind', 'exposure'] }
 ];
@@ -34,17 +34,17 @@ const CAT_1_SAFETY = [
 // CATEGORY 2: SECTOR CRITICALITY (Max 40 pts)
 // ========================================
 const CAT_2_SECTOR = [
-    { id: 21, name: 'Water disruption', points: 35, keywords: ['no water', 'supply stopped', 'dry tap', 'water', 'tap', 'drinking'] },
+    { id: 21, name: 'Water disruption', points: 35, keywords: ['no water', 'supply stopped', 'dry tap', 'water supply', 'water problem', 'water issue', 'water not coming', 'no drinking water'] },
     { id: 22, name: 'Pipeline damage', points: 35, keywords: ['pipeline', 'main line', 'burst pipe'] },
     { id: 23, name: 'Sewer overflow', points: 30, keywords: ['sewage', 'overflow', 'backflow'] },
     { id: 24, name: 'Drainage blockage', points: 25, keywords: ['blocked drain', 'clogged', 'stagnant'] },
     { id: 25, name: 'Power outage', points: 30, keywords: ['no power', 'blackout', 'electricity gone'] },
-    { id: 26, name: 'Streetlight failure', points: 20, keywords: ['streetlight', 'dark street', 'light', 'lights', 'lamp', 'not working', 'broken'] },
+    { id: 26, name: 'Streetlight failure', points: 20, keywords: ['streetlight', 'street light', 'dark street', 'lamp post', 'light pole', 'lights not working', 'light broken', 'no street light'] },
     { id: 27, name: 'Traffic signal fail', points: 35, keywords: ['traffic signal', 'signal broken'] },
-    { id: 28, name: 'Road cave-in', points: 45, keywords: ['road caved', 'deep hole', 'pothole', 'road', 'uneven', 'patched', 'patch'] },
+    { id: 28, name: 'Road damage', points: 30, keywords: ['road caved', 'deep hole', 'pothole', 'road damage', 'road broken', 'uneven road', 'road crack', 'road patch'] },
     { id: 29, name: 'Bridge damage', points: 50, keywords: ['bridge', 'flyover', 'pillar'] },
     { id: 30, name: 'Transport disruption', points: 25, keywords: ['bus stop', 'metro', 'transport'] },
-    { id: 31, name: 'Garbage overflow', points: 20, keywords: ['garbage', 'trash', 'dustbin', 'waste', 'dirty', 'clean'] },
+    { id: 31, name: 'Garbage overflow', points: 20, keywords: ['garbage', 'trash', 'dustbin', 'waste pile', 'waste dump', 'dirty area'] },
     { id: 32, name: 'Water contamination', points: 40, keywords: ['dirty water', 'muddy', 'smelly water'] },
     { id: 33, name: 'Pump failure', points: 35, keywords: ['pump', 'motor', 'station'] },
     { id: 34, name: 'Treatment plant', points: 40, keywords: ['treatment plant', 'stp', 'wtp'] },
