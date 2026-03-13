@@ -87,7 +87,7 @@ const OperationsMap = ({ issues, selectedIssueId, onIssueSelect }) => {
                 />
 
                 {/* Dynamic Markers */}
-                {issues.map(issue => (
+                {(issues || []).map(issue => (
                     issue.location?.lat && (
                         <Marker
                             key={issue.id}

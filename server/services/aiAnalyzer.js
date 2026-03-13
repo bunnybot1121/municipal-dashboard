@@ -3,8 +3,9 @@
  * This runs SERVER-SIDE to analyze submitted evidence.
  */
 
-const { determinePriority } = require('../utils/priorityList');
+const { calculatePriorityScore, CAT_1_SAFETY } = require('../public/js/aiPriority');
 const { getSeasonalPriority } = require('../utils/seasonalLogic');
+const { analyzeIssueWithGemini } = require('./geminiService');
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371e3; // metres
@@ -21,7 +22,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
     return R * c;
 };
 
-const analyzeEvidence = (issueData) => {
+const analyzeEvidence = async (issueData) => {
     const analysis = {
         confidenceScore: 100,
         isFake: false,
@@ -78,22 +79,45 @@ const analyzeEvidence = (issueData) => {
         }
     }
 
-    // 4. PRIORITY & CATEGORY ANALYSIS (New)
-    // Combine text from title and description for analysis
-    const textToAnalyze = `${title || ''} ${description || ''} ${sector || ''}`;
-    const priorityResult = determinePriority(textToAnalyze);
+    // 4. PRIORITY & CATEGORY ANALYSIS (145-Signal Engine)
+    // Construct a mock issue object for the engine
+    const signalIssue = {
+        title: title || '',
+        description: description || '',
+        sector: sector || '',
+        severity: issueData.priority || issueData.severity || 'medium',
+        createdAt: issueData.createdAt || issueData.reportedAt || issueData.scheduledStart || new Date().toISOString()
+    };
 
-    if (priorityResult.details) {
-        analysis.priority = priorityResult.priority;
-        analysis.riskFactors.lifeSafety = priorityResult.details.lifeSafety;
-        analysis.riskFactors.infrastructure = priorityResult.details.infrastructure;
-        analysis.explanation = priorityResult.explanation; // Include detailed reason
-        // Boost confidence if we found a matching keyword
-        if (priorityResult.confidence > 0.8) {
-            analysis.confidenceScore += 5;
-        }
-    } else {
-        analysis.explanation = priorityResult.explanation || "Standard priority assessment.";
+    const priorityResult = calculatePriorityScore(signalIssue);
+
+    // Map Engine Result to Schema — KEEP stored priority as authority
+    const storedPriority = issueData.priority || issueData.severity || 'Medium';
+    // Capitalize first letter to match schema expectations
+    const normalizedPriority = storedPriority.charAt(0).toUpperCase() + storedPriority.slice(1).toLowerCase();
+    analysis.priority = normalizedPriority; // Preserve the assigned priority
+    analysis.enginePriority = priorityResult.label; // Engine result saved separately for reference
+    analysis.priorityScore = priorityResult.score;
+    analysis.categoryScores = priorityResult.advancedAnalysis.signals;
+    analysis.totalRulesChecked = 145;
+    analysis.breakdown = priorityResult.breakdown;
+
+    analysis.riskFactors.lifeSafety = priorityResult.advancedAnalysis.signals.safety > 20 ? 9 : 5;
+    analysis.riskFactors.infrastructure = priorityResult.advancedAnalysis.signals.sector > 20 ? 9 : 5;
+
+    // Detailed Explanation from signals
+    analysis.explanation = priorityResult.advancedAnalysis.explanation || "Priority assigned based on 145-signal analysis.";
+
+    // Add detected signals to flags for visibility
+    if (priorityResult.breakdown && priorityResult.breakdown.length > 0) {
+        priorityResult.breakdown.forEach(signal => {
+            if (signal.value > 0) analysis.flags.push(`SIGNAL: ${signal.name} (+${signal.value})`); // Show points
+        });
+    }
+
+    // Boost confidence if high priority signals detected
+    if (priorityResult.score > 60) {
+        analysis.confidenceScore += 10;
     }
 
     // 5. SEASONAL LOGIC INTEGRATION
@@ -101,21 +125,52 @@ const analyzeEvidence = (issueData) => {
     analysis.seasonalFactor = seasonal.factor;
 
     // Adjust priority score based on season
-    // If seasonal factor is high (>1.2), we might bump the priority
-    if (seasonal.factor >= 1.5 && analysis.priority !== 'Critical') {
-        if (analysis.priority === 'High') analysis.priority = 'Critical';
-        else if (analysis.priority === 'Medium') analysis.priority = 'High';
-        else if (analysis.priority === 'Low') analysis.priority = 'Medium';
+    if (seasonal.factor >= 1.5 && analysis.priority !== 'Crisis') {
+        // Upgrade priority based on seasonal factor
+        if (analysis.priority === 'Critical') analysis.priority = 'Crisis';
+        else if (analysis.priority === 'Moderate') analysis.priority = 'Critical';
 
-        const escalationMsg = `Escalated to ${analysis.priority} due to critical ${seasonal.season} factors.`;
+        analysis.explanation += ` [SEASONAL ESCALATION: ${seasonal.season}]`;
         analysis.flags.push(`SEASONAL_ESCALATION: ${seasonal.season}`);
-        analysis.explanation += ` ${escalationMsg}`;
     }
 
     // 6. Clamp score
     analysis.confidenceScore = Math.max(0, Math.min(100, analysis.confidenceScore));
 
-    // 7. Final Fake Verdict
+    analysis.confidenceScore = Math.max(0, Math.min(100, analysis.confidenceScore));
+
+    // 7. GEMINI AI INTEGRATION (Second Opinion)
+    try {
+        console.log("🤖 Calling OpenRouter AI for advanced analysis...");
+        const geminiResult = await analyzeIssueWithGemini(title, description, sector, {
+            location: issueData.location?.address || issueData.address || '',
+            priority: issueData.priority || analysis.priority,
+            status: issueData.status || 'pending'
+        });
+
+        analysis.gemini = {
+            priority: geminiResult.priority,
+            reasoning: geminiResult.reasoning,
+            risks: geminiResult.risks,
+            match: geminiResult.priority === analysis.priority, // Check if AI agrees with Rules
+            recommended_action: geminiResult.recommended_action // Include new action plan
+        };
+        console.log("✅ OpenRouter Analysis Complete:", geminiResult.priority);
+
+        // If Gemini detects Crisis but Rules didn't, flag it
+        if (geminiResult.priority === 'Crisis' && analysis.priority !== 'Crisis') {
+            analysis.flags.push('AI_MISMATCH_ESCALATION: AI detected Crisis');
+            // Optional: You could boost the score here if you trust Gemini more
+            // analysis.priority = 'Critical'; 
+        }
+
+    } catch (err) {
+        console.error("Failed to get OpenRouter analysis:", err.message);
+        analysis.gemini = { status: "failed", error: err.message };
+    }
+
+
+    // 8. Final Fake Verdict
     if (analysis.confidenceScore < 40) {
         analysis.isFake = true;
     }

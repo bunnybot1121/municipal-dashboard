@@ -7,6 +7,7 @@ import TopBar from './components/TopBar';
 import ActionFab from './components/ActionFab';
 import BottomSheet from './components/BottomSheet';
 import ReportingModal from './components/ReportingModal';
+import CitizenNotifications from './components/CitizenNotifications';
 
 const CitizenApp = () => {
     // State
@@ -65,6 +66,9 @@ const CitizenApp = () => {
                 location={location}
                 address={fullAddress}
             />
+
+            {/* 6. Citizen Notifications (Bell + Toast + Drawer) */}
+            <CitizenNotifications />
         </div>
     );
 };

@@ -12,6 +12,9 @@ export default function ReportIssue() {
         description: ''
     });
 
+    const [validationState, setValidationState] = useState(null); // null | 'validating' | 'rejected' | 'accepted'
+    const [validationResult, setValidationResult] = useState(null);
+
     const videoRef = useRef(null);
     const streamRef = useRef(null);
 
@@ -121,6 +124,8 @@ export default function ReportIssue() {
     function retakePhoto() {
         setPhoto(null);
         setStep('camera');
+        setValidationState(null);
+        setValidationResult(null);
         startCamera();
     }
 
@@ -131,6 +136,48 @@ export default function ReportIssue() {
         }
 
         try {
+            // === STEP 1: AI VALIDATION ===
+            setValidationState('validating');
+            setValidationResult(null);
+
+            let validation = { isValid: true, confidence: 50, reason: 'Validation skipped (server unavailable)' };
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+                const valResponse = await fetch('http://localhost:5001/api/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        photo: photo,
+                        description: formData.description,
+                        sector: formData.sector,
+                        severity: formData.severity
+                    }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (valResponse.ok) {
+                    validation = await valResponse.json();
+                }
+            } catch (valErr) {
+                console.warn("⚠️ AI Validation server unreachable:", valErr.message);
+                // Accept if server is down — don't block citizens
+            }
+
+            setValidationResult(validation);
+
+            // === STEP 2: CHECK RESULT ===
+            if (!validation.isValid) {
+                setValidationState('rejected');
+                return; // Don't save — show rejection UI
+            }
+
+            setValidationState('accepted');
+
+            // === STEP 3: SAVE TO DB ===
             const issueData = {
                 title: `${formData.sector} - ${formData.severity}`,
                 description: formData.description,
@@ -143,13 +190,20 @@ export default function ReportIssue() {
                     address: address
                 },
                 rawGps: gps,
+                aiValidation: validation,
                 createdAt: new Date().toISOString()
             };
 
-            await api.createIssue(issueData);
-            setStep('success');
+            const response = await api.createIssue(issueData);
+
+            if (response && response.id) {
+                setStep('success');
+            } else {
+                throw new Error("Failed to create issue");
+            }
         } catch (error) {
             console.error('Submit error:', error);
+            setValidationState(null);
             alert('Failed to submit report. Please try again.');
         }
     }
@@ -285,17 +339,69 @@ export default function ReportIssue() {
                         </p>
                     </div>
 
-                    {/* Submit Button */}
-                    <button
-                        onClick={submitReport}
-                        className="w-full bg-blue-600 text-white py-4 rounded-lg text-lg font-bold shadow-lg"
-                    >
-                        SUBMIT REPORT
-                    </button>
-
-                    <p className="text-center text-sm text-gray-600">
-                        Your report will be reviewed within 24 hours
-                    </p>
+                    {/* AI Validation Status & Submit */}
+                    {validationState === 'validating' ? (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                            <div className="inline-flex items-center gap-3">
+                                <div className="w-6 h-6 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                <span className="text-blue-700 font-bold text-lg">Verifying with AI...</span>
+                            </div>
+                            <p className="text-blue-600 text-sm mt-2">Analyzing photo and description for authenticity</p>
+                        </div>
+                    ) : validationState === 'rejected' ? (
+                        <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6">
+                            <div className="text-center">
+                                <div className="text-4xl mb-2">🚫</div>
+                                <h3 className="text-red-700 font-bold text-lg">Report Not Verified</h3>
+                                <p className="text-red-600 text-sm mt-2">{validationResult?.reason || 'AI could not verify this as a valid municipal issue.'}</p>
+                                {validationResult?.detectedIssueType && (
+                                    <p className="text-red-500 text-xs mt-1">Detected: {validationResult.detectedIssueType}</p>
+                                )}
+                                {validationResult?.suggestions?.length > 0 && (
+                                    <div className="mt-3 bg-white rounded p-3 text-left">
+                                        <p className="text-xs font-bold text-gray-700 mb-1">💡 Suggestions:</p>
+                                        {validationResult.suggestions.map((s, i) => (
+                                            <p key={i} className="text-xs text-gray-600">• {s}</p>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex gap-3 mt-4">
+                                <button
+                                    onClick={retakePhoto}
+                                    className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold"
+                                >
+                                    📷 Retake Photo
+                                </button>
+                                <button
+                                    onClick={() => { setValidationState(null); setValidationResult(null); }}
+                                    className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold"
+                                >
+                                    ✏️ Edit & Retry
+                                </button>
+                            </div>
+                        </div>
+                    ) : validationState === 'accepted' ? (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                            <div className="text-3xl mb-1">✅</div>
+                            <p className="text-green-700 font-bold">AI Verified — Submitting report...</p>
+                            {validationResult?.detectedIssueType && (
+                                <p className="text-green-600 text-xs mt-1">Detected: {validationResult.detectedIssueType}</p>
+                            )}
+                        </div>
+                    ) : (
+                        <>
+                            <button
+                                onClick={submitReport}
+                                className="w-full bg-blue-600 text-white py-4 rounded-lg text-lg font-bold shadow-lg"
+                            >
+                                🛡️ VERIFY & SUBMIT REPORT
+                            </button>
+                            <p className="text-center text-sm text-gray-600">
+                                AI will verify your photo before submission
+                            </p>
+                        </>
+                    )}
                 </div>
             </div>
         );

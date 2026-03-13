@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import {
     Dashboard as DashboardIcon,
     Assignment,
@@ -9,18 +10,25 @@ import {
     Menu,
     ChevronLeft,
     Logout,
-    AccountCircle
+    AccountCircle,
+    Settings as SettingsIcon,
+    ReportProblem,
+    NotificationsOutlined
 } from '@mui/icons-material';
 
 const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     const location = useLocation();
+    const { logout } = useAuth();
 
     const navItems = [
         { path: '/', icon: DashboardIcon, label: 'Dashboard' },
         { path: '/issues', icon: Assignment, label: 'Issues' },
+        { path: '/citizen-reports', icon: ReportProblem, label: 'Citizen Reports' },
+        { path: '/notifications', icon: NotificationsOutlined, label: 'Notifications' },
         { path: '/scheduler', icon: CalendarMonth, label: 'Maintenance' },
         { path: '/analytics', icon: BarChart, label: 'Analytics' },
-        { path: '/staff', icon: People, label: 'Staff' }
+        { path: '/staff', icon: People, label: 'Staff' },
+        { path: '/settings', icon: SettingsIcon, label: 'Settings' }
     ];
 
     const isActive = (path) => {
@@ -75,7 +83,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                     )}
                 </div>
                 {!isCollapsed && (
-                    <button className="sidebar-logout">
+                    <button className="sidebar-logout" onClick={logout}>
                         <Logout fontSize="small" />
                         <span>Logout</span>
                     </button>

@@ -22,10 +22,23 @@ const Analytics = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const data = await api.getIssues();
-            if (data && Array.isArray(data)) {
-                setIssues(data);
-            }
+            const [issuesData, tasksData] = await Promise.all([
+                api.getIssues().catch(() => []),
+                api.getTasks().catch(() => [])
+            ]);
+
+            // Normalize Tasks to look like Issues for analytics
+            const normalizedTasks = tasksData.map(t => ({
+                id: `TSK-${t.id}`,
+                sector: t.sector,
+                status: t.status,
+                createdAt: t.scheduled_start || t.created_at, // Use scheduled date for trends
+                type: 'task'
+            }));
+
+            // Combine both
+            const combined = [...(issuesData || []), ...normalizedTasks];
+            setIssues(combined);
         } catch (error) {
             console.error("Failed to fetch analytics data", error);
         } finally {

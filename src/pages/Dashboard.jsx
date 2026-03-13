@@ -1,355 +1,741 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react'; // v2.1 Hybrid Dashboard
 import { useNavigate } from 'react-router-dom';
-import { api } from '../services/apiClient';
-import LeafletMap from '../components/CommandCenter/LeafletMap';
-import InfraHealth from '../components/CommandCenter/InfraHealth';
-import {
-    Assessment as BarChart3,
-    AccessTime as Clock,
-    CheckCircle,
-    Timer
-} from '@mui/icons-material';
+import { fetchTasksFromSupabase } from '../services/taskService';
+import { calculatePriorityScore } from '../utils/aiPriority';
+import { useIssues } from '../hooks/useIssues';
+import { AlertCircle, Loader, RefreshCw, BarChart2, Clock, CheckCircle, List, Activity, Map as MapIcon, Wifi, Filter, ChevronDown, ChevronRight, X, Brain, TrendingUp, Shield, MapPin, Users, Zap, Wrench, Scale, MinusCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import EnhancedMap from '../components/EnhancedMap';
+import { fetchSensorReadings, subscribeSensorUpdates } from '../services/sensorService';
 
-// --- MOCK DATA FOR FALLBACK ---
-const MOCK_ISSUES = [
-    { id: 'ISS-1001', title: 'Major Pothole on MG Road', sector: 'roads', priority: 'critical', status: 'open', location: { lat: 19.0760, lng: 72.8777 }, riskLevel: 'Critical', aiAnalysis: { isReal: true, confidence: 0.98 } },
-    { id: 'ISS-1002', title: 'Garbage Pileup near Market', sector: 'waste', priority: 'high', status: 'open', location: { lat: 19.0750, lng: 72.8760 }, riskLevel: 'High', aiAnalysis: { isReal: true, confidence: 0.95 } },
-    { id: 'ISS-1003', title: 'Street Light Malfunction', sector: 'lighting', priority: 'medium', status: 'in-progress', location: { lat: 19.0740, lng: 72.8750 }, riskLevel: 'Medium', aiAnalysis: { isReal: true, confidence: 0.92 } },
-    { id: 'ISS-1004', title: 'Water Pipe Burst', sector: 'water', priority: 'critical', status: 'open', location: { lat: 19.0730, lng: 72.8740 }, riskLevel: 'Critical', aiAnalysis: { isReal: true, confidence: 0.99 } },
-    { id: 'ISS-1005', title: 'Illegal Banner Removal', sector: 'admin', priority: 'low', status: 'resolved', location: { lat: 19.0720, lng: 72.8730 }, riskLevel: 'Low', aiAnalysis: { isReal: true, confidence: 0.88 } },
-    { id: 'ISS-1006', title: 'Drainage Clogging', sector: 'drainage', priority: 'high', status: 'open', location: { lat: 19.0710, lng: 72.8720 }, riskLevel: 'High', aiAnalysis: { isReal: true, confidence: 0.94 } },
-    { id: 'ISS-1007', title: 'Broken Footpath Tiles', sector: 'roads', priority: 'medium', status: 'open', location: { lat: 19.0700, lng: 72.8710 }, riskLevel: 'Medium', aiAnalysis: { isReal: true, confidence: 0.90 } },
-    { id: 'ISS-1008', title: 'Dead Animal Removal', sector: 'waste', priority: 'high', status: 'resolved', location: { lat: 19.0690, lng: 72.8700 }, riskLevel: 'High', aiAnalysis: { isReal: true, confidence: 0.97 } },
-    { id: 'ISS-1009', title: 'No Water Supply (Sector 4)', sector: 'water', priority: 'critical', status: 'in-progress', location: { lat: 19.0680, lng: 72.8690 }, riskLevel: 'Critical', aiAnalysis: { isReal: true, confidence: 0.96 } },
-    { id: 'ISS-1010', title: 'Tree Branch Falling Risk', sector: 'admin', priority: 'medium', status: 'open', location: { lat: 19.0670, lng: 72.8680 }, riskLevel: 'Medium', aiAnalysis: { isReal: true, confidence: 0.89 } },
-    { id: 'ISS-1011', title: 'Open Manhole', sector: 'drainage', priority: 'critical', status: 'open', location: { lat: 19.0660, lng: 72.8670 }, riskLevel: 'Critical', aiAnalysis: { isReal: true, confidence: 0.99 } },
-    { id: 'ISS-1012', title: 'Street Light Flickering', sector: 'lighting', priority: 'low', status: 'open', location: { lat: 19.0650, lng: 72.8660 }, riskLevel: 'Low', aiAnalysis: { isReal: true, confidence: 0.85 } },
-    { id: 'ISS-1013', title: 'Garbage Bin Overflow', sector: 'waste', priority: 'medium', status: 'in-progress', location: { lat: 19.0640, lng: 72.8650 }, riskLevel: 'Medium', aiAnalysis: { isReal: true, confidence: 0.93 } },
-    { id: 'ISS-1014', title: 'Pothole on Linking Road', sector: 'roads', priority: 'high', status: 'open', location: { lat: 19.0630, lng: 72.8640 }, riskLevel: 'High', aiAnalysis: { isReal: true, confidence: 0.95 } },
-    { id: 'ISS-1015', title: 'Fire Hydrant Leak', sector: 'water', priority: 'high', status: 'resolved', location: { lat: 19.0620, lng: 72.8630 }, riskLevel: 'High', aiAnalysis: { isReal: true, confidence: 0.91 } }
-];
+/* ── Citizen Analysis Side Panel ──────────────────────── */
+function CitizenAnalysisPanel({ issue, onClose, onViewFull }) {
+    const a = issue.calculatedPriority;
+    const signals = a?.advancedAnalysis?.signals || {};
+    const dims = a?.advancedAnalysis?.dimensions || {};
 
-const Dashboard = () => {
+    // const CAT_ROWS = [...]; // Removed duplicate breakdown per user request
+
+    const scoreColor = a?.score >= 85 ? '#EF4444' : a?.score >= 60 ? '#F97316' : a?.score >= 40 ? '#EAB308' : '#10B981';
+    const scoreBg = a?.score >= 85 ? 'bg-red-100 text-red-700' : a?.score >= 60 ? 'bg-orange-100 text-orange-700' : a?.score >= 40 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-700';
+
+    return (
+        <>
+            <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
+            <div
+                className="fixed top-0 right-0 h-full w-full max-w-[420px] bg-white shadow-2xl z-50 flex flex-col"
+                style={{ animation: 'slideInRight 0.22s ease-out' }}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 py-4 border-b bg-gray-50">
+                    <div>
+                        <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider">145-Signal AI Analysis</p>
+                        <h2 className="font-extrabold text-gray-800 text-sm mt-0.5 line-clamp-1">{issue.title}</h2>
+                    </div>
+                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-500">
+                        <X size={18} />
+                    </button>
+                </div>
+
+                {/* Scrollable body */}
+                <div className="flex-1 overflow-y-auto">
+                    {/* Photo + score overlay */}
+                    <div className="relative h-44 bg-gray-200">
+                        {issue.photo_url
+                            ? <img src={issue.photo_url} alt={issue.title} className="w-full h-full object-cover" />
+                            : <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">No Photo</div>
+                        }
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between">
+                            <div>
+                                <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider">AI Priority Score</p>
+                                <p className="text-white text-4xl font-black">{a?.score ?? '—'}<span className="text-lg font-medium">/100</span></p>
+                            </div>
+                            <span className={`px-3 py-1.5 rounded-lg text-xs font-extrabold uppercase ${scoreBg}`}>
+                                {a?.label ?? 'Calculating'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="px-5 py-4 space-y-5">
+                        {/* Score bar */}
+                        <div>
+                            <div className="flex justify-between text-xs text-gray-500 mb-1">
+                                <span className="font-semibold">Overall Priority Score</span>
+                                <span className="font-bold" style={{ color: scoreColor }}>{a?.score ?? 0}/100</span>
+                            </div>
+                            <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full rounded-full transition-all duration-700"
+                                    style={{ width: `${a?.score ?? 0}%`, backgroundColor: scoreColor }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Top signals explanation */}
+                        {a?.advancedAnalysis?.explanation && (
+                            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3">
+                                <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1">🤖 Top Signals Detected</p>
+                                <p className="text-sm text-indigo-800 font-medium">{a.advancedAnalysis.explanation}</p>
+                            </div>
+                        )}
+
+                        {/* Category breakdown */}
+                        {/* 9-Category Breakdown Removed per user request */}
+
+                        {/* 7D Dimensions */}
+                        <div>
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">7D Framework Output</p>
+                            <div className="bg-gray-50 rounded-xl border border-gray-100 divide-y divide-gray-100">
+                                {[
+                                    ['Sector Assessment', dims.sector],
+                                    ['Event Risk', dims.event],
+                                    ['Severity Level', dims.severity],
+                                    ['Time Boost', dims.timeBoost != null ? `+${dims.timeBoost} pts` : null],
+                                    ['Location Boost', dims.locationBoost != null ? `+${dims.locationBoost} pts` : null],
+                                    ['Impact Score', dims.impactScore != null ? `${dims.impactScore} pts` : null],
+                                ].map(([k, v]) => v != null && (
+                                    <div key={k} className="flex justify-between px-3 py-2 text-xs">
+                                        <span className="text-gray-500 font-medium">{k}</span>
+                                        <span className="font-bold text-gray-800">{v}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Escalation */}
+                        {a?.advancedAnalysis?.escalation && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-3">
+                                <TrendingUp size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Escalation Target</p>
+                                    <p className="text-sm font-bold text-amber-900 mt-0.5">{a.advancedAnalysis.escalation}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Meta info */}
+                        <div className="bg-gray-50 rounded-xl border border-gray-100 divide-y divide-gray-100">
+                            {[
+                                ['Sector', issue.sector],
+                                ['Status', issue.status],
+                                ['Reported', new Date(issue.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })],
+                                ['Address', issue.address || issue.location?.address || '—'],
+                            ].map(([k, v]) => (
+                                <div key={k} className="flex justify-between px-3 py-2 text-xs">
+                                    <span className="text-gray-500 font-medium">{k}</span>
+                                    <span className="font-bold text-gray-800 text-right max-w-[60%] truncate">{v || '—'}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer CTA */}
+                <div className="px-5 py-4 border-t bg-white">
+                    <button
+                        onClick={onViewFull}
+                        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-colors"
+                    >
+                        Open Full Detail Page →
+                    </button>
+                </div>
+            </div>
+            <style>{`
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to   { transform: translateX(0);    opacity: 1; }
+                }
+            `}</style>
+        </>
+    );
+}
+
+export default function Dashboard() {
+    const [tasks, setTasks] = useState([]);
+    const [citizenIssues, setCitizenIssues] = useState([]); // This will hold the processed issues
+    const [loadingTasks, setLoadingTasks] = useState(true);
+    const [sensors, setSensors] = useState([]);
+    const [sensorsLoading, setSensorsLoading] = useState(true);
+    const [sensorsError, setSensorsError] = useState(null);
+    const [error, setError] = useState('');
+    const { city } = useAuth();
     const navigate = useNavigate();
-    const [issues, setIssues] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({
-        total: 0,
-        pending: 0,
-        resolved: 0,
-        avgResponse: '4.2h'
-    });
-    const [sectorCounts, setSectorCounts] = useState({});
-    const [priorityCounts, setPriorityCounts] = useState({
-        critical: 0,
-        high: 0,
-        medium: 0,
-        low: 0
-    });
 
+    // Custom Hook for Real-time Issues
+    const { issues: realTimeIssues, loading: issuesLoading } = useIssues();
+
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [citizenPanelOpen, setCitizenPanelOpen] = useState(false); // collapsed by default
+    const [selectedCitizenIssue, setSelectedCitizenIssue] = useState(null); // for analysis panel
+
+    // 1. Fetch Tasks (One-time or on City change)
     useEffect(() => {
-        loadData();
+        loadTasks();
+    }, [city]);
+
+    // 1b. Fetch Real Sensor Data + Subscribe to real-time updates
+    useEffect(() => {
+        setSensorsLoading(true);
+        setSensorsError(null);
+        fetchSensorReadings()
+            .then(data => {
+                setSensors(data);
+                setSensorsLoading(false);
+            })
+            .catch(err => {
+                console.error('❌ Sensor load error:', err);
+                setSensorsError('Could not reach sensor hardware.');
+                setSensorsLoading(false);
+            });
+
+        const unsubscribe = subscribeSensorUpdates((newReading) => {
+            setSensors(prev => {
+                const idx = prev.findIndex(s => s.id === newReading.id);
+                if (idx >= 0) {
+                    const updated = [...prev];
+                    updated[idx] = newReading;
+                    return updated;
+                }
+                return [newReading, ...prev];
+            });
+        });
+        return () => unsubscribe();
     }, []);
 
-    const loadData = async () => {
+    async function loadTasks() {
+        setLoadingTasks(true);
+        setError('');
+        const currentCityId = city || 'Khargar';
         try {
-            // Try fetching real data first
-            // const data = await api.getIssues();
-            // Force mock data for now to ensure robust testing without backend
-            const data = MOCK_ISSUES;
-
-            if (data && Array.isArray(data)) {
-                const normalizedData = data.map(issue => ({
-                    ...issue,
-                    id: issue._id || issue.id,
-                    priority: (issue.priority || issue.severity || 'low').toLowerCase(),
-                    status: (issue.status || 'open').toLowerCase(),
-                    sector: (issue.sector || 'other').toLowerCase()
-                }));
-
-                setIssues(normalizedData);
-                calculateStats(normalizedData);
-            }
-        } catch (error) {
-            console.log("Backend error, using mock data:", error);
-            // Fallback is also Mock Data
-            const normalizedData = MOCK_ISSUES.map(issue => ({
-                ...issue,
-                id: issue._id || issue.id,
-                priority: (issue.priority || issue.severity || 'low').toLowerCase(),
-                status: (issue.status || 'open').toLowerCase(),
-                sector: (issue.sector || 'other').toLowerCase()
-            }));
-            setIssues(normalizedData);
-            calculateStats(normalizedData);
+            const realTasks = await fetchTasksFromSupabase(currentCityId);
+            setTasks(realTasks || []);
+        } catch (err) {
+            setError(`Failed to load tasks: ${err.message}`);
+            console.error('âŒ DASHBOARD TASK LOAD ERROR:', err);
         } finally {
-            setLoading(false);
+            setLoadingTasks(false);
         }
+    }
+
+    // 2. Process Real-time Issues when they change
+    useEffect(() => {
+        if (realTimeIssues.length > 0) {
+            // Apply 145-Signal Priority Analysis
+            const analyzedIssues = realTimeIssues.map(issue => {
+                // If backend already has score, use it, otherwise calculate frontend fallback
+                // The hook already maps `calculatedPriority` but let's ensure consistency
+                const priorityAnalysis = issue.calculatedPriority || calculatePriorityScore({
+                    title: issue.title,
+                    description: issue.description,
+                    sector: issue.sector,
+                    severity: issue.priority, // map priority to severity for calc
+                    createdAt: issue.created_at
+                });
+
+                return { ...issue, calculatedPriority: priorityAnalysis };
+            });
+
+            // SORTING: AI Priority Score (Desc), then Created At (Desc)
+            const sortedIssues = analyzedIssues.sort((a, b) => {
+                const scoreA = a.calculatedPriority?.score || 0;
+                const scoreB = b.calculatedPriority?.score || 0;
+                if (scoreB !== scoreA) return scoreB - scoreA;
+                return new Date(b.created_at) - new Date(a.created_at);
+            });
+
+            setCitizenIssues(sortedIssues);
+        } else {
+            setCitizenIssues([]);
+        }
+    }, [realTimeIssues]);
+
+    // FILTERING
+    const filteredIssues = citizenIssues.filter(issue => {
+        if (statusFilter === 'all') return true;
+        return issue.status === statusFilter;
+    });
+
+    // Helper to check if a task matches the SELECTED date
+    const isSelectedDate = (dateString) => {
+        if (!dateString) return false;
+        const taskDate = new Date(dateString).toISOString().split('T')[0];
+        return taskDate === selectedDate;
     };
 
-    const calculateStats = (data) => {
-        const total = data.length;
-        const pending = data.filter(i => i.status !== 'resolved' && i.status !== 'closed').length;
-        const resolved = data.filter(i => i.status === 'resolved' || i.status === 'closed').length;
+    const todaysTasks = tasks.filter(t => isSelectedDate(t.scheduled_start));
 
-        // Sector Counts
-        const sectors = {};
-        // Priority Counts
-        const priorities = { critical: 0, high: 0, medium: 0, low: 0 };
+    // Map markers from Real Issues + Real Tasks
+    const KHARGAR_CENTER = { lat: 19.0298, lng: 73.0588 }; // Khargar Coords
 
-        data.forEach(i => {
-            // Sector
-            sectors[i.sector] = (sectors[i.sector] || 0) + 1;
-            // Priority
-            if (priorities[i.priority] !== undefined) {
-                priorities[i.priority]++;
-            }
-        });
-
-        setStats(prev => ({ ...prev, total, pending, resolved }));
-        setSectorCounts(sectors);
-        setPriorityCounts(priorities);
+    // Default locations for task sectors to distribute them on map
+    const SECTOR_LOCATIONS = {
+        water: { lat: 19.035, lng: 73.065 },
+        waste: { lat: 19.025, lng: 73.070 },
+        lighting: { lat: 19.040, lng: 73.050 },
+        drainage: { lat: 19.020, lng: 73.055 },
+        roads: { lat: 19.030, lng: 73.045 },
+        sanitation: { lat: 19.015, lng: 73.060 },
+        parks: { lat: 19.038, lng: 73.075 },
+        power: { lat: 19.042, lng: 73.062 },
+        buildings: { lat: 19.028, lng: 73.080 }
     };
 
-    const getPriorityStyle = (p) => {
-        const map = {
-            'critical': 'bg-rose-50 text-rose-600',
-            'high': 'bg-amber-50 text-amber-600',
-            'medium': 'bg-blue-50 text-blue-600',
-            'low': 'bg-slate-100 text-slate-600'
-        };
-        return map[(p || 'low').toLowerCase()] || map['low'];
-    };
+    const mapMarkers = [
+        ...filteredIssues.map((i) => ({
+            id: i.id,
+            lat: i.location?.lat || KHARGAR_CENTER.lat,
+            lng: i.location?.lng || KHARGAR_CENTER.lng,
+            title: i.title,
+            priority: i.priority,
+            type: 'Issue'
+        })),
+        ...todaysTasks.map((t, idx) => {
+            const sectorBase = SECTOR_LOCATIONS[t.sector?.toLowerCase()] || KHARGAR_CENTER;
+            // Add a small jitter so multiple tasks in same sector don't overlap perfectly
+            const jitterLat = (Math.random() - 0.5) * 0.008;
+            const jitterLng = (Math.random() - 0.5) * 0.008;
 
-    const getStatusStyle = (s) => {
-        const map = {
-            'open': 'bg-slate-300',
-            'in-progress': 'bg-amber-400',
-            'resolved': 'bg-emerald-500',
-            'closed': 'bg-emerald-500'
-        };
-        return map[(s || 'open').toLowerCase()] || 'bg-slate-300';
-    };
+            return {
+                id: t.id || `task-${idx}`,
+                lat: t.lat || (sectorBase.lat + jitterLat),
+                lng: t.lng || (sectorBase.lng + jitterLng),
+                title: `Task: ${t.title}`,
+                priority: t.priority || 'medium',
+                type: 'Schedule',
+                sector: t.sector
+            };
+        }),
+        ...sensors.map((s) => ({
+            id: s.id,
+            lat: s.location?.lat || KHARGAR_CENTER.lat,
+            lng: s.location?.lng || KHARGAR_CENTER.lng,
+            title: s.label,
+            priority: s.status === 'critical' ? 'critical' : 'low',
+            type: 'Sensor'
+        }))
+    ];
 
-    const getSectorIcon = (s) => {
-        const map = {
-            'water': 'water_drop',
-            'roads': 'edit_road',
-            'lighting': 'lightbulb',
-            'waste': 'delete_sweep',
-            'drainage': 'waves',
-            'power': 'bolt',
-            'admin': 'admin_panel_settings'
-        };
-        return map[(s || '').toLowerCase()] || 'category';
-    };
+    const overallLoading = loadingTasks || (issuesLoading && citizenIssues.length === 0);
 
-    const recentIssues = issues.slice(0, 8); // Show more issues
+    if (overallLoading && citizenIssues.length === 0) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <Loader className="w-16 h-16 text-blue-600 mx-auto mb-4 animate-spin" />
+                    <p className="text-gray-700 font-medium">Loading real-time data...</p>
+                </div>
+            </div>
+        );
+    }
 
-    if (loading) {
-        return <div className="p-10 text-center text-slate-500">Loading Dashboard...</div>;
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+                    <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+                    <p className="text-red-900 font-semibold text-center mb-4">{error}</p>
+                    <button
+                        onClick={loadTasks}
+                        className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center justify-center gap-2"
+                    >
+                        <RefreshCw className="w-4 h-4" />
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     return (
-        <div className="p-6 space-y-8 animate-fade-in">
-            {/* Metric Cards - 4 columns */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <MetricCard
-                    title="Total Issues"
-                    value={stats.total}
-                    trend="Total"
-                    icon={<BarChart3 />}
-                    color="blue"
-                />
-                <MetricCard
-                    title="Pending"
-                    value={stats.pending}
-                    trend="Active"
-                    icon={<Clock />}
-                    color="yellow"
-                />
-                <MetricCard
-                    title="Resolved"
-                    value={stats.resolved}
-                    trend="Completed"
-                    icon={<CheckCircle />}
-                    color="green"
-                />
-                <MetricCard
-                    title="Avg Response"
-                    value={stats.avgResponse}
-                    trend="Est."
-                    icon={<Timer />}
-                    color="purple"
-                />
-            </div>
+        <>
+            <div className="min-h-screen bg-gray-50 p-6 animate-fade-in">
+                <div className="max-w-7xl mx-auto">
+                    <div className="mb-8">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+                                    Dashboard
+                                    <span className="flex items-center gap-1.5 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full border border-blue-200">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                        </span>
+                                        v2.3 Live
+                                    </span>
+                                </h1>
+                                <p className="text-gray-600 mt-1">{city || 'Khargar'}</p>
+                            </div>
 
-            {/* SENSOR MONITORING SECTION */}
-            <InfraHealth />
+                            <div className="flex items-center gap-3">
+                                {/* Status Filter */}
+                                <div className="bg-white border rounded-lg px-3 py-2 shadow-sm flex items-center gap-2">
+                                    <Filter size={16} className="text-gray-500" />
+                                    <select
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                        className="outline-none text-gray-700 font-medium bg-transparent text-sm"
+                                    >
+                                        <option value="all">All Statuses</option>
+                                        <option value="new">New</option>
+                                        <option value="assigned">Assigned</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="resolved">Resolved</option>
+                                        <option value="rejected">Rejected</option>
+                                    </select>
+                                </div>
 
-            {/* Map + Chart - 2:1 ratio */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                    <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden h-96">
-                        <LeafletMap issues={issues} />
-                    </div>
-                </div>
-                <div>
-                    <PriorityChart counts={priorityCounts} pendingCount={stats.pending} />
-                </div>
-            </div>
+                                {/* Date Picker Control */}
+                                <div className="bg-white border rounded-lg px-3 py-2 shadow-sm flex items-center gap-2">
+                                    <span className="text-sm text-gray-500 font-medium">View Date:</span>
+                                    <input
+                                        type="date"
+                                        value={selectedDate}
+                                        onChange={(e) => setSelectedDate(e.target.value)}
+                                        className="outline-none text-gray-800 font-bold"
+                                        style={{ maxWidth: '130px' }}
+                                    />
+                                </div>
 
-            {/* Sector Cards - 5 columns */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                <SectorCard icon="🛣️" label="ROADS" value={sectorCounts['roads'] || 0} />
-                <SectorCard icon="💧" label="WATER" value={sectorCounts['water'] || 0} />
-                <SectorCard icon="〰️" label="DRAINAGE" value={sectorCounts['drainage'] || 0} />
-                <SectorCard icon="💡" label="LIGHTING" value={sectorCounts['lighting'] || 0} />
-                <SectorCard icon="🗑️" label="WASTE" value={sectorCounts['waste'] || 0} />
-            </div>
-
-            {/* Table */}
-            <div>
-                <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
-                        <h3 className="font-bold text-slate-800">Recent Issues</h3>
-                        <div className="flex gap-2">
-                            <button className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-50 text-slate-600 transition-colors">Export CSV</button>
+                                <button
+                                    onClick={loadTasks}
+                                    className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 shadow-sm transition-colors text-blue-600 font-medium"
+                                >
+                                    <RefreshCw className="w-4 h-4" />
+                                    Refresh
+                                </button>
+                            </div>
                         </div>
+
+                        {/* Connection Status: Compact & Integrated */}
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] font-extrabold tracking-widest border-b border-slate-200">
-                                <tr>
-                                    <th className="px-6 py-4">Issue ID</th>
-                                    <th className="px-6 py-4">Title</th>
-                                    <th className="px-6 py-4">Sector</th>
-                                    <th className="px-6 py-4">Priority</th>
-                                    <th className="px-6 py-4">Status</th>
-                                    <th className="px-6 py-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {recentIssues.length > 0 ? recentIssues.map((issue) => (
-                                    <tr key={issue.id} className="hover:bg-slate-50 transition-colors">
-                                        <td className="px-6 py-4 font-mono text-xs font-semibold text-slate-500">
-                                            #{issue.id && issue.id.length > 6 ? issue.id.substring(issue.id.length - 6).toUpperCase() : issue.id}
-                                        </td>
-                                        <td className="px-6 py-4 font-semibold text-sm text-slate-900">{issue.title}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="flex items-center gap-2 text-xs font-medium text-slate-600">
-                                                <span className="material-symbols-outlined text-base">{getSectorIcon(issue.sector)}</span> {issue.sector}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`${getPriorityStyle(issue.priority)} px-2 py-1 rounded text-[10px] font-bold uppercase`}>{issue.priority || 'Low'}</span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="flex items-center gap-2 text-sm font-medium">
-                                                <span className={`w-2 h-2 rounded-full ${getStatusStyle(issue.status)}`}></span>
-                                                <span className="capitalize text-slate-700">{issue.status}</span>
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button className="text-[#3c3cf6] hover:text-blue-700 font-bold text-sm" onClick={() => navigate(`/issues/${issue.id}`)}>Review</button>
-                                        </td>
-                                    </tr>
-                                )) : (
-                                    <tr>
-                                        <td colSpan="6" className="px-6 py-8 text-center text-slate-500">No issues found.</td>
-                                    </tr>
+
+                    {/* CITIZEN REPORTS SECTION â€” compact collapsible */}
+                    <div className="mb-6">
+                        {/* Collapsible Header */}
+                        <button
+                            onClick={() => setCitizenPanelOpen(o => !o)}
+                            className="w-full flex items-center justify-between bg-white border border-gray-200 rounded-xl px-5 py-3 shadow-sm hover:bg-gray-50 transition-colors"
+                        >
+                            <span className="flex items-center gap-2 font-semibold text-gray-800">
+                                <AlertCircle size={18} className="text-red-500" />
+                                Citizen Reports
+                                <span className="ml-1 bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                                    {filteredIssues.length}
+                                </span>
+                                {issuesLoading && <Loader className="w-4 h-4 animate-spin text-gray-400" />}
+                            </span>
+                            <span className="text-gray-400">
+                                {citizenPanelOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                            </span>
+                        </button>
+
+                        {/* Expandable compact list */}
+                        {citizenPanelOpen && (
+                            <div className="mt-2 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                                {filteredIssues.length === 0 ? (
+                                    <div className="p-6 text-center text-gray-400 text-sm">
+                                        No issues found matching current filters.
+                                    </div>
+                                ) : (
+                                    <div className="overflow-y-auto" style={{ maxHeight: '300px' }}>
+                                        <table className="w-full text-sm">
+                                            <thead className="bg-gray-50 sticky top-0 border-b">
+                                                <tr>
+                                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Priority</th>
+                                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Title</th>
+                                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Sector</th>
+                                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Status</th>
+                                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Date</th>
+                                                    <th className="px-4 py-2"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100">
+                                                {filteredIssues.map((issue) => (
+                                                    <tr
+                                                        key={issue.id}
+                                                        onClick={() => setSelectedCitizenIssue(issue)}
+                                                        className="hover:bg-indigo-50/40 transition-colors cursor-pointer"
+                                                    >
+                                                        <td className="px-4 py-2">
+                                                            <span className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase ${issue.calculatedPriority.label === 'Crisis' ? 'bg-red-600 text-white' :
+                                                                issue.calculatedPriority.label === 'Critical' ? 'bg-orange-500 text-white' :
+                                                                    issue.calculatedPriority.label === 'Moderate' ? 'bg-yellow-400 text-gray-900' :
+                                                                        'bg-blue-100 text-blue-800'
+                                                                }`}>
+                                                                {issue.calculatedPriority.label}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-2 font-medium text-gray-900 max-w-[200px] truncate">
+                                                            {issue.status === 'new' && (
+                                                                <span className="mr-1 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">NEW</span>
+                                                            )}
+                                                            {issue.title}
+                                                        </td>
+                                                        <td className="px-4 py-2 text-gray-500 capitalize hidden md:table-cell">{issue.sector}</td>
+                                                        <td className="px-4 py-2 hidden md:table-cell">
+                                                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase border ${issue.status === 'resolved' ? 'border-green-200 text-green-700 bg-green-50' :
+                                                                issue.status === 'in_progress' ? 'border-blue-200 text-blue-700 bg-blue-50' :
+                                                                    issue.status === 'rejected' ? 'border-red-200 text-red-700 bg-red-50' :
+                                                                        'border-gray-200 text-gray-600 bg-gray-50'
+                                                                }`}>
+                                                                {issue.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-2 text-gray-400 text-xs hidden lg:table-cell">
+                                                            {new Date(issue.created_at).toLocaleDateString()}
+                                                        </td>
+                                                        <td className="px-4 py-2" onClick={e => e.stopPropagation()}>
+                                                            <button
+                                                                onClick={() => setSelectedCitizenIssue(issue)}
+                                                                className="text-indigo-600 text-xs font-semibold hover:underline whitespace-nowrap"
+                                                            >
+                                                                Analyse &rarr;
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 )}
-                            </tbody>
-                        </table>
+                            </div>
+                        )}
                     </div>
-                </div>
-            </div>
-        </div>
-    );
-};
 
-function MetricCard({ title, value, trend, icon, color = 'blue' }) {
-    const colorClasses = {
-        blue: 'border-blue-500 bg-blue-50',
-        yellow: 'border-amber-500 bg-amber-50',
-        green: 'border-emerald-500 bg-emerald-50',
-        purple: 'border-purple-500 bg-purple-50'
-    };
+                    {/* LIVE MONITORING SECTION (RESTORED) */}
+                    <div className="mb-8">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <Activity className="text-blue-600" />
+                            Live Operational View
+                        </h2>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Map */}
+                            <div className="lg:col-span-2 bg-white p-4 rounded-xl border border-gray-200 shadow-sm h-[500px]">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="font-semibold text-gray-700 flex items-center gap-2">
+                                        <MapIcon size={18} /> Geospatial Overview
+                                    </h3>
+                                    <div className="flex gap-2">
+                                        <span className="text-xs px-2 py-1 bg-red-100 text-red-800 rounded">Critical</span>
+                                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">Normal</span>
+                                    </div>
+                                </div>
+                                <EnhancedMap markers={mapMarkers} height="420px" center={KHARGAR_CENTER} />
+                            </div>
 
-    const trendColor = trend.includes('+') ? 'text-emerald-600' : 'text-slate-500';
-
-    return (
-        <div className={`bg-white rounded-lg border-l-4 ${colorClasses[color]} p-6 shadow-sm border-t border-r border-b border-slate-200`}>
-            <div className="flex items-start justify-between">
-                <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{title}</span>
-                    </div>
-                    <div className="text-3xl font-extrabold text-slate-900 mb-2">{value}</div>
-                    {trend && (
-                        <div className={`text-sm font-bold flex items-center gap-1 ${trendColor}`}>
-                            {trend}
+                            {/* Sensor Panel */}
+                            <div className="space-y-4">
+                                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                    <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                                        <Wifi size={18} /> IoT Sensor Status
+                                    </h3>
+                                    <div className="space-y-3 max-h-[420px] overflow-y-auto pr-2">
+                                        {sensorsLoading ? (
+                                            <div className="p-4 flex flex-col items-center gap-2 text-gray-400 text-sm">
+                                                <Loader className="w-5 h-5 animate-spin" />
+                                                <span>Connecting to sensors…</span>
+                                            </div>
+                                        ) : sensorsError ? (
+                                            <div className="p-4 text-center">
+                                                <p className="text-red-500 text-xs font-medium mb-2">{sensorsError}</p>
+                                                <button
+                                                    onClick={() => {
+                                                        setSensorsLoading(true);
+                                                        setSensorsError(null);
+                                                        fetchSensorReadings().then(d => { setSensors(d); setSensorsLoading(false); }).catch(e => { setSensorsError('Could not reach sensor hardware.'); setSensorsLoading(false); });
+                                                    }}
+                                                    className="text-xs text-blue-600 hover:underline font-semibold"
+                                                >Retry</button>
+                                            </div>
+                                        ) : sensors.length === 0 ? (
+                                            <div className="p-4 text-center text-gray-400 text-sm">No sensor data available.</div>
+                                        ) : null}
+                                        {sensors.map(sensor => (
+                                            <div key={sensor.id} className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-blue-200 transition-colors">
+                                                <div className="flex justify-between mb-1">
+                                                    <span className="text-xs font-bold text-gray-500 uppercase">{sensor.type}</span>
+                                                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${sensor.status === 'critical' ? 'bg-red-100 text-red-700' :
+                                                        sensor.status === 'warning' ? 'bg-orange-100 text-orange-700' :
+                                                            'bg-green-100 text-green-700'
+                                                        }`}>{sensor.status}</span>
+                                                </div>
+                                                <p className="font-medium text-gray-900 text-sm">{sensor.label}</p>
+                                                <div className="flex justify-between items-end mt-2">
+                                                    <span className="text-2xl font-bold text-gray-800">{sensor.value}<span className="text-sm font-normal text-gray-500 ml-1">{sensor.unit}</span></span>
+                                                    <span className="text-xs text-gray-400">{sensor.lastUpdated}</span>
+                                                </div>
+                                                {/* Fill level bar for ultrasonic sensors */}
+                                                {sensor.type === 'ultrasonic' && sensor.fillPercent !== undefined && (
+                                                    <div className="mt-2">
+                                                        <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                                                            <span>Fill Level</span>
+                                                            <span className="font-bold">{sensor.fillPercent}%</span>
+                                                        </div>
+                                                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                                            <div
+                                                                className={`h-full rounded-full transition-all duration-500 ${sensor.fillPercent >= 90 ? 'bg-red-500' : sensor.fillPercent >= 75 ? 'bg-orange-400' : 'bg-green-500'}`}
+                                                                style={{ width: `${sensor.fillPercent}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    )}
-                </div>
-                <div className="text-slate-400 bg-white p-2 rounded-lg shadow-sm">
-                    {React.cloneElement(icon, { sx: { fontSize: 24 } })}
-                </div>
-            </div>
-        </div>
-    );
-}
+                    </div>
 
-function PriorityChart({ counts, pendingCount }) {
-    return (
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 h-96 flex flex-col">
-            <div className="flex items-center justify-between mb-6">
-                <h3 className="font-semibold text-slate-800">Priority Distribution</h3>
-            </div>
-            <div className="flex-1 flex items-center justify-center relative">
-                <div className="w-48 h-48 rounded-full border-[1.5rem] border-slate-100 relative flex items-center justify-center">
-                    {/* Simplified visual representation */}
-                    <div className="absolute inset-0 border-[1.5rem] border-transparent border-t-rose-500 rounded-full rotate-45 opacity-80"></div>
-                    <div className="absolute inset-0 border-[1.5rem] border-transparent border-r-amber-400 rounded-full rotate-12 opacity-80"></div>
-                    <div className="absolute inset-0 border-[1.5rem] border-transparent border-l-blue-500 rounded-full -rotate-45 opacity-80"></div>
-                    <div className="text-center z-10">
-                        <div className="text-4xl font-extrabold text-slate-900">{pendingCount}</div>
-                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pending</div>
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        {/* CARD 1: Total Reports */}
+                        <div className="bg-white rounded-lg border p-6 shadow-sm">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <p className="text-sm text-gray-600 font-medium mb-1">Total Reports</p>
+                                    <p className="text-4xl font-bold text-gray-900">{citizenIssues.length}</p>
+                                </div>
+                                <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                                    <BarChart2 size={24} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* CARD 2: Open Issues */}
+                        <div className="bg-white rounded-lg border p-6 shadow-sm">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <p className="text-sm text-gray-600 font-medium mb-1">Open Issues</p>
+                                    <p className="text-4xl font-bold text-yellow-600">
+                                        {citizenIssues.filter(i => i.status === 'new' || i.status === 'in_progress').length}
+                                    </p>
+                                </div>
+                                <div className="p-2 bg-yellow-50 rounded-lg text-yellow-600">
+                                    <Clock size={24} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* CARD 3: Resolved */}
+                        <div className="bg-white rounded-lg border p-6 shadow-sm">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <p className="text-sm text-gray-600 font-medium mb-1">Resolved</p>
+                                    <p className="text-4xl font-bold text-green-600">
+                                        {citizenIssues.filter(i => i.status === 'resolved').length}
+                                    </p>
+                                </div>
+                                <div className="p-2 bg-green-50 rounded-lg text-green-600">
+                                    <CheckCircle size={24} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* CARD 4: Critical Priority */}
+                        <div className="bg-white rounded-lg border p-6 shadow-sm">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <p className="text-sm text-gray-600 font-medium mb-1">Critical / Crisis</p>
+                                    <p className="text-4xl font-bold text-red-600">
+                                        {citizenIssues.filter(i => (i.calculatedPriority?.label || '').includes('Critic') || (i.calculatedPriority?.label || '').includes('Crisis')).length}
+                                    </p>
+                                </div>
+                                <div className="p-2 bg-red-50 rounded-lg text-red-600">
+                                    <AlertCircle size={24} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Tasks Table */}
+                    <div className="bg-white rounded-lg border overflow-hidden shadow-sm">
+                        <div className="px-6 py-4 border-b bg-gray-50 flex items-center gap-2">
+                            <List className="text-gray-500" size={20} />
+                            <h2 className="text-xl font-semibold text-gray-900">Scheduled Tasks ({new Date(selectedDate).toDateString()})</h2>
+                        </div>
+
+                        {todaysTasks.length === 0 ? (
+                            <div className="p-12 text-center">
+                                <div className="bg-gray-50 p-6 rounded-lg inline-block text-left max-w-md w-full border border-dashed border-gray-300">
+                                    <p className="text-gray-500 text-sm">No tasks scheduled for {new Date(selectedDate).toDateString()}.</p>
+                                    <button
+                                        onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+                                        className="mt-2 text-blue-600 text-sm font-semibold hover:underline"
+                                    >
+                                        Go to Today
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-gray-50 border-b">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Title</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Sector</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Priority</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Date</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200">
+                                        {todaysTasks.slice(0, 100).map((task, idx) => ( // limit to 100 for perf in this view
+                                            <tr
+                                                key={task.id || idx}
+                                                className="hover:bg-gray-50 transition-colors cursor-pointer"
+                                                onClick={() => navigate(`/issues/TSK-${task.id}`)}
+                                            >
+                                                <td className="px-6 py-4 text-sm text-gray-900 font-medium">{task.title}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-700 capitalize">{task.sector}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${(task.priority || '').toLowerCase().includes('critic') || (task.priority || '').toLowerCase().includes('p1') ? 'bg-red-100 text-red-800' :
+                                                        (task.priority || '').toLowerCase().includes('high') || (task.priority || '').toLowerCase().includes('p2') ? 'bg-orange-100 text-orange-800' :
+                                                            (task.priority || '').toLowerCase().includes('medium') || (task.priority || '').toLowerCase().includes('p3') ? 'bg-blue-100 text-blue-800' :
+                                                                'bg-gray-100 text-gray-800'
+                                                        }`}>
+                                                        {task.priority || 'Low'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-gray-700 font-mono">
+                                                    {new Date(task.scheduled_start).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-1 rounded text-xs font-semibold uppercase ${task.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                                        task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                                                            'bg-yellow-100 text-yellow-800'
+                                                        }`}>
+                                                        {task.status || 'Pending'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                {todaysTasks.length > 100 && (
+                                    <div className="p-4 text-center text-gray-500 text-sm border-t bg-gray-50">
+                                        Showing first 100 of {todaysTasks.length} tasks
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-            <div className="grid grid-cols-2 gap-3 mt-6">
-                <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 bg-rose-500 rounded-full"></span>
-                    <span className="text-xs font-medium text-slate-600">Critical ({counts.critical})</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 bg-amber-500 rounded-full"></span>
-                    <span className="text-xs font-medium text-slate-600">High ({counts.high})</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
-                    <span className="text-xs font-medium text-slate-600">Medium ({counts.medium})</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 bg-slate-200 rounded-full"></span>
-                    <span className="text-xs font-medium text-slate-600">Low ({counts.low})</span>
-                </div>
-            </div>
-        </div>
+            {/* Citizen Analysis Side Panel */}
+            {selectedCitizenIssue && (
+                <CitizenAnalysisPanel
+                    issue={selectedCitizenIssue}
+                    onClose={() => setSelectedCitizenIssue(null)}
+                    onViewFull={() => {
+                        navigate(`/issues/${selectedCitizenIssue.id}`);
+                        setSelectedCitizenIssue(null);
+                    }}
+                />
+            )}
+        </>
     );
 }
 
-function SectorCard({ icon, label, value }) {
-    return (
-        <div className="bg-white rounded-lg border border-slate-200 p-4 hover:shadow-md transition-all">
-            <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl">{icon}</span>
-            </div>
-            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</div>
-            <div className="text-2xl font-extrabold text-slate-900">{value}</div>
-        </div>
-    );
-}
-
-export default Dashboard;

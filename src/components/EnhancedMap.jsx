@@ -1,5 +1,5 @@
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -55,15 +55,27 @@ const createPriorityIcon = (priority) => {
     });
 };
 
-const EnhancedMap = ({ center = [28.6139, 77.2090], zoom = 13, markers = [], height = '400px' }) => {
+// Component to handle map center updates
+const MapController = ({ center }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (center) {
+            map.flyTo([center.lat, center.lng], 13);
+        }
+    }, [center, map]);
+    return null;
+};
+
+const EnhancedMap = ({ center = { lat: 19.0298, lng: 73.0588 }, zoom = 13, markers = [], height = '400px' }) => {
     return (
         <div style={{ height, width: '100%' }} className="rounded-xl overflow-hidden border border-[var(--border)] shadow-sm">
             <MapContainer
-                center={center}
+                center={[center.lat, center.lng]}
                 zoom={zoom}
                 style={{ height: '100%', width: '100%' }}
                 scrollWheelZoom={true}
             >
+                <MapController center={center} />
                 {/* Use better tile layer */}
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

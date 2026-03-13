@@ -2,3 +2,27 @@ node_modules
 dist
 .DS_Store
 .env
+
+# Debug/test scripts
+debug_*.mjs
+debug_*.js
+test_*.js
+test_*.mjs
+test_*.py
+check_*.mjs
+check_*.js
+check_*.sql
+analyze_*.js
+analysis_output.txt
+parser_test_result.txt
+sensor_schema.txt
+list_models.py
+
+# SQL migration/fix scripts
+*.sql
+
+# Python test files
+test_gemini.cjs
+test_gemini.py
+server/test_analysis_endpoint.py
+server/openrouter_priority_agent.py

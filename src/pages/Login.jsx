@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { ShieldCheck, User, Lock } from 'lucide-react';
 
 const LoginPage = () => {
-    const { login } = useAuth();
+    const { login, signup, user, loading } = useAuth();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [fullName, setFullName] = useState('');
     const [role, setRole] = useState('admin');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [isRegistering, setIsRegistering] = useState(false);
 
     const navigate = useNavigate();
     const cardRef = useRef(null);
@@ -64,17 +66,32 @@ const LoginPage = () => {
         };
     }, []);
 
+    // Redirect if already logged in
+    useEffect(() => {
+        if (!loading && user) {
+            // Immediate redirect if user is already authenticated
+            navigate('/');
+        }
+    }, [user, loading, navigate]);
+
     const handleLogin = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         setError('');
 
-        const result = await login(username, password);
-
-        if (result && result.success) {
-            navigate('/');
+        let authResult;
+        if (isRegistering) {
+            // Default to 'admin' or 'citizen' since Staff role is removed from UI
+            // For now, we defaults to 'admin' for this dashboard app as per context
+            authResult = await signup(username, password, fullName, 'admin');
         } else {
-            setError(result?.error || 'Invalid credentials');
+            authResult = await login(username, password);
+        }
+
+        if (authResult?.success) {
+            // Redirect handled by useEffect
+        } else {
+            setError(authResult?.error || 'Authentication failed');
             setIsLoading(false);
         }
     };
@@ -110,45 +127,31 @@ const LoginPage = () => {
                     <p className="text-slate-400 text-sm mt-1">Unified Municipal Command</p>
                 </div>
 
-                {/* Role Toggle */}
-                <div className="flex justify-center mb-8" style={{ transform: 'translateZ(20px)' }}>
-                    <div className="bg-slate-800/80 p-1 rounded-full flex relative">
-                        <div
-                            className="absolute top-1 left-1 w-[calc(50%-4px)] h-[calc(100%-8px)] bg-blue-600 rounded-full transition-all duration-300"
-                            style={{
-                                transform: role === 'staff' ? 'translateX(100%)' : 'translateX(0%)',
-                                width: '92px'  // Fixed width to match button roughly
-                            }}
-                        ></div>
-                        <button
-                            onClick={() => setRole('admin')}
-                            className={`relative z-10 w-24 py-1.5 text-sm font-medium transition-colors ${role === 'admin' ? 'text-white' : 'text-slate-400 hover:text-white'}`}
-                        >
-                            Admin
-                        </button>
-                        <button
-                            onClick={() => setRole('staff')}
-                            className={`relative z-10 w-24 py-1.5 text-sm font-medium transition-colors ${role === 'staff' ? 'text-white' : 'text-slate-400 hover:text-white'}`}
-                        >
-                            Staff
-                        </button>
-                    </div>
-                </div>
+                {/* Role Toggle REMOVED */}
 
                 {/* Form Section */}
                 <form onSubmit={handleLogin} className="space-y-5" style={{ transform: 'translateZ(10px)' }}>
 
-                    {error && (
-                        <div className="bg-red-500/10 border border-red-500/50 text-red-200 text-sm p-3 rounded-xl text-center">
-                            {error}
+
+
+                    {isRegistering && (
+                        <div className="relative group">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Full Name"
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                                className="w-full bg-slate-800/50 text-white pl-12 pr-4 py-3.5 rounded-xl border border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-slate-800 transition-all outline-none placeholder:text-slate-500"
+                            />
                         </div>
                     )}
 
                     <div className="relative group">
                         <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" size={18} />
                         <input
-                            type="text"
-                            placeholder="Username"
+                            type="email"
+                            placeholder="Email Address"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             className="w-full bg-slate-800/50 text-white pl-12 pr-4 py-3.5 rounded-xl border border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-slate-800 transition-all outline-none placeholder:text-slate-500"
@@ -173,9 +176,22 @@ const LoginPage = () => {
                         className="w-full mt-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 transition-all relative overflow-hidden group disabled:opacity-70 disabled:cursor-not-allowed"
                         style={{ transform: 'translateZ(20px)' }}
                     >
-                        <span className="relative z-10">{isLoading ? 'Authenticating...' : 'Initialize System'}</span>
+                        <span className="relative z-10">{isLoading ? 'Processing...' : (isRegistering ? 'Create Account' : 'Initialize System')}</span>
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                     </button>
+
+                    <div className="text-center mt-4" style={{ transform: 'translateZ(10px)' }}>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setIsRegistering(!isRegistering);
+                                setError('');
+                            }}
+                            className="text-slate-400 hover:text-white text-sm transition-colors hover:underline"
+                        >
+                            {isRegistering ? 'Already have credentials? Login' : 'No credentials? Register Access'}
+                        </button>
+                    </div>
                 </form>
 
 

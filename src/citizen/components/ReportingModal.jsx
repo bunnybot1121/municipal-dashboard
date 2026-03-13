@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Trash2, Zap, Droplets, AlertTriangle, Check } from 'lucide-react';
+import { api } from '../../services/apiClient';
 
 const CATEGORIES = [
     { id: 'waste', label: 'Trash', icon: Trash2, color: 'alert-orange' },
@@ -13,6 +14,7 @@ const ReportingModal = ({ isOpen, onClose, location, address }) => {
     const canvasRef = useRef(null);
     const [capturedImage, setCapturedImage] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [description, setDescription] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [stream, setStream] = useState(null);
 
@@ -32,11 +34,10 @@ const ReportingModal = ({ isOpen, onClose, location, address }) => {
                 video: { facingMode: 'environment' },
                 audio: false
             });
-            setStream(mediaStream); // Keep track to stop later
+            setStream(mediaStream);
             if (videoRef.current) videoRef.current.srcObject = mediaStream;
         } catch (err) {
             console.error("Camera Error:", err);
-            // Fallback for demo without camera hardware
         }
     };
 
@@ -71,16 +72,46 @@ const ReportingModal = ({ isOpen, onClose, location, address }) => {
         setCapturedImage(canvas.toDataURL('image/jpeg'));
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!capturedImage || !selectedCategory) return;
         setIsSubmitting(true);
-        setTimeout(() => {
-            alert("Report Submitted Successfully!");
+
+        try {
+            const sectorLabel = CATEGORIES.find(c => c.id === selectedCategory)?.label || selectedCategory;
+            const issueData = {
+                title: `${sectorLabel} Issue - Citizen Report`,
+                description: description || `${sectorLabel} issue reported by citizen`,
+                sector: selectedCategory,
+                severity: 'Moderate',
+                photo: capturedImage,
+                location: {
+                    lat: location?.latitude ?? null,
+                    lng: location?.longitude ?? null,
+                    address: address || 'Unknown'
+                },
+                rawGps: location ? { lat: location.latitude, lng: location.longitude, accuracy: 10 } : null,
+                createdAt: new Date().toISOString()
+            };
+
+            const response = await api.createIssue(issueData);
+
+            if (response && response.id) {
+                // Brief success then close
+                setTimeout(() => {
+                    setIsSubmitting(false);
+                    setCapturedImage(null);
+                    setSelectedCategory(null);
+                    setDescription('');
+                    onClose();
+                }, 1000);
+            } else {
+                throw new Error("Failed to create issue");
+            }
+        } catch (error) {
+            console.error('Submit error:', error);
             setIsSubmitting(false);
-            setCapturedImage(null);
-            setSelectedCategory(null);
-            onClose();
-        }, 1500);
+            alert('Failed to submit report. Please try again.');
+        }
     };
 
     if (!isOpen) return null;
@@ -103,7 +134,6 @@ const ReportingModal = ({ isOpen, onClose, location, address }) => {
                     {!capturedImage ? (
                         <>
                             <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                            {/* HUD Overlay */}
                             <div className="absolute inset-0 border-[30px] border-black/30 pointer-events-none"></div>
                             <div className="absolute bottom-6 left-0 right-0 flex justify-center z-10">
                                 <button
@@ -117,27 +147,30 @@ const ReportingModal = ({ isOpen, onClose, location, address }) => {
                     ) : (
                         <div className="relative w-full h-full">
                             <img src={capturedImage} className="w-full h-full object-cover" alt="Evidence" />
-                            <button
-                                onClick={() => setCapturedImage(null)}
-                                className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-gray-800/80 text-white px-6 py-2 rounded-full font-bold backdrop-blur-md"
-                            >
-                                Retake Photo
-                            </button>
+                            {!isSubmitting && (
+                                <button
+                                    onClick={() => setCapturedImage(null)}
+                                    className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-gray-800/80 text-white px-6 py-2 rounded-full font-bold backdrop-blur-md"
+                                >
+                                    Retake Photo
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
 
-                {/* 2. Category Selection (Only show after capture) */}
+                {/* 2. Category + Submit (after capture) */}
                 {capturedImage && (
                     <div className="bg-white rounded-t-3xl -mt-6 z-20 p-6 shadow-up animate-fade-in relative">
                         <h3 className="text-center font-bold text-gray-500 mb-4 tracking-wider text-xs uppercase">Select Category</h3>
 
-                        <div className="grid grid-cols-4 gap-2 mb-6">
+                        <div className="grid grid-cols-4 gap-2 mb-4">
                             {CATEGORIES.map(cat => (
                                 <button
                                     key={cat.id}
                                     onClick={() => setSelectedCategory(cat.id)}
-                                    className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${selectedCategory === cat.id ? 'bg-orange-100 ring-2 ring-orange-500 scale-105' : 'bg-gray-50'}`}
+                                    disabled={isSubmitting}
+                                    className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${selectedCategory === cat.id ? 'bg-orange-100 ring-2 ring-orange-500 scale-105' : 'bg-gray-50'} ${isSubmitting ? 'opacity-50' : ''}`}
                                 >
                                     <div className={`p-3 rounded-full ${selectedCategory === cat.id ? 'bg-orange-500 text-white' : 'bg-white text-gray-600 shadow-sm'}`}>
                                         <cat.icon size={24} />
@@ -147,17 +180,32 @@ const ReportingModal = ({ isOpen, onClose, location, address }) => {
                             ))}
                         </div>
 
-                        {/* 3. Submit Button */}
+                        {/* Description */}
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Describe the issue (optional)..."
+                            maxLength={300}
+                            rows={2}
+                            disabled={isSubmitting}
+                            className="w-full border border-gray-200 rounded-xl p-3 resize-none text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:opacity-50"
+                        />
+
+                        {/* Submit Button */}
                         <button
                             disabled={!selectedCategory || isSubmitting}
                             onClick={handleSubmit}
                             className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all
-                                ${!selectedCategory ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
+                                ${!selectedCategory ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : isSubmitting ? 'bg-orange-400 text-white cursor-wait' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
                         >
-                            {isSubmitting ? 'Sending...' : (
+                            {isSubmitting ? '📤 Submitting...' : (
                                 <><span>Submit Report</span> <Check size={20} /></>
                             )}
                         </button>
+
+                        <p className="text-center text-xs text-gray-400 mt-2">
+                            AI will verify your report on the admin side
+                        </p>
                     </div>
                 )}
             </div>

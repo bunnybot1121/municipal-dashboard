@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
         const issueData = req.body;
 
         // Run AI Analysis
-        const analysis = analyzeEvidence(issueData);
+        const analysis = await analyzeEvidence(issueData);
 
         // Merge analysis results
         const newIssueData = {

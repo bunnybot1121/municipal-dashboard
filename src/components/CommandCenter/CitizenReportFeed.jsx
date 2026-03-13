@@ -133,9 +133,15 @@ const ReportCard = ({ report, onVerify, onReject, onClick }) => {
                     </span>
                 </div>
 
-                <p style={{ fontSize: '0.8rem', color: '#4B5563', marginBottom: '0.75rem', lineHeight: '1.4' }}>
-                    {(report.description || 'No description available').substring(0, 60)}...
-                </p>
+                <div className="flex gap-2 items-center mb-0.75rem">
+                    <p style={{ fontSize: '0.8rem', color: '#4B5563', lineHeight: '1.4', margin: 0 }}>
+                        {(report.description || 'No description available').substring(0, 60)}...
+                    </p>
+                    {/* Sensor Badge - Mock Data for Demo */}
+                    <div style={{ fontSize: '0.65rem', padding: '2px 6px', background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+                        AQI: {Math.floor(Math.random() * (150 - 30) + 30)}
+                    </div>
+                </div>
 
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: '0.75rem' }}>

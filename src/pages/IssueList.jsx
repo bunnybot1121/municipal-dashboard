@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { api } from '../services/apiClient'; // Import API
+import { api } from '../services/apiClient';
 import { SECTORS } from '../services/mockData';
 import {
     Search,
@@ -20,7 +20,9 @@ import {
     Bolt as Zap,
     Category as Box,
     SearchOff as SearchX,
-    ChevronLeft
+    ChevronLeft,
+    Check as CheckIcon,
+    Close as CloseIcon
 } from '@mui/icons-material';
 
 const IssueList = () => {
@@ -39,27 +41,36 @@ const IssueList = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const data = await api.getIssues();
-            if (data && Array.isArray(data)) {
-                // Normalize data to match table expectations
-                const normalizedData = data.map(issue => ({
+
+            // Fetch Issues only (citizen reports)
+            const issuesData = await api.getIssues();
+
+            let combinedData = [];
+
+            if (issuesData && Array.isArray(issuesData)) {
+                combinedData = issuesData.map(issue => ({
                     ...issue,
-                    id: issue._id || issue.id,
+                    uniqueId: `iss-${issue.id}`,
+                    type: 'issue',
+                    id: issue.id,
                     priority: (issue.priority || issue.severity || 'low').toLowerCase(),
                     status: (issue.status || 'open').toLowerCase(),
                     sector: (issue.sector || 'other').toLowerCase(),
                     location: {
-                        address: issue.location?.address || 'Unknown Location',
-                        lat: issue.location?.lat,
-                        lng: issue.location?.lng
+                        lat: issue.location?.lat ?? issue.lat ?? issue.latitude ?? null,
+                        lng: issue.location?.lng ?? issue.lng ?? issue.longitude ?? null,
+                        address: issue.location?.address || issue.location_address || issue.address || 'Location not provided',
+                        accuracy: issue.location?.accuracy ?? null
                     },
-                    createdAt: issue.createdAt || issue.reportedAt, // Ensure we have a date field
-                    aiAnalysis: issue.aiAnalysis || { confidence: 0.88 } // Default if missing
+                    createdAt: issue.created_at || issue.createdAt || new Date().toISOString(),
+                    aiAnalysis: issue.aiAnalysis || { confidence: issue.ai_confidence || 0.88 },
+                    imageUrl: issue.photo_url || issue.imageUrl
                 }));
-                setIssues(normalizedData);
             }
+
+            setIssues(combinedData);
         } catch (error) {
-            console.error("Failed to fetch issues", error);
+            console.error("Failed to fetch data", error);
         } finally {
             setLoading(false);
         }
@@ -93,6 +104,22 @@ const IssueList = () => {
             key,
             direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
         }));
+    };
+
+    const handleStatusUpdate = async (e, issueId, newStatus) => {
+        e.stopPropagation(); // Prevent row click navigation
+        try {
+            await api.updateIssue(issueId, { status: newStatus });
+            setIssues(prevIssues =>
+                prevIssues.map(issue =>
+                    issue.id === issueId ? { ...issue, status: newStatus } : issue
+                )
+            );
+            // Optional: Add toast notification here if available
+        } catch (error) {
+            console.error("Failed to update status", error);
+            alert("Failed to update status");
+        }
     };
 
     const getSectorIcon = (s) => {
@@ -206,6 +233,7 @@ const IssueList = () => {
                                     { key: 'priority', label: 'Priority', width: 'w-28' },
                                     { key: 'status', label: 'Status', width: 'w-32' },
                                     { key: 'location', label: 'Location', width: 'w-40' },
+                                    { key: 'verified', label: 'AI Verified', width: 'w-32' },
                                     { key: 'confidence', label: 'Evidence Score', width: 'w-32' },
                                     { key: 'action', label: '', width: 'w-16' }
                                 ].map((col) => (
@@ -236,7 +264,7 @@ const IssueList = () => {
                             ) : (
                                 filteredIssues.map((issue) => (
                                     <tr
-                                        key={issue.id}
+                                        key={issue.uniqueId || issue.id}
                                         onClick={() => navigate(`/issues/${issue.id}`)}
                                         className="hover:bg-blue-50/30 transition-colors cursor-pointer group"
                                     >
@@ -272,9 +300,9 @@ const IssueList = () => {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
                                                 <span className={`w-2 h-2 rounded-full ${(issue.status === 'resolved' || issue.status === 'completed') ? 'bg-green-500' :
-                                                        issue.status === 'in-progress' ? 'bg-blue-500' :
-                                                            issue.status === 'rejected' ? 'bg-gray-400' :
-                                                                'bg-amber-500' // Default / Open
+                                                    issue.status === 'in-progress' ? 'bg-blue-500' :
+                                                        issue.status === 'rejected' ? 'bg-gray-400' :
+                                                            'bg-amber-500' // Default / Open
                                                     }`}></span>
                                                 <span className="text-sm font-medium text-gray-700 capitalize">
                                                     {(issue.status || 'Open').replace('-', ' ')}
@@ -286,6 +314,23 @@ const IssueList = () => {
                                                 <MapPin sx={{ fontSize: 14 }} className="text-gray-400" />
                                                 <span className="truncate">{issue.location?.address || 'Unknown Location'}</span>
                                             </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {(() => {
+                                                const pv = issue.aiAnalysis?.photoVerification;
+                                                if (!pv) return (
+                                                    <span className="text-gray-300 text-xs">—</span>
+                                                );
+                                                return pv.isValid ? (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-green-100 text-green-700" title={pv.reason}>
+                                                        ✅ Verified
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700" title={pv.reason}>
+                                                        ⚠️ Suspicious
+                                                    </span>
+                                                );
+                                            })()}
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="w-24">
@@ -301,9 +346,29 @@ const IssueList = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <button className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
-                                                <MoreVertical sx={{ fontSize: 16 }} />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                {issue.type === 'issue' && issue.status === 'open' && (
+                                                    <>
+                                                        <button
+                                                            onClick={(e) => handleStatusUpdate(e, issue.id, 'accepted')}
+                                                            className="p-1.5 rounded-full bg-green-50 text-green-600 hover:bg-green-100 transition-colors shadow-sm border border-green-100"
+                                                            title="Accept Issue"
+                                                        >
+                                                            <CheckIcon sx={{ fontSize: 16 }} />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => handleStatusUpdate(e, issue.id, 'rejected')}
+                                                            className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors shadow-sm border border-red-100"
+                                                            title="Reject Issue"
+                                                        >
+                                                            <CloseIcon sx={{ fontSize: 16 }} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                                <button className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
+                                                    <MoreVertical sx={{ fontSize: 16 }} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))

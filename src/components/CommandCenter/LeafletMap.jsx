@@ -47,8 +47,9 @@ const RecenterAutomatically = ({ lat, lng }) => {
 };
 
 const LeafletMap = ({ issues, selectedIssueId, onIssueSelect }) => {
-    // Default Center (Mumbai/Nagpur generic)
-    const [center, setCenter] = useState([19.0760, 72.8777]);
+    // Default Center (Khargar, Navi Mumbai)
+    const KHARGAR_COORDS = [19.0298, 73.0583];
+    const [center, setCenter] = useState(KHARGAR_COORDS);
 
     useEffect(() => {
         if (selectedIssueId && issues) {
@@ -56,28 +57,26 @@ const LeafletMap = ({ issues, selectedIssueId, onIssueSelect }) => {
             if (issue?.location?.lat) {
                 setCenter([issue.location.lat, issue.location.lng]);
             }
-        } else if (issues && issues.length > 0) {
-            // Center on first issue if nothing selected
-            const first = issues[0];
-            if (first?.location?.lat) setCenter([first.location.lat, first.location.lng]);
         }
     }, [selectedIssueId, issues]);
 
-    // Determine color based on priority/status
-    // Determine color based on priority/status
+    // Recenter Helper
+    const handleResetView = () => {
+        setCenter(KHARGAR_COORDS);
+    };
+
     const getIcon = (issue) => {
         const status = (issue.status || '').toLowerCase();
         const priority = (issue.priority || issue.severity || '').toLowerCase();
-        const risk = (issue.riskLevel || '').toLowerCase();
 
         if (status === 'resolved' || status === 'closed' || status === 'completed') return Icons.green;
-        if (priority === 'critical' || risk === 'crisis' || risk === 'critical') return Icons.red;
+        if (priority === 'critical') return Icons.red;
         if (priority === 'high') return Icons.orange;
         return Icons.blue;
     };
 
     return (
-        <div className="card" style={{ padding: 0, height: '100%', borderRadius: '1rem', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
+        <div style={{ height: '100%', width: '100%', position: 'relative', borderRadius: '1rem', overflow: 'hidden' }}>
             <MapContainer
                 center={center}
                 zoom={13}
@@ -89,7 +88,6 @@ const LeafletMap = ({ issues, selectedIssueId, onIssueSelect }) => {
                     url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                 />
 
-                {/* Dynamic Markers */}
                 {issues.map(issue => (
                     issue.location?.lat && (
                         <Marker
@@ -105,13 +103,9 @@ const LeafletMap = ({ issues, selectedIssueId, onIssueSelect }) => {
                                     <h4 className="text-sm font-bold text-slate-900 mb-1">{issue.title}</h4>
                                     <div className="text-xs text-slate-500 mb-2">{issue.location.address}</div>
                                     <div className="flex items-center gap-2">
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${(issue.status === 'resolved' || issue.status === 'closed' || issue.status === 'completed') ? 'bg-green-100 text-green-700' :
-                                                (issue.status === 'in-progress') ? 'bg-blue-100 text-blue-700' :
-                                                    'bg-slate-100 text-slate-700'
-                                            }`}>{issue.status}</span>
-                                        {(issue.priority === 'critical' || issue.priority === 'high') && (
-                                            <span className="text-[10px] font-bold text-red-500 uppercase">{issue.priority}</span>
-                                        )}
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${(issue.status === 'resolved') ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'}`}>
+                                            {issue.status}
+                                        </span>
                                     </div>
                                 </div>
                             </Popup>
@@ -124,12 +118,9 @@ const LeafletMap = ({ issues, selectedIssueId, onIssueSelect }) => {
                 {/* Reset View Control */}
                 <div style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 1000 }}>
                     <button
-                        onClick={() => {
-                            setCenter([19.0760, 72.8777]);
-                            // Also need to trigger map.setView via state or direct access if center doesn't change
-                        }}
+                        onClick={handleResetView}
                         className="bg-white p-2 rounded-lg shadow-md hover:bg-slate-50 text-slate-600 transition-colors"
-                        title="Reset View"
+                        title="Reset View to Khargar"
                     >
                         <CenterFocusStrong sx={{ fontSize: 20 }} />
                     </button>
@@ -137,7 +128,7 @@ const LeafletMap = ({ issues, selectedIssueId, onIssueSelect }) => {
 
             </MapContainer>
 
-            {/* Custom Overlay Controls could go here */}
+            {/* Legend Overlay */}
             <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', zIndex: 1000, background: 'white', padding: '0.75rem', borderRadius: '0.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
                 <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '0.5rem' }}>LEGEND</div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
@@ -158,5 +149,4 @@ const LeafletMap = ({ issues, selectedIssueId, onIssueSelect }) => {
         </div>
     );
 };
-
 export default LeafletMap;
