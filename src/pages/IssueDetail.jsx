@@ -914,6 +914,7 @@ const AutoRunAnalysis = ({ issue, setIssue }) => {
                     title: issue.title || issue.type || '',
                     description: issue.description || '',
                     type: issue.type || '',
+                    issue_type: issue.issue_type || issue.type || '',
                     sector: issue.sector || '',
                     severity: issue.priority || issue.severity || 'medium',
                     createdAt: issue.createdAt || issue.reportedAt || issue.scheduledStart || new Date().toISOString()
@@ -1006,18 +1007,38 @@ const AutoRunAnalysis = ({ issue, setIssue }) => {
                     const analysis = await response.json();
                     if (!isMounted) return;
 
+                    // Always run 145-signal engine to populate categoryScores
+                    const signalIssue = {
+                        title: issue.title || issue.type || '',
+                        description: issue.description || '',
+                        type: issue.type || '',
+                        issue_type: issue.issue_type || issue.type || '',
+                        sector: issue.sector || '',
+                        severity: issue.priority || issue.severity || 'medium',
+                        createdAt: issue.createdAt || new Date().toISOString()
+                    };
+                    const signalResult = calculatePriorityScore(signalIssue);
+                    const catScores = signalResult.advancedAnalysis?.signals || {};
+
+                    // Merge category scores into server analysis
+                    const mergedAnalysis = {
+                        ...analysis,
+                        categoryScores: analysis.categoryScores || catScores,
+                        flags: analysis.flags || signalResult.breakdown?.map(b => `SIGNAL: ${b.name} (+${b.value})`) || []
+                    };
+
                     // Update Issue in DB (Skip for Tasks)
                     if (issue.id && issue.id.startsWith('TSK-')) {
                         console.log("Skipping DB update for Task.");
                     } else {
                         try {
                             await api.updateIssue(issue.id, {
-                                ai_analysis: analysis,
-                                ai_confidence: (analysis.confidenceScore || 0) / 100
+                                ai_analysis: mergedAnalysis,
+                                ai_confidence: (mergedAnalysis.confidenceScore || 0) / 100
                             });
                         } catch (e) { console.error("DB Save failed", e); }
                     }
-                    setIssue(prev => ({ ...prev, aiAnalysis: analysis }));
+                    setIssue(prev => ({ ...prev, aiAnalysis: mergedAnalysis }));
                 } else {
                     throw new Error(`Server responded with ${response.status}`);
                 }
