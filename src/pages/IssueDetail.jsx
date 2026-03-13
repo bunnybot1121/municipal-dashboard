@@ -560,31 +560,48 @@ const IssueDetail = () => {
                                     </div>
 
                                     {/* CATEGORY BREAKDOWN TABLE */}
-                                    <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
-                                        <div className="bg-gray-50 px-4 py-2 border-b flex justify-between">
-                                            <span className="text-xs font-bold text-gray-500 uppercase">Category Breakdown (Scores)</span>
-                                            <span className="text-xs text-gray-400">Points Awarded</span>
-                                        </div>
-                                        <div className="grid grid-cols-2 text-sm">
-                                            {[
-                                                { l: 'Safety Criticality', s: issue.aiAnalysis?.categoryScores?.safety || 0, max: 50 },
-                                                { l: 'Sector Impact', s: issue.aiAnalysis?.categoryScores?.sector || 0, max: 40 },
-                                                { l: 'Time Factors', s: issue.aiAnalysis?.categoryScores?.time || 0, max: 25 },
-                                                { l: 'Location Context', s: issue.aiAnalysis?.categoryScores?.location || 0, max: 20 },
-                                                { l: 'Citizen Voicing', s: issue.aiAnalysis?.categoryScores?.citizen || 0, max: 20 },
-                                                { l: 'System Signals', s: issue.aiAnalysis?.categoryScores?.system || 0, max: 15 },
-                                                { l: 'Resource Ops', s: issue.aiAnalysis?.categoryScores?.resource || 0, max: 10 },
-                                                { l: 'Governance', s: issue.aiAnalysis?.categoryScores?.gov || 0, max: 30 },
-                                            ].map((cat, i) => (
-                                                <div key={i} className={`p-3 border-b border-gray-100 flex justify-between ${i % 2 === 0 ? 'border-r' : ''}`}>
-                                                    <span className="text-gray-600">{cat.l}</span>
-                                                    <span className={`font-mono font-bold ${cat.s > 0 ? 'text-[#3c3cf6]' : 'text-gray-300'}`}>
-                                                        {cat.s} <span className="text-gray-300 font-normal">/ {cat.max}</span>
-                                                    </span>
+                                    {(() => {
+                                        // Compute category scores LIVE — never rely on cached DB values
+                                        const liveSignalIssue = {
+                                            title: issue.title || issue.type || '',
+                                            description: issue.description || '',
+                                            type: issue.type || '',
+                                            issue_type: issue.issue_type || issue.type || '',
+                                            sector: issue.sector || '',
+                                            severity: issue.priority || issue.severity || 'medium',
+                                            createdAt: issue.createdAt || new Date().toISOString()
+                                        };
+                                        const liveResult = calculatePriorityScore(liveSignalIssue);
+                                        const liveCat = liveResult.advancedAnalysis?.signals || {};
+
+                                        return (
+                                            <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+                                                <div className="bg-gray-50 px-4 py-2 border-b flex justify-between">
+                                                    <span className="text-xs font-bold text-gray-500 uppercase">Category Breakdown (Scores)</span>
+                                                    <span className="text-xs text-gray-400">Points Awarded</span>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </div>
+                                                <div className="grid grid-cols-2 text-sm">
+                                                    {[
+                                                        { l: 'Safety Criticality', s: liveCat.safety || 0, max: 50 },
+                                                        { l: 'Sector Impact', s: liveCat.sector || 0, max: 40 },
+                                                        { l: 'Time Factors', s: liveCat.time || 0, max: 25 },
+                                                        { l: 'Location Context', s: liveCat.location || 0, max: 20 },
+                                                        { l: 'Citizen Voicing', s: liveCat.citizen || 0, max: 20 },
+                                                        { l: 'System Signals', s: liveCat.system || 0, max: 15 },
+                                                        { l: 'Resource Ops', s: liveCat.resource || 0, max: 10 },
+                                                        { l: 'Governance', s: liveCat.gov || 0, max: 30 },
+                                                    ].map((cat, i) => (
+                                                        <div key={i} className={`p-3 border-b border-gray-100 flex justify-between ${i % 2 === 0 ? 'border-r' : ''}`}>
+                                                            <span className="text-gray-600">{cat.l}</span>
+                                                            <span className={`font-mono font-bold ${cat.s > 0 ? 'text-[#3c3cf6]' : 'text-gray-300'}`}>
+                                                                {cat.s} <span className="text-gray-300 font-normal">/ {cat.max}</span>
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* GEMINI / OPENROUTER AI MAIN CARD */}
                                     {issue.aiAnalysis?.gemini ? (
