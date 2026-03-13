@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/municipal-dashboard/', // Uncomment for GitHub Pages deployment
+  base: '/', // Use '/' for Vercel, '/municipal-dashboard/' for GitHub Pages
   server: {
     host: true,
     port: 5173,
@@ -17,7 +17,6 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: 'docs',
     rollupOptions: {
       input: {
         main: './index.html',
