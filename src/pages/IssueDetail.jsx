@@ -563,13 +563,15 @@ const IssueDetail = () => {
                                     {(() => {
                                         // Compute category scores LIVE — never rely on cached DB values
                                         const liveSignalIssue = {
-                                            title: issue.title || issue.type || '',
+                                            title: issue.title || issue.type || issue.issue_type || '',
                                             description: issue.description || '',
-                                            type: issue.type || '',
+                                            type: issue.type || issue.issue_type || '',
                                             issue_type: issue.issue_type || issue.type || '',
                                             sector: issue.sector || '',
                                             severity: issue.priority || issue.severity || 'medium',
-                                            createdAt: issue.createdAt || new Date().toISOString()
+                                            createdAt: issue.createdAt || issue.created_at || new Date().toISOString(),
+                                            imageUrl: issue.imageUrl || issue.photo_url || '',
+                                            address: issue.address || issue.location_address || ''
                                         };
                                         const liveResult = calculatePriorityScore(liveSignalIssue);
                                         const liveCat = liveResult.advancedAnalysis?.signals || {};
