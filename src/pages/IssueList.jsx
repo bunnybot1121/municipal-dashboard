@@ -138,40 +138,40 @@ const IssueList = () => {
 
     const getSectorColor = (s) => {
         const map = {
-            'water': 'bg-blue-100 text-blue-600',
-            'roads': 'bg-slate-100 text-slate-600',
-            'lighting': 'bg-yellow-100 text-yellow-600',
-            'waste': 'bg-green-100 text-green-600',
-            'drainage': 'bg-cyan-100 text-cyan-600',
-            'power': 'bg-orange-100 text-orange-600'
+            'water': 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
+            'roads': 'bg-slate-500/20 text-slate-300 border border-slate-500/30',
+            'lighting': 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30',
+            'waste': 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
+            'drainage': 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30',
+            'power': 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
         };
-        return map[(s || '').toLowerCase()] || 'bg-gray-100 text-gray-600';
+        return map[(s || '').toLowerCase()] || 'bg-white/10 text-white border border-white/20';
     };
 
     const getPriorityStyle = (p) => {
         const map = {
-            'critical': 'bg-red-100 text-red-700 border border-red-200',
-            'high': 'bg-orange-100 text-orange-700 border border-orange-200',
-            'medium': 'bg-blue-100 text-blue-700 border border-blue-200',
-            'low': 'bg-gray-100 text-gray-700 border border-gray-200'
+            'critical': 'bg-red-500/20 text-red-300 border border-red-500/30',
+            'high': 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
+            'medium': 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
+            'low': 'bg-white/10 text-white/80 border border-white/20'
         };
         return map[(p || '').toLowerCase()] || map['low'];
     };
 
     if (loading) {
-        return <div className="p-10 text-center text-gray-500">Loading issues...</div>;
+        return <div className="p-10 text-center text-white/50">Loading issues...</div>;
     }
 
     return (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6 animate-fade-in text-white">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-xl font-bold text-gray-800">Scheduled Tasks</h1>
-                    <p className="text-sm text-gray-500 font-medium">Manage scheduled maintenance tasks and work orders</p>
+                    <h1 className="text-2xl font-bold text-white drop-shadow-sm">Scheduled Tasks</h1>
+                    <p className="text-sm text-white/70 font-medium">Manage scheduled maintenance tasks and work orders</p>
                 </div>
                 <button
-                    className="px-5 py-2.5 bg-[#5B52FF] hover:bg-[#4338CA] text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
+                    className="px-5 py-2.5 liquid-btn liquid-btn-emerald rounded-xl text-sm font-bold flex items-center gap-2"
                     onClick={() => navigate('/scheduler')}
                 >
                     <PlusCircle sx={{ fontSize: 18 }} />
@@ -180,15 +180,15 @@ const IssueList = () => {
             </div>
 
             {/* Filters & Search */}
-            <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/20 p-5 rounded-2xl shadow-lg flex flex-col md:flex-row gap-4 items-center">
                 <div className="relative flex-1 w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" sx={{ fontSize: 18 }} />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" sx={{ fontSize: 18 }} />
                     <input
                         type="text"
                         placeholder="Search by ID, Title, or Location..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50/50 text-sm focus:bg-white focus:ring-2 focus:ring-[#5B52FF]/20 focus:border-[#5B52FF] outline-none transition-all"
+                        className="w-full pl-11 pr-4 py-3 rounded-xl border border-white/10 bg-black/20 text-white placeholder-white/40 text-sm focus:bg-black/40 focus:ring-1 focus:ring-white/30 focus:border-white/30 outline-none transition-all"
                     />
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
@@ -196,35 +196,35 @@ const IssueList = () => {
                         <select
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
-                            className="appearance-none w-full md:w-40 px-4 py-2.5 pr-8 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 focus:ring-2 focus:ring-[#5B52FF]/20 focus:border-[#5B52FF] outline-none cursor-pointer"
+                            className="appearance-none w-full md:w-40 px-4 py-3 pr-10 rounded-xl border border-white/10 bg-black/20 text-sm font-medium text-white focus:bg-black/40 focus:ring-1 focus:ring-white/30 focus:border-white/30 outline-none cursor-pointer"
                         >
-                            <option value="all">All Statuses</option>
-                            <option value="pending">Pending</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="resolved">Resolved</option>
+                            <option value="all" className="bg-slate-900">All Statuses</option>
+                            <option value="pending" className="bg-slate-900">Pending</option>
+                            <option value="in-progress" className="bg-slate-900">In Progress</option>
+                            <option value="completed" className="bg-slate-900">Completed</option>
+                            <option value="resolved" className="bg-slate-900">Resolved</option>
                         </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" sx={{ fontSize: 18 }} />
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" sx={{ fontSize: 18 }} />
                     </div>
                     <div className="relative">
                         <select
                             value={filterSector}
                             onChange={(e) => setFilterSector(e.target.value)}
-                            className="appearance-none w-full md:w-40 px-4 py-2.5 pr-8 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 focus:ring-2 focus:ring-[#5B52FF]/20 focus:border-[#5B52FF] outline-none cursor-pointer"
+                            className="appearance-none w-full md:w-40 px-4 py-3 pr-10 rounded-xl border border-white/10 bg-black/20 text-sm font-medium text-white focus:bg-black/40 focus:ring-1 focus:ring-white/30 focus:border-white/30 outline-none cursor-pointer"
                         >
-                            <option value="all">All Sectors</option>
-                            {SECTORS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                            <option value="all" className="bg-slate-900">All Sectors</option>
+                            {SECTORS.map(s => <option key={s.id} value={s.id} className="bg-slate-900">{s.label}</option>)}
                         </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" sx={{ fontSize: 18 }} />
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" sx={{ fontSize: 18 }} />
                     </div>
                 </div>
             </div>
 
             {/* Enhanced Table */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 text-gray-500 uppercase text-[10px] font-extrabold tracking-widest border-b border-gray-200">
+            <div className="bg-white/5 backdrop-blur-xl rounded-[2rem] border border-white/20 shadow-lg overflow-hidden">
+                <div className="overflow-auto custom-scrollbar max-h-[65vh] min-h-[400px]">
+                    <table className="w-full text-left border-collapse">
+                        <thead className="bg-[#1a2235]/80 backdrop-blur-xl text-white/80 uppercase text-[10px] font-bold tracking-widest border-b border-white/10 sticky top-0 z-20 shadow-md">
                             <tr>
                                 {[
                                     { key: 'id', label: 'Task ID', width: 'w-28' },
@@ -242,21 +242,21 @@ const IssueList = () => {
                                     >
                                         <div className="flex items-center gap-1">
                                             {col.label}
-                                            {col.key !== 'action' && <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />}
+                                            {col.key !== 'action' && <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 text-white/30 transition-opacity" />}
                                         </div>
                                     </th>
                                 ))}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-white/5">
                             {filteredIssues.length === 0 ? (
                                 <tr>
                                     <td colSpan="7" className="px-6 py-12 text-center">
-                                        <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
-                                            <SearchX sx={{ fontSize: 32 }} className="text-gray-300" />
+                                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 border border-white/10">
+                                            <SearchX sx={{ fontSize: 32 }} className="text-white/30" />
                                         </div>
-                                        <p className="text-gray-800 font-bold">No issues found</p>
-                                        <p className="text-xs text-gray-500 mt-1">Try adjusting your filters.</p>
+                                        <p className="text-white font-bold drop-shadow-sm">No issues found</p>
+                                        <p className="text-xs text-white/70 mt-1">Try adjusting your filters.</p>
                                     </td>
                                 </tr>
                             ) : (
@@ -264,41 +264,41 @@ const IssueList = () => {
                                     <tr
                                         key={issue.uniqueId || issue.id}
                                         onClick={() => navigate(`/issues/TSK-${issue.id}`)}
-                                        className="hover:bg-blue-50/30 transition-colors cursor-pointer group"
+                                        className="hover:bg-white/5 transition-colors cursor-pointer group"
                                     >
                                         <td className="px-6 py-4">
-                                            <span className="text-[#5B52FF] font-bold text-xs group-hover:underline">
+                                            <span className="text-emerald-400 font-bold text-xs group-hover:underline drop-shadow-sm">
                                                 TSK-{issue.id && issue.id.length > 6 ? issue.id.substring(issue.id.length - 6).toUpperCase() : issue.id}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 max-w-[300px]">
-                                            <div className="font-bold text-sm text-gray-800 truncate mb-0.5">{issue.title}</div>
-                                            <div className="text-xs text-gray-500 truncate">{issue.description || 'No description provided.'}</div>
+                                            <div className="font-bold text-sm text-white truncate mb-0.5 drop-shadow-sm">{issue.title}</div>
+                                            <div className="text-xs text-white/80 truncate">{issue.description || 'No description provided.'}</div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${getSectorColor(issue.sector)}`}>
+                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${getSectorColor(issue.sector)}`}>
                                                 {getSectorIcon(issue.sector)}
                                                 {issue.sector}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`${getPriorityStyle(issue.priority)} px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide border inline-block text-center min-w-[80px]`}>
+                                            <span className={`${getPriorityStyle(issue.priority)} px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide inline-block text-center min-w-[80px]`}>
                                                 {issue.priority || 'Low'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
-                                                <span className={`w-2 h-2 rounded-full ${(issue.status === 'resolved' || issue.status === 'completed') ? 'bg-green-500' :
-                                                    issue.status === 'in-progress' || issue.status === 'assigned' ? 'bg-blue-500' :
-                                                        issue.status === 'rejected' ? 'bg-gray-400' :
-                                                            'bg-amber-500'
+                                                <span className={`w-2 h-2 rounded-full ${(issue.status === 'resolved' || issue.status === 'completed') ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' :
+                                                    issue.status === 'in-progress' || issue.status === 'assigned' ? 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]' :
+                                                        issue.status === 'rejected' ? 'bg-white/40 shadow-[0_0_8px_rgba(255,255,255,0.4)]' :
+                                                            'bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.8)]'
                                                     }`}></span>
-                                                <span className="text-sm font-medium text-gray-700 capitalize">
+                                                <span className="text-sm font-medium text-white/90 capitalize">
                                                     {(issue.status || 'Pending').replace(/[-_]/g, ' ')}
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-xs text-gray-500">
+                                        <td className="px-6 py-4 text-xs font-medium text-white/90">
                                             {issue.scheduledStart ? new Date(issue.scheduledStart).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                                         </td>
                                         <td className="px-6 py-4 text-right">
@@ -307,14 +307,14 @@ const IssueList = () => {
                                                     <>
                                                         <button
                                                             onClick={(e) => handleStatusUpdate(e, issue.id, 'completed')}
-                                                            className="p-1.5 rounded-full bg-green-50 text-green-600 hover:bg-green-100 transition-colors shadow-sm border border-green-100"
+                                                            className="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/30 hover:text-emerald-300 transition-colors border border-emerald-500/20"
                                                             title="Mark Completed"
                                                         >
                                                             <CheckIcon sx={{ fontSize: 16 }} />
                                                         </button>
                                                     </>
                                                 )}
-                                                <button className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors">
+                                                <button className="text-white/40 hover:text-white/90 p-1.5 rounded-xl hover:bg-white/10 transition-colors">
                                                     <MoreVertical sx={{ fontSize: 16 }} />
                                                 </button>
                                             </div>
@@ -326,14 +326,14 @@ const IssueList = () => {
                     </table>
                 </div>
                 {/* Pagination (Visual Only for now) */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500 font-medium">
+                <div className="px-6 py-4 bg-white/5 border-t border-white/10 flex items-center justify-between text-xs text-white/80 font-medium">
                     <span>Showing {filteredIssues.length} tasks</span>
-                    <div className="flex gap-2">
-                        <button className="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors" disabled>
+                    <div className="flex gap-2 text-white">
+                        <button className="w-8 h-8 flex items-center justify-center rounded-lg liquid-btn liquid-btn-white" disabled>
                             <ChevronLeft sx={{ fontSize: 16 }} />
                         </button>
-                        <button className="w-8 h-8 flex items-center justify-center rounded border border-transparent bg-[#5B52FF] text-white font-bold shadow-sm">1</button>
-                        <button className="w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+                        <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/20 bg-white/20 font-bold shadow-sm">1</button>
+                        <button className="w-8 h-8 flex items-center justify-center rounded-lg liquid-btn liquid-btn-white">
                             <ChevronRight sx={{ fontSize: 16 }} />
                         </button>
                     </div>

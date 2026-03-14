@@ -154,78 +154,78 @@ const Settings = () => {
 
     return (
         <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
-            <h1 className="text-2xl font-bold text-slate-800">System Settings</h1>
+            <h1 className="text-2xl font-bold text-white drop-shadow-md">System Settings</h1>
 
             {/* DEBUG LOG BOX */}
-            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-xs max-h-40 overflow-auto">
-                <p className="font-bold underline mb-2">UPLOAD DEBUG LOGS:</p>
-                {debugLogs.length === 0 ? <p className="opacity-50">Waiting for action...</p> : debugLogs.map((l, i) => <p key={i}>{l}</p>)}
+            <div className="bg-black/60 border border-white/20 backdrop-blur-sm text-green-400 p-4 rounded-xl font-mono text-xs max-h-40 overflow-auto shadow-inner">
+                <p className="font-bold underline mb-2 text-white/90">UPLOAD DEBUG LOGS:</p>
+                {debugLogs.length === 0 ? <p className="text-white/40 italic">Waiting for action...</p> : debugLogs.map((l, i) => <p key={i}>{l}</p>)}
             </div>
 
             {/* General Info Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">General Configuration</h2>
+            <div className="bg-white/10 backdrop-blur-xl rounded-[2rem] shadow-lg border border-white/20 p-6">
+                <h2 className="text-lg font-bold text-white drop-shadow-sm mb-4 border-b border-white/10 pb-2">General Configuration</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Assigned Municipality</label>
+                        <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Assigned Municipality</label>
                         <div className="flex items-center gap-2">
-                            <span className="text-lg font-medium text-slate-900">{city || 'Not Assigned'}</span>
-                            <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">ACTIVE</span>
+                            <span className="text-lg font-bold text-white drop-shadow-sm">{city || 'Not Assigned'}</span>
+                            <span className="bg-green-500/20 shadow-sm border border-green-400/30 text-green-300 text-xs px-2 py-0.5 rounded-full font-bold">ACTIVE</span>
                         </div>
                     </div>
                     <div>
-                        <button onClick={handleTestInsert} className="bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700">Test DB Connection</button>
+                        <button onClick={handleTestInsert} className="liquid-btn liquid-btn-white text-gray-900 font-bold px-4 py-2 flex items-center justify-center rounded-xl shadow-lg">Test DB Connection</button>
                     </div>
                 </div>
             </div>
 
             {/* Schedule Management Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div className="bg-white/10 backdrop-blur-xl rounded-[2rem] shadow-lg border border-white/20 p-6">
                 <div className="flex items-start justify-between mb-4">
                     <div>
-                        <h2 className="text-lg font-bold text-slate-800">Maintenance Schedule</h2>
-                        <p className="text-slate-500 text-sm">Manage the automated yearly calendar.</p>
+                        <h2 className="text-lg font-bold text-white drop-shadow-sm">Maintenance Schedule</h2>
+                        <p className="text-white/70 text-sm">Manage the automated yearly calendar.</p>
                     </div>
-                    <button onClick={handleResetData} className="text-red-500 hover:text-red-700 text-sm font-bold flex items-center gap-1">
+                    <button onClick={handleResetData} className="text-red-400 hover:text-red-300 hover:bg-red-400/10 px-3 py-1.5 rounded-lg transition-colors text-sm font-bold flex items-center gap-1">
                         <Trash2 size={16} /> Reset All Data
                     </button>
                 </div>
 
-                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200 border-dashed text-center">
-                    <div className="w-16 h-16 bg-white rounded-full mx-auto flex items-center justify-center mb-4 shadow-sm text-blue-600">
+                <div className="bg-black/20 backdrop-blur-sm rounded-2xl p-6 border border-white/10 border-dashed text-center">
+                    <div className="w-16 h-16 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full mx-auto flex items-center justify-center mb-4 shadow-lg text-white">
                         <FileText size={32} />
                     </div>
-                    <h3 className="font-bold text-slate-800 mb-1">Update Schedule</h3>
-                    <p className="text-slate-500 text-sm mb-4 max-w-md mx-auto">
+                    <h3 className="font-bold text-white drop-shadow-sm mb-1">Update Schedule</h3>
+                    <p className="text-white/60 text-sm mb-4 max-w-md mx-auto">
                         Uploading a new file will append tasks to the calendar.
                         Existing completed tasks will remain unchanged.
                     </p>
 
                     <div className="flex justify-center gap-3 items-center flex-col sm:flex-row">
-                        <label className="cursor-pointer bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 text-slate-700 px-4 py-2 rounded-lg font-medium transition-all shadow-sm flex items-center gap-2">
+                        <label className="cursor-pointer bg-white/10 border border-white/20 hover:border-white/40 hover:bg-white/20 text-white px-4 py-2.5 rounded-xl font-medium transition-all shadow-md flex items-center gap-2">
                             <Upload size={18} /> {file ? file.name : 'Choose File'}
                             <input type="file" className="hidden" accept=".md,.txt" onChange={handleFileUpload} />
                         </label>
                         <button
                             onClick={handleScheduleUpload}
                             disabled={!file || status === 'processing'}
-                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white px-6 py-2 rounded-lg font-bold transition-all shadow-md flex items-center gap-2"
+                            className="liquid-btn liquid-btn-blue text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2"
                         >
                             {status === 'processing' ? <RefreshCw className="animate-spin" size={18} /> : <RefreshCw size={18} />}
                             Update Now
                         </button>
                     </div>
-                    {status === 'success' && <div className="mt-4 text-green-600 font-bold text-sm flex items-center justify-center gap-2"><CheckCircle size={16} /> {message}</div>}
-                    {status === 'error' && <div className="mt-4 text-red-500 font-bold text-sm flex items-center justify-center gap-2"><AlertTriangle size={16} /> {message}</div>}
+                    {status === 'success' && <div className="mt-4 text-green-400 font-bold text-sm drop-shadow-sm flex items-center justify-center gap-2"><CheckCircle size={16} /> {message}</div>}
+                    {status === 'error' && <div className="mt-4 text-red-400 font-bold text-sm drop-shadow-sm flex items-center justify-center gap-2"><AlertTriangle size={16} /> {message}</div>}
                 </div>
 
                 <div className="mt-6">
                     <div className="flex justify-between items-center mb-3">
-                        <h4 className="text-sm font-bold text-slate-700">Sync History (Database)</h4>
+                        <h4 className="text-sm font-bold text-white/90 drop-shadow-sm">Sync History (Database)</h4>
                     </div>
                     <div className="space-y-3">
                         {syncHistory.length === 0 ? (
-                            <p className="text-xs text-slate-400 italic text-center py-2">No upload history found.</p>
+                            <p className="text-xs text-white/40 italic text-center py-2">No upload history found.</p>
                         ) : (
                             syncHistory.map(item => (
                                 <HistoryItem
@@ -245,19 +245,19 @@ const Settings = () => {
 };
 
 const HistoryItem = ({ date, file, status, count }) => (
-    <div className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-lg hover:border-slate-300 transition-colors">
+    <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all shadow-sm backdrop-blur-sm group">
         <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${status === 'Success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                <FileText size={16} />
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-inner ${status === 'Success' ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'}`}>
+                <FileText size={18} className="group-hover:scale-110 transition-transform" />
             </div>
             <div>
-                <div className="text-sm font-bold text-slate-800">{file}</div>
-                <div className="text-xs text-slate-500">{date}</div>
+                <div className="text-sm font-bold text-white drop-shadow-sm">{file}</div>
+                <div className="text-xs text-white/50">{date}</div>
             </div>
         </div>
         <div className="text-right">
-            <div className={`text-xs font-bold px-2 py-0.5 rounded-full inline-block ${status === 'Success' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>{status}</div>
-            <div className="text-xs text-slate-400 mt-1">{count} tasks</div>
+            <div className={`text-xs font-bold px-2.5 py-1 rounded-md inline-block shadow-sm ${status === 'Success' ? 'text-green-200 bg-green-500/30 border border-green-400/30' : 'text-red-200 bg-red-500/30 border border-red-400/30'}`}>{status}</div>
+            <div className="text-xs text-white/40 mt-1 font-medium">{count} tasks</div>
         </div>
     </div>
 );

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react'; // v2.1 Hybrid Dashboard
+import React, { useState, useEffect } from 'react'; // v2.1 Hybrid Dashboard
 import { useNavigate } from 'react-router-dom';
 import { fetchTasksFromSupabase } from '../services/taskService';
 import { calculatePriorityScore } from '../utils/aiPriority';
@@ -21,50 +21,50 @@ function CitizenAnalysisPanel({ issue, onClose, onViewFull }) {
 
     return (
         <>
-            <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={onClose} />
             <div
-                className="fixed top-0 right-0 h-full w-full max-w-[420px] bg-white shadow-2xl z-50 flex flex-col"
+                className="fixed top-0 right-0 h-full w-full max-w-[420px] bg-white/10 backdrop-blur-2xl border-l border-white/20 shadow-2xl z-50 flex flex-col text-white"
                 style={{ animation: 'slideInRight 0.22s ease-out' }}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b bg-gray-50">
+                <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-white/5">
                     <div>
-                        <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider">145-Signal AI Analysis</p>
-                        <h2 className="font-extrabold text-gray-800 text-sm mt-0.5 line-clamp-1">{issue.title}</h2>
+                        <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest drop-shadow-sm">145-Signal AI Analysis</p>
+                        <h2 className="font-bold text-white text-lg mt-0.5 line-clamp-1 drop-shadow-sm">{issue.title}</h2>
                     </div>
-                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-500">
-                        <X size={18} />
+                    <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/10 text-white/70 hover:text-white transition-colors">
+                        <X size={20} />
                     </button>
                 </div>
 
                 {/* Scrollable body */}
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
                     {/* Photo + score overlay */}
-                    <div className="relative h-44 bg-gray-200">
+                    <div className="relative h-48 bg-black/20 border-b border-white/10">
                         {issue.photo_url
                             ? <img src={issue.photo_url} alt={issue.title} className="w-full h-full object-cover" />
-                            : <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">No Photo</div>
+                            : <div className="w-full h-full flex items-center justify-center text-white/40 text-sm">No Photo Available</div>
                         }
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between">
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/50 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between">
                             <div>
-                                <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider">AI Priority Score</p>
-                                <p className="text-white text-4xl font-black">{a?.score ?? '—'}<span className="text-lg font-medium">/100</span></p>
+                                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-1">AI Priority Score</p>
+                                <p className="text-white text-5xl font-black drop-shadow-lg">{a?.score ?? '—'}<span className="text-xl font-medium text-white/50 ml-1">/100</span></p>
                             </div>
-                            <span className={`px-3 py-1.5 rounded-lg text-xs font-extrabold uppercase ${scoreBg}`}>
+                            <span className={`px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-wider ${scoreBg.replace('bg-', 'bg-').replace('text-', 'text-').replace('-100', '-500/20').replace('-700', '-300').replace('-800', '-300').concat(' border-current/30')}`}>
                                 {a?.label ?? 'Calculating'}
                             </span>
                         </div>
                     </div>
 
-                    <div className="px-5 py-4 space-y-5">
+                    <div className="px-6 py-5 space-y-6">
                         {/* Score bar */}
                         <div>
-                            <div className="flex justify-between text-xs text-gray-500 mb-1">
-                                <span className="font-semibold">Overall Priority Score</span>
-                                <span className="font-bold" style={{ color: scoreColor }}>{a?.score ?? 0}/100</span>
+                            <div className="flex justify-between text-xs text-white/60 mb-2 uppercase tracking-wider">
+                                <span className="font-semibold">Overall Priority</span>
+                                <span className="font-bold text-white">{a?.score ?? 0}/100</span>
                             </div>
-                            <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
                                 <div
                                     className="h-full rounded-full transition-all duration-700"
                                     style={{ width: `${a?.score ?? 0}%`, backgroundColor: scoreColor }}
@@ -74,19 +74,18 @@ function CitizenAnalysisPanel({ issue, onClose, onViewFull }) {
 
                         {/* Top signals explanation */}
                         {a?.advancedAnalysis?.explanation && (
-                            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3">
-                                <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1">🤖 Top Signals Detected</p>
-                                <p className="text-sm text-indigo-800 font-medium">{a.advancedAnalysis.explanation}</p>
+                            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4">
+                                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                    <Brain size={12} /> Top Signals Detected
+                                </p>
+                                <p className="text-sm text-emerald-100/90 font-medium leading-relaxed">{a.advancedAnalysis.explanation}</p>
                             </div>
                         )}
 
-                        {/* Category breakdown */}
-                        {/* 9-Category Breakdown Removed per user request */}
-
                         {/* 7D Dimensions */}
                         <div>
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">7D Framework Output</p>
-                            <div className="bg-gray-50 rounded-xl border border-gray-100 divide-y divide-gray-100">
+                            <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-3">7D Framework Output</p>
+                            <div className="bg-white/5 rounded-2xl border border-white/10 divide-y divide-white/5 overflow-hidden">
                                 {[
                                     ['Sector Assessment', dims.sector],
                                     ['Event Risk', dims.event],
@@ -95,9 +94,9 @@ function CitizenAnalysisPanel({ issue, onClose, onViewFull }) {
                                     ['Location Boost', dims.locationBoost != null ? `+${dims.locationBoost} pts` : null],
                                     ['Impact Score', dims.impactScore != null ? `${dims.impactScore} pts` : null],
                                 ].map(([k, v]) => v != null && (
-                                    <div key={k} className="flex justify-between px-3 py-2 text-xs">
-                                        <span className="text-gray-500 font-medium">{k}</span>
-                                        <span className="font-bold text-gray-800">{v}</span>
+                                    <div key={k} className="flex justify-between px-4 py-3 text-xs hover:bg-white/5 transition-colors">
+                                        <span className="text-white/60 font-medium">{k}</span>
+                                        <span className="font-bold text-white/90">{v}</span>
                                     </div>
                                 ))}
                             </div>
@@ -105,26 +104,26 @@ function CitizenAnalysisPanel({ issue, onClose, onViewFull }) {
 
                         {/* Escalation */}
                         {a?.advancedAnalysis?.escalation && (
-                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-3">
-                                <TrendingUp size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                            <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 flex items-start gap-3">
+                                <TrendingUp size={16} className="text-orange-400 flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Escalation Target</p>
-                                    <p className="text-sm font-bold text-amber-900 mt-0.5">{a.advancedAnalysis.escalation}</p>
+                                    <p className="text-[10px] font-bold text-orange-400/80 uppercase tracking-widest mb-1">Escalation Target</p>
+                                    <p className="text-sm font-bold text-orange-200 mt-0.5">{a.advancedAnalysis.escalation}</p>
                                 </div>
                             </div>
                         )}
 
                         {/* Meta info */}
-                        <div className="bg-gray-50 rounded-xl border border-gray-100 divide-y divide-gray-100">
+                        <div className="bg-white/5 rounded-2xl border border-white/10 divide-y divide-white/5 overflow-hidden mt-6">
                             {[
                                 ['Sector', issue.sector],
                                 ['Status', issue.status],
                                 ['Reported', new Date(issue.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })],
                                 ['Address', issue.address || issue.location?.address || '—'],
                             ].map(([k, v]) => (
-                                <div key={k} className="flex justify-between px-3 py-2 text-xs">
-                                    <span className="text-gray-500 font-medium">{k}</span>
-                                    <span className="font-bold text-gray-800 text-right max-w-[60%] truncate">{v || '—'}</span>
+                                <div key={k} className="flex justify-between px-4 py-3 text-xs hover:bg-white/5 transition-colors">
+                                    <span className="text-white/60 font-medium">{k}</span>
+                                    <span className="font-bold text-white/90 text-right max-w-[65%] truncate">{v || '—'}</span>
                                 </div>
                             ))}
                         </div>
@@ -132,10 +131,10 @@ function CitizenAnalysisPanel({ issue, onClose, onViewFull }) {
                 </div>
 
                 {/* Footer CTA */}
-                <div className="px-5 py-4 border-t bg-white">
+                <div className="px-6 py-5 border-t border-white/10 bg-white/5 shrink-0">
                     <button
                         onClick={onViewFull}
-                        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-colors"
+                        className="w-full py-3.5 liquid-btn liquid-btn-emerald rounded-xl font-bold text-sm"
                     >
                         Open Full Detail Page →
                     </button>
@@ -350,32 +349,32 @@ export default function Dashboard() {
 
     return (
         <>
-            <div className="min-h-screen bg-gray-50 p-6 animate-fade-in">
+            <div className="min-h-screen p-6 animate-fade-in text-white">
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-8">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
-                                <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+                                <h1 className="text-3xl font-bold flex items-center gap-2 drop-shadow-md">
                                     Dashboard
-                                    <span className="flex items-center gap-1.5 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full border border-blue-200">
+                                    <span className="flex items-center gap-1.5 text-xs bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-full border border-emerald-500/30">
                                         <span className="relative flex h-2 w-2">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                         </span>
                                         v2.3 Live
                                     </span>
                                 </h1>
-                                <p className="text-gray-600 mt-1">{city || 'Khargar'}</p>
+                                <p className="text-white/70 mt-1 drop-shadow-sm">{city || 'Khargar'}</p>
                             </div>
 
                             <div className="flex items-center gap-3">
                                 {/* Status Filter */}
-                                <div className="bg-white border rounded-lg px-3 py-2 shadow-sm flex items-center gap-2">
-                                    <Filter size={16} className="text-gray-500" />
+                                <div className="bg-white/5 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2 shadow-lg flex items-center gap-2">
+                                    <Filter size={16} className="text-white/70" />
                                     <select
                                         value={statusFilter}
                                         onChange={(e) => setStatusFilter(e.target.value)}
-                                        className="outline-none text-gray-700 font-medium bg-transparent text-sm"
+                                        className="outline-none text-white font-medium bg-transparent text-sm appearance-none [&>option]:text-gray-900"
                                     >
                                         <option value="all">All Statuses</option>
                                         <option value="new">New</option>
@@ -387,20 +386,20 @@ export default function Dashboard() {
                                 </div>
 
                                 {/* Date Picker Control */}
-                                <div className="bg-white border rounded-lg px-3 py-2 shadow-sm flex items-center gap-2">
-                                    <span className="text-sm text-gray-500 font-medium">View Date:</span>
+                                <div className="bg-white/5 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2 shadow-lg flex items-center gap-2">
+                                    <span className="text-sm text-white/70 font-medium">View Date:</span>
                                     <input
                                         type="date"
                                         value={selectedDate}
                                         onChange={(e) => setSelectedDate(e.target.value)}
-                                        className="outline-none text-gray-800 font-bold"
+                                        className="outline-none text-white font-bold bg-transparent [color-scheme:dark]"
                                         style={{ maxWidth: '130px' }}
                                     />
                                 </div>
 
                                 <button
                                     onClick={loadTasks}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 shadow-sm transition-colors text-blue-600 font-medium"
+                                    className="flex items-center gap-2 px-4 py-2 liquid-btn liquid-btn-white rounded-xl font-medium"
                                 >
                                     <RefreshCw className="w-4 h-4" />
                                     Refresh
@@ -411,85 +410,84 @@ export default function Dashboard() {
                         {/* Connection Status: Compact & Integrated */}
                     </div>
 
-                    {/* CITIZEN REPORTS SECTION â€” compact collapsible */}
                     <div className="mb-6">
                         {/* Collapsible Header */}
                         <button
                             onClick={() => setCitizenPanelOpen(o => !o)}
-                            className="w-full flex items-center justify-between bg-white border border-gray-200 rounded-xl px-5 py-3 shadow-sm hover:bg-gray-50 transition-colors"
+                            className="w-full flex items-center justify-between liquid-btn liquid-btn-white rounded-[2rem] px-6 py-4"
                         >
-                            <span className="flex items-center gap-2 font-semibold text-gray-800">
-                                <AlertCircle size={18} className="text-red-500" />
+                            <span className="flex items-center gap-2 font-semibold text-white">
+                                <AlertCircle size={18} className="text-red-400" />
                                 Citizen Reports
-                                <span className="ml-1 bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                                <span className="ml-1 bg-red-500/20 text-red-200 border border-red-500/30 text-xs font-bold px-2 py-0.5 rounded-full">
                                     {filteredIssues.length}
                                 </span>
-                                {issuesLoading && <Loader className="w-4 h-4 animate-spin text-gray-400" />}
+                                {issuesLoading && <Loader className="w-4 h-4 animate-spin text-white/50" />}
                             </span>
-                            <span className="text-gray-400">
+                            <span className="text-white/60">
                                 {citizenPanelOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                             </span>
                         </button>
 
                         {/* Expandable compact list */}
                         {citizenPanelOpen && (
-                            <div className="mt-2 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                            <div className="mt-3 bg-white/5 backdrop-blur-xl border border-white/20 rounded-[2rem] shadow-lg overflow-hidden">
                                 {filteredIssues.length === 0 ? (
-                                    <div className="p-6 text-center text-gray-400 text-sm">
+                                    <div className="p-6 text-center text-white/80 text-sm">
                                         No issues found matching current filters.
                                     </div>
                                 ) : (
                                     <div className="overflow-y-auto" style={{ maxHeight: '300px' }}>
                                         <table className="w-full text-sm">
-                                            <thead className="bg-gray-50 sticky top-0 border-b">
+                                            <thead className="bg-white/5 sticky top-0 border-b border-white/10">
                                                 <tr>
-                                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Priority</th>
-                                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Title</th>
-                                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Sector</th>
-                                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Status</th>
-                                                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Date</th>
-                                                    <th className="px-4 py-2"></th>
+                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-white/90 uppercase">Priority</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-white/90 uppercase">Title</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-white/90 uppercase hidden md:table-cell">Sector</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-white/90 uppercase hidden md:table-cell">Status</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-white/90 uppercase hidden lg:table-cell">Date</th>
+                                                    <th className="px-6 py-3"></th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-gray-100">
+                                            <tbody className="divide-y divide-white/10">
                                                 {filteredIssues.map((issue) => (
                                                     <tr
                                                         key={issue.id}
                                                         onClick={() => setSelectedCitizenIssue(issue)}
-                                                        className="hover:bg-indigo-50/40 transition-colors cursor-pointer"
+                                                        className="hover:bg-white/5 transition-colors cursor-pointer"
                                                     >
-                                                        <td className="px-4 py-2">
-                                                            <span className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase ${issue.calculatedPriority.label === 'Crisis' ? 'bg-red-600 text-white' :
-                                                                issue.calculatedPriority.label === 'Critical' ? 'bg-orange-500 text-white' :
-                                                                    issue.calculatedPriority.label === 'Moderate' ? 'bg-yellow-400 text-gray-900' :
-                                                                        'bg-blue-100 text-blue-800'
+                                                        <td className="px-6 py-3">
+                                                            <span className={`px-2 py-1 rounded-full border text-[11px] font-bold uppercase tracking-wider ${issue.calculatedPriority.label === 'Crisis' ? 'bg-red-500/20 text-red-300 border-red-500/30' :
+                                                                issue.calculatedPriority.label === 'Critical' ? 'bg-orange-500/20 text-orange-300 border-orange-500/30' :
+                                                                    issue.calculatedPriority.label === 'Moderate' ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' :
+                                                                        'bg-blue-500/20 text-blue-300 border-blue-500/30'
                                                                 }`}>
                                                                 {issue.calculatedPriority.label}
                                                             </span>
                                                         </td>
-                                                        <td className="px-4 py-2 font-medium text-gray-900 max-w-[200px] truncate">
+                                                        <td className="px-6 py-3 font-medium text-white max-w-[200px] truncate">
                                                             {issue.status === 'new' && (
-                                                                <span className="mr-1 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">NEW</span>
+                                                                <span className="mr-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">NEW</span>
                                                             )}
                                                             {issue.title}
                                                         </td>
-                                                        <td className="px-4 py-2 text-gray-500 capitalize hidden md:table-cell">{issue.sector}</td>
-                                                        <td className="px-4 py-2 hidden md:table-cell">
-                                                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase border ${issue.status === 'resolved' ? 'border-green-200 text-green-700 bg-green-50' :
-                                                                issue.status === 'in_progress' ? 'border-blue-200 text-blue-700 bg-blue-50' :
-                                                                    issue.status === 'rejected' ? 'border-red-200 text-red-700 bg-red-50' :
-                                                                        'border-gray-200 text-gray-600 bg-gray-50'
+                                                        <td className="px-6 py-3 text-white/90 capitalize hidden md:table-cell">{issue.sector}</td>
+                                                        <td className="px-6 py-3 hidden md:table-cell">
+                                                            <span className={`text-[10px] font-semibold px-2 py-1 rounded-full uppercase border ${issue.status === 'resolved' ? 'border-emerald-500/30 text-emerald-300 bg-emerald-500/10' :
+                                                                issue.status === 'in_progress' ? 'border-blue-500/30 text-blue-300 bg-blue-500/10' :
+                                                                    issue.status === 'rejected' ? 'border-red-500/30 text-red-300 bg-red-500/10' :
+                                                                        'border-white/30 text-white/90 bg-white/10'
                                                                 }`}>
                                                                 {issue.status}
                                                             </span>
                                                         </td>
-                                                        <td className="px-4 py-2 text-gray-400 text-xs hidden lg:table-cell">
+                                                        <td className="px-6 py-3 text-white/80 text-xs hidden lg:table-cell">
                                                             {new Date(issue.created_at).toLocaleDateString()}
                                                         </td>
-                                                        <td className="px-4 py-2" onClick={e => e.stopPropagation()}>
+                                                        <td className="px-6 py-3" onClick={e => e.stopPropagation()}>
                                                             <button
                                                                 onClick={() => setSelectedCitizenIssue(issue)}
-                                                                className="text-indigo-600 text-xs font-semibold hover:underline whitespace-nowrap"
+                                                                className="text-emerald-400 text-xs font-semibold hover:text-emerald-300 transition-colors whitespace-nowrap"
                                                             >
                                                                 Analyse &rarr;
                                                             </button>
@@ -504,78 +502,80 @@ export default function Dashboard() {
                         )}
                     </div>
 
-                    {/* LIVE MONITORING SECTION (RESTORED) */}
+                    {/* LIVE MONITORING SECTION */}
                     <div className="mb-8">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <Activity className="text-blue-600" />
+                        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2 drop-shadow-md">
+                            <Activity className="text-emerald-400" />
                             Live Operational View
                         </h2>
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Map */}
-                            <div className="lg:col-span-2 bg-white p-4 rounded-xl border border-gray-200 shadow-sm h-[500px]">
+                            <div className="lg:col-span-2 bg-white/5 backdrop-blur-xl border border-white/20 p-5 rounded-[2rem] shadow-lg h-[500px]">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h3 className="font-semibold text-gray-700 flex items-center gap-2">
+                                    <h3 className="font-semibold text-white/90 flex items-center gap-2">
                                         <MapIcon size={18} /> Geospatial Overview
                                     </h3>
                                     <div className="flex gap-2">
-                                        <span className="text-xs px-2 py-1 bg-red-100 text-red-800 rounded">Critical</span>
-                                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">Normal</span>
+                                        <span className="text-xs px-2 py-1 bg-red-500/20 border border-red-500/30 text-red-300 rounded-full">Critical</span>
+                                        <span className="text-xs px-2 py-1 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-full">Normal</span>
                                     </div>
                                 </div>
-                                <EnhancedMap markers={mapMarkers} height="420px" center={KHARGAR_CENTER} />
+                                <div className="rounded-xl overflow-hidden border border-white/10">
+                                    <EnhancedMap markers={mapMarkers} height="400px" center={KHARGAR_CENTER} />
+                                </div>
                             </div>
 
                             {/* Sensor Panel */}
                             <div className="space-y-4">
-                                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                                    <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                                <div className="bg-white/5 backdrop-blur-xl border border-white/20 p-5 rounded-[2rem] shadow-lg h-[500px] flex flex-col">
+                                    <h3 className="font-semibold text-white/90 mb-4 flex items-center gap-2 shrink-0">
                                         <Wifi size={18} /> IoT Sensor Status
                                     </h3>
-                                    <div className="space-y-3 max-h-[420px] overflow-y-auto pr-2">
+                                    <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                                         {sensorsLoading ? (
-                                            <div className="p-4 flex flex-col items-center gap-2 text-gray-400 text-sm">
+                                            <div className="p-4 flex flex-col items-center gap-2 text-white/50 text-sm">
                                                 <Loader className="w-5 h-5 animate-spin" />
                                                 <span>Connecting to sensors…</span>
                                             </div>
                                         ) : sensorsError ? (
                                             <div className="p-4 text-center">
-                                                <p className="text-red-500 text-xs font-medium mb-2">{sensorsError}</p>
+                                                <p className="text-red-400 text-xs font-medium mb-2">{sensorsError}</p>
                                                 <button
                                                     onClick={() => {
                                                         setSensorsLoading(true);
                                                         setSensorsError(null);
                                                         fetchSensorReadings().then(d => { setSensors(d); setSensorsLoading(false); }).catch(e => { setSensorsError('Could not reach sensor hardware.'); setSensorsLoading(false); });
                                                     }}
-                                                    className="text-xs text-blue-600 hover:underline font-semibold"
+                                                    className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold"
                                                 >Retry</button>
                                             </div>
                                         ) : sensors.length === 0 ? (
-                                            <div className="p-4 text-center text-gray-400 text-sm">No sensor data available.</div>
+                                            <div className="p-4 text-center text-white/50 text-sm">No sensor data available.</div>
                                         ) : null}
                                         {sensors.map(sensor => (
-                                            <div key={sensor.id} className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-blue-200 transition-colors">
-                                                <div className="flex justify-between mb-1">
-                                                    <span className="text-xs font-bold text-gray-500 uppercase">{sensor.type}</span>
-                                                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${sensor.status === 'critical' ? 'bg-red-100 text-red-700' :
-                                                        sensor.status === 'warning' ? 'bg-orange-100 text-orange-700' :
-                                                            'bg-green-100 text-green-700'
+                                            <div key={sensor.id} className="p-4 bg-white/5 rounded-xl border border-white/10 hover:border-white/20 hover:bg-white/10 transition-colors">
+                                                <div className="flex justify-between mb-2">
+                                                    <span className="text-xs font-bold text-white/50 uppercase tracking-widest">{sensor.type}</span>
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${sensor.status === 'critical' ? 'bg-red-500/20 border-red-500/30 text-red-300' :
+                                                        sensor.status === 'warning' ? 'bg-orange-500/20 border-orange-500/30 text-orange-300' :
+                                                            'bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
                                                         }`}>{sensor.status}</span>
                                                 </div>
-                                                <p className="font-medium text-gray-900 text-sm">{sensor.label}</p>
+                                                <p className="font-medium text-white text-sm">{sensor.label}</p>
                                                 <div className="flex justify-between items-end mt-2">
-                                                    <span className="text-2xl font-bold text-gray-800">{sensor.value}<span className="text-sm font-normal text-gray-500 ml-1">{sensor.unit}</span></span>
-                                                    <span className="text-xs text-gray-400">{sensor.lastUpdated}</span>
+                                                    <span className="text-2xl font-bold text-white/90">{sensor.value}<span className="text-sm font-normal text-white/50 ml-1">{sensor.unit}</span></span>
+                                                    <span className="text-xs text-white/40">{sensor.lastUpdated}</span>
                                                 </div>
                                                 {/* Fill level bar for ultrasonic sensors */}
                                                 {sensor.type === 'ultrasonic' && sensor.fillPercent !== undefined && (
-                                                    <div className="mt-2">
-                                                        <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                                                    <div className="mt-3">
+                                                        <div className="flex justify-between text-[10px] text-white/50 mb-1">
                                                             <span>Fill Level</span>
-                                                            <span className="font-bold">{sensor.fillPercent}%</span>
+                                                            <span className="font-bold text-white/80">{sensor.fillPercent}%</span>
                                                         </div>
-                                                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                                        <div className="h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
                                                             <div
-                                                                className={`h-full rounded-full transition-all duration-500 ${sensor.fillPercent >= 90 ? 'bg-red-500' : sensor.fillPercent >= 75 ? 'bg-orange-400' : 'bg-green-500'}`}
+                                                                className={`h-full rounded-full transition-all duration-500 ${sensor.fillPercent >= 90 ? 'bg-red-500' : sensor.fillPercent >= 75 ? 'bg-orange-400' : 'bg-emerald-500'}`}
                                                                 style={{ width: `${sensor.fillPercent}%` }}
                                                             />
                                                         </div>
@@ -592,58 +592,58 @@ export default function Dashboard() {
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         {/* CARD 1: Total Reports */}
-                        <div className="bg-white rounded-lg border p-6 shadow-sm">
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/20 rounded-[2rem] p-6 shadow-lg">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <p className="text-sm text-gray-600 font-medium mb-1">Total Reports</p>
-                                    <p className="text-4xl font-bold text-gray-900">{citizenIssues.length}</p>
+                                    <p className="text-sm text-white/60 font-medium mb-1 uppercase tracking-wider">Total Reports</p>
+                                    <p className="text-4xl font-bold text-white drop-shadow-sm">{citizenIssues.length}</p>
                                 </div>
-                                <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                                <div className="p-3 bg-white/10 rounded-2xl text-white">
                                     <BarChart2 size={24} />
                                 </div>
                             </div>
                         </div>
 
                         {/* CARD 2: Open Issues */}
-                        <div className="bg-white rounded-lg border p-6 shadow-sm">
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/20 rounded-[2rem] p-6 shadow-lg">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <p className="text-sm text-gray-600 font-medium mb-1">Open Issues</p>
-                                    <p className="text-4xl font-bold text-yellow-600">
+                                    <p className="text-sm text-yellow-200/60 font-medium mb-1 uppercase tracking-wider">Open Issues</p>
+                                    <p className="text-4xl font-bold text-yellow-300 drop-shadow-sm">
                                         {citizenIssues.filter(i => i.status === 'new' || i.status === 'in_progress').length}
                                     </p>
                                 </div>
-                                <div className="p-2 bg-yellow-50 rounded-lg text-yellow-600">
+                                <div className="p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-2xl text-yellow-300">
                                     <Clock size={24} />
                                 </div>
                             </div>
                         </div>
 
                         {/* CARD 3: Resolved */}
-                        <div className="bg-white rounded-lg border p-6 shadow-sm">
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/20 rounded-[2rem] p-6 shadow-lg">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <p className="text-sm text-gray-600 font-medium mb-1">Resolved</p>
-                                    <p className="text-4xl font-bold text-green-600">
+                                    <p className="text-sm text-emerald-200/60 font-medium mb-1 uppercase tracking-wider">Resolved</p>
+                                    <p className="text-4xl font-bold text-emerald-400 drop-shadow-sm">
                                         {citizenIssues.filter(i => i.status === 'resolved').length}
                                     </p>
                                 </div>
-                                <div className="p-2 bg-green-50 rounded-lg text-green-600">
+                                <div className="p-3 bg-emerald-500/20 border border-emerald-500/30 rounded-2xl text-emerald-400">
                                     <CheckCircle size={24} />
                                 </div>
                             </div>
                         </div>
 
                         {/* CARD 4: Critical Priority */}
-                        <div className="bg-white rounded-lg border p-6 shadow-sm">
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/20 rounded-[2rem] p-6 shadow-lg">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <p className="text-sm text-gray-600 font-medium mb-1">Critical / Crisis</p>
-                                    <p className="text-4xl font-bold text-red-600">
+                                    <p className="text-sm text-red-200/60 font-medium mb-1 uppercase tracking-wider">Critical / Crisis</p>
+                                    <p className="text-4xl font-bold text-red-400 drop-shadow-sm">
                                         {citizenIssues.filter(i => (i.calculatedPriority?.label || '').includes('Critic') || (i.calculatedPriority?.label || '').includes('Crisis')).length}
                                     </p>
                                 </div>
-                                <div className="p-2 bg-red-50 rounded-lg text-red-600">
+                                <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-2xl text-red-400">
                                     <AlertCircle size={24} />
                                 </div>
                             </div>
@@ -651,61 +651,61 @@ export default function Dashboard() {
                     </div>
 
                     {/* Tasks Table */}
-                    <div className="bg-white rounded-lg border overflow-hidden shadow-sm">
-                        <div className="px-6 py-4 border-b bg-gray-50 flex items-center gap-2">
-                            <List className="text-gray-500" size={20} />
-                            <h2 className="text-xl font-semibold text-gray-900">Scheduled Tasks ({new Date(selectedDate).toDateString()})</h2>
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/20 rounded-[2rem] overflow-hidden shadow-lg">
+                        <div className="px-6 py-5 border-b border-white/10 bg-white/5 flex items-center gap-2">
+                            <List className="text-white/70" size={20} />
+                            <h2 className="text-xl font-semibold text-white drop-shadow-sm">Scheduled Tasks ({new Date(selectedDate).toDateString()})</h2>
                         </div>
 
                         {todaysTasks.length === 0 ? (
                             <div className="p-12 text-center">
-                                <div className="bg-gray-50 p-6 rounded-lg inline-block text-left max-w-md w-full border border-dashed border-gray-300">
-                                    <p className="text-gray-500 text-sm">No tasks scheduled for {new Date(selectedDate).toDateString()}.</p>
+                                <div className="bg-white/5 p-6 rounded-2xl inline-block text-left max-w-md w-full border border-dashed border-white/20">
+                                    <p className="text-white/80 text-sm">No tasks scheduled for {new Date(selectedDate).toDateString()}.</p>
                                     <button
                                         onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
-                                        className="mt-2 text-blue-600 text-sm font-semibold hover:underline"
+                                        className="mt-3 px-4 py-2 liquid-btn liquid-btn-emerald rounded-lg text-sm font-semibold"
                                     >
                                         Go to Today
                                     </button>
                                 </div>
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead className="bg-gray-50 border-b">
+                            <div className="overflow-auto custom-scrollbar max-h-[500px]">
+                                <table className="w-full text-left border-collapse">
+                                    <thead className="bg-[#1a2235]/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-10 shadow-md">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Title</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Sector</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Priority</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Date</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-white/90 uppercase tracking-wider">Title</th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-white/90 uppercase tracking-wider">Sector</th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-white/90 uppercase tracking-wider">Priority</th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-white/90 uppercase tracking-wider">Date</th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-white/90 uppercase tracking-wider">Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-200">
+                                    <tbody className="divide-y divide-white/10">
                                         {todaysTasks.slice(0, 100).map((task, idx) => ( // limit to 100 for perf in this view
                                             <tr
                                                 key={task.id || idx}
-                                                className="hover:bg-gray-50 transition-colors cursor-pointer"
+                                                className="hover:bg-white/5 transition-colors cursor-pointer"
                                                 onClick={() => navigate(`/issues/TSK-${task.id}`)}
                                             >
-                                                <td className="px-6 py-4 text-sm text-gray-900 font-medium">{task.title}</td>
-                                                <td className="px-6 py-4 text-sm text-gray-700 capitalize">{task.sector}</td>
+                                                <td className="px-6 py-4 text-sm text-white font-medium">{task.title}</td>
+                                                <td className="px-6 py-4 text-sm text-white/90 capitalize">{task.sector}</td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${(task.priority || '').toLowerCase().includes('critic') || (task.priority || '').toLowerCase().includes('p1') ? 'bg-red-100 text-red-800' :
-                                                        (task.priority || '').toLowerCase().includes('high') || (task.priority || '').toLowerCase().includes('p2') ? 'bg-orange-100 text-orange-800' :
-                                                            (task.priority || '').toLowerCase().includes('medium') || (task.priority || '').toLowerCase().includes('p3') ? 'bg-blue-100 text-blue-800' :
-                                                                'bg-gray-100 text-gray-800'
+                                                    <span className={`px-2 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${(task.priority || '').toLowerCase().includes('critic') || (task.priority || '').toLowerCase().includes('p1') ? 'bg-red-500/20 border-red-500/30 text-red-300' :
+                                                        (task.priority || '').toLowerCase().includes('high') || (task.priority || '').toLowerCase().includes('p2') ? 'bg-orange-500/20 border-orange-500/30 text-orange-300' :
+                                                            (task.priority || '').toLowerCase().includes('medium') || (task.priority || '').toLowerCase().includes('p3') ? 'bg-blue-500/20 border-blue-500/30 text-blue-300' :
+                                                                'bg-white/10 border-white/20 text-white'
                                                         }`}>
                                                         {task.priority || 'Low'}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-gray-700 font-mono">
+                                                <td className="px-6 py-4 text-sm text-white/90 font-mono">
                                                     {new Date(task.scheduled_start).toLocaleDateString()}
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 rounded text-xs font-semibold uppercase ${task.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                                        task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                                                            'bg-yellow-100 text-yellow-800'
+                                                    <span className={`px-2 py-1 border rounded-full text-[10px] font-semibold uppercase ${task.status === 'completed' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' :
+                                                        task.status === 'in_progress' ? 'bg-blue-500/20 border-blue-500/30 text-blue-300' :
+                                                            'bg-yellow-500/20 border-yellow-500/30 text-yellow-300'
                                                         }`}>
                                                         {task.status || 'Pending'}
                                                     </span>
@@ -715,7 +715,7 @@ export default function Dashboard() {
                                     </tbody>
                                 </table>
                                 {todaysTasks.length > 100 && (
-                                    <div className="p-4 text-center text-gray-500 text-sm border-t bg-gray-50">
+                                    <div className="p-4 text-center text-white/80 text-sm border-t border-white/10 bg-white/5">
                                         Showing first 100 of {todaysTasks.length} tasks
                                     </div>
                                 )}

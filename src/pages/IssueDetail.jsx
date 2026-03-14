@@ -233,21 +233,21 @@ const IssueDetail = () => {
     return (
         <div className="max-w-7xl mx-auto space-y-6 animate-fade-in pb-10">
             {/* Header / Breadcrumbs */}
-            <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                <span className="hover:text-[#3c3cf6] cursor-pointer" onClick={() => navigate('/issues')}>Issues</span>
-                <span>/</span>
-                <span>{issue.id || id}</span>
+            <div className="flex items-center gap-2 text-sm text-white/70 font-medium drop-shadow-sm mb-2">
+                <span className="hover:text-white transition-colors cursor-pointer" onClick={() => navigate('/issues')}>Issues</span>
+                <span className="text-white/40">/</span>
+                <span className="text-white/90">{issue.id || id}</span>
             </div>
 
             {/* Title Block */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{issue.type || 'Issue Report'}</h1>
+                    <h1 className="text-3xl font-bold text-white drop-shadow-lg mb-2">{issue.type || 'Issue Report'}</h1>
                     <div className="flex items-center gap-3">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase border ${getPriorityColor(issue.priority)} flex items-center gap-1`}>
                             <Warning sx={{ fontSize: 14 }} /> {issue.priority || 'Medium'}
                         </span>
-                        <span className="flex items-center gap-1 text-sm text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200 shadow-sm">
+                        <span className="flex items-center gap-1 text-sm text-white/90 bg-white/10 px-3 py-1 rounded-full border border-white/20 shadow-sm backdrop-blur-md">
                             <AccessTime sx={{ fontSize: 16 }} /> Reported {new Date(issue.createdAt || Date.now()).toLocaleDateString()}
                         </span>
                     </div>
@@ -265,7 +265,7 @@ const IssueDetail = () => {
                                         console.error("Failed to accept issue", error);
                                     }
                                 }}
-                                className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 shadow-md transition-all flex items-center gap-2"
+                                className="px-4 py-2 liquid-btn liquid-btn-emerald rounded-lg font-bold flex items-center gap-2"
                             >
                                 <CheckCircle sx={{ fontSize: 18 }} /> Accept
                             </button>
@@ -281,7 +281,7 @@ const IssueDetail = () => {
                                         }
                                     }
                                 }}
-                                className="px-4 py-2 bg-red-50 text-red-700 border border-red-200 font-bold rounded-lg hover:bg-red-100 shadow-sm transition-all flex items-center gap-2"
+                                className="px-4 py-2 liquid-btn liquid-btn-red rounded-lg font-bold flex items-center gap-2"
                             >
                                 <Close sx={{ fontSize: 18 }} /> Reject
                             </button>
@@ -289,19 +289,19 @@ const IssueDetail = () => {
                     )}
                     <button
                         onClick={() => setIsOverrideOpen(true)}
-                        className="px-4 py-2 bg-white border border-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-50 shadow-sm transition-all"
+                        className="px-4 py-2 liquid-btn liquid-btn-white rounded-lg font-bold"
                     >
                         Override Analysis
                     </button>
                     <button
                         onClick={handleResolve}
-                        className="px-4 py-2 bg-green-50 text-green-700 border border-green-200 font-bold rounded-lg hover:bg-green-100 shadow-sm transition-all"
+                        className="px-4 py-2 liquid-btn liquid-btn-emerald rounded-lg font-bold"
                     >
                         Mark Resolved
                     </button>
                     <button
                         onClick={handleAssign}
-                        className="px-4 py-2 bg-[#3c3cf6] text-white font-bold rounded-lg hover:bg-[#2a2abf] shadow-lg shadow-indigo-500/30 transition-all"
+                        className="px-4 py-2 liquid-btn liquid-btn-blue rounded-lg font-bold"
                     >
                         Assign to Dept
                     </button>
@@ -334,11 +334,11 @@ const IssueDetail = () => {
             )}
 
             {/* Tabs */}
-            <div className="border-b border-gray-200 flex gap-6">
+            <div className="border-b border-white/20 flex gap-6 mt-4">
                 <TabButton active={activeTab === 'evidence'} onClick={() => setActiveTab('evidence')} icon={ImageIcon} label="Evidence" />
                 <TabButton active={activeTab === 'detail'} onClick={() => setActiveTab('detail')} icon={Description} label="Details" />
                 <TabButton active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} icon={CheckCircle} label="AI Analysis" />
-                <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={History} label="History" />
+                <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} label="History" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -347,56 +347,56 @@ const IssueDetail = () => {
 
                     {/* AI Photo Verification Banner */}
                     {isVerifying && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3 animate-pulse">
-                            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="bg-blue-500/10 border border-blue-400/30 backdrop-blur-md rounded-2xl p-4 flex items-center gap-3 animate-pulse shadow-sm">
+                            <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
                             <div>
-                                <p className="text-blue-700 font-bold text-sm">🛡️ Verifying with AI...</p>
-                                <p className="text-blue-500 text-xs">Analyzing photo for authenticity</p>
+                                <p className="text-blue-300 font-bold text-sm drop-shadow-sm">🛡️ Verifying with AI...</p>
+                                <p className="text-blue-200 text-xs text-shadow-sm">Analyzing photo for authenticity</p>
                             </div>
                         </div>
                     )}
                     {!isVerifying && issue.aiAnalysis?.photoVerification && (() => {
                         const pv = issue.aiAnalysis.photoVerification;
                         if (pv.needsManualReview) return (
-                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                                <span className="text-2xl">🔍</span>
+                            <div className="bg-amber-500/10 border border-amber-400/30 backdrop-blur-md rounded-2xl p-4 flex items-start gap-3 shadow-sm">
+                                <span className="text-2xl drop-shadow-md">🔍</span>
                                 <div className="flex-1">
-                                    <p className="text-amber-700 font-bold text-sm">Manual Review Required</p>
-                                    <p className="text-amber-600 text-xs mt-1">{pv.reason}</p>
+                                    <p className="text-amber-300 font-bold text-sm drop-shadow-sm">Manual Review Required</p>
+                                    <p className="text-amber-200/80 text-xs mt-1 drop-shadow-sm">{pv.reason}</p>
                                 </div>
                             </div>
                         );
                         return pv.isValid ? (
-                            <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
-                                <span className="text-2xl">✅</span>
+                            <div className="bg-green-500/10 border border-green-400/30 backdrop-blur-md rounded-2xl p-4 flex items-start gap-3 shadow-sm hover:bg-green-500/20 transition-all">
+                                <span className="text-2xl drop-shadow-md">✅</span>
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-green-700 font-bold text-sm">AI Verified — Legitimate Report</p>
-                                        <span className="text-green-600 text-xs font-bold bg-green-100 px-2 py-0.5 rounded-full">{pv.confidence}% confidence</span>
+                                        <p className="text-green-300 font-bold text-sm drop-shadow-sm">AI Verified — Legitimate Report</p>
+                                        <span className="text-green-200/90 text-xs font-bold bg-green-500/20 border border-green-400/30 px-2 py-0.5 rounded-full shadow-sm drop-shadow-md">{pv.confidence}% confidence</span>
                                     </div>
-                                    <p className="text-green-600 text-xs mt-1">{pv.reason}</p>
+                                    <p className="text-green-200/80 text-xs mt-1 drop-shadow-sm">{pv.reason}</p>
                                     {pv.detectedIssueType && pv.detectedIssueType !== 'unverified' && (
-                                        <p className="text-green-500 text-xs mt-0.5">Detected: <strong>{pv.detectedIssueType}</strong></p>
+                                        <p className="text-green-300/80 text-xs mt-0.5 drop-shadow-sm">Detected: <strong className="text-green-200">{pv.detectedIssueType}</strong></p>
                                     )}
                                     {pv.verifiedAt && (
-                                        <p className="text-green-400 text-xs mt-1">Verified at: {new Date(pv.verifiedAt).toLocaleString('en-IN')}</p>
+                                        <p className="text-green-400/60 text-xs mt-1 drop-shadow-sm">Verified at: {new Date(pv.verifiedAt).toLocaleString('en-IN')}</p>
                                     )}
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4 flex items-start gap-3">
-                                <span className="text-2xl">⚠️</span>
+                            <div className="bg-red-500/10 border border-red-400/50 backdrop-blur-md rounded-2xl p-4 flex items-start gap-3 shadow-sm hover:bg-red-500/20 transition-all">
+                                <span className="text-2xl drop-shadow-md">⚠️</span>
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-red-700 font-bold text-sm">Suspicious Report — AI Flagged</p>
-                                        <span className="text-red-600 text-xs font-bold bg-red-100 px-2 py-0.5 rounded-full">{pv.confidence}% confidence</span>
+                                        <p className="text-red-300 font-bold text-sm drop-shadow-sm">Suspicious Report — AI Flagged</p>
+                                        <span className="text-red-200/90 text-xs font-bold bg-red-500/20 border border-red-400/30 px-2 py-0.5 rounded-full shadow-sm drop-shadow-sm">{pv.confidence}% confidence</span>
                                     </div>
-                                    <p className="text-red-600 text-xs mt-1">{pv.reason}</p>
+                                    <p className="text-red-200/80 text-xs mt-1 drop-shadow-sm">{pv.reason}</p>
                                     {pv.detectedIssueType && pv.detectedIssueType !== 'unverified' && (
-                                        <p className="text-red-500 text-xs mt-0.5">Detected: <strong>{pv.detectedIssueType}</strong></p>
+                                        <p className="text-red-300/80 text-xs mt-0.5 drop-shadow-sm">Detected: <strong className="text-red-200">{pv.detectedIssueType}</strong></p>
                                     )}
                                     {pv.verifiedAt && (
-                                        <p className="text-red-400 text-xs mt-1">Flagged at: {new Date(pv.verifiedAt).toLocaleString('en-IN')}</p>
+                                        <p className="text-red-400/60 text-xs mt-1 drop-shadow-sm">Flagged at: {new Date(pv.verifiedAt).toLocaleString('en-IN')}</p>
                                     )}
                                 </div>
                             </div>
@@ -423,7 +423,7 @@ const IssueDetail = () => {
                             {/* Map & Metadata Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Map Preview */}
-                                <div className="h-48 bg-gray-100 rounded-2xl overflow-hidden border border-gray-200 relative">
+                                <div className="h-48 bg-white/5 backdrop-blur-md rounded-2xl overflow-hidden border border-white/20 relative shadow-inner">
                                     {(issue.location && typeof issue.location.lat === 'number' && typeof issue.location.lng === 'number') ? (
                                         <MapContainer center={[issue.location.lat, issue.location.lng]} zoom={15} style={{ height: '100%', width: '100%' }}>
                                             <MapEffect />
@@ -433,33 +433,33 @@ const IssueDetail = () => {
                                             </Marker>
                                         </MapContainer>
                                     ) : (
-                                        <div className="flex items-center justify-center h-full text-gray-400 text-sm flex-col">
-                                            <MapIcon className="mb-2 opacity-50" />
-                                            <span>No Location Data</span>
+                                        <div className="flex items-center justify-center h-full text-white/50 text-sm flex-col">
+                                            <MapIcon className="mb-2 opacity-50 drop-shadow-sm" />
+                                            <span className="drop-shadow-sm">No Location Data</span>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
                             {/* Consistency Score Block */}
-                            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
+                            <div className="bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg flex items-center justify-between hover:bg-white/20 transition-all">
                                 <div className="flex items-center gap-6">
                                     <div className="relative w-20 h-20 flex items-center justify-center">
                                         <svg className="w-full h-full transform -rotate-90">
-                                            <circle cx="40" cy="40" r="36" stroke="#e5e7eb" strokeWidth="8" fill="none" />
-                                            <circle cx="40" cy="40" r="36" stroke="#3c3cf6" strokeWidth="8" fill="none" strokeDasharray="226" strokeDashoffset="20" />
+                                            <circle cx="40" cy="40" r="36" stroke="rgba(255,255,255,0.1)" strokeWidth="8" fill="none" />
+                                            <circle cx="40" cy="40" r="36" stroke="#60a5fa" strokeWidth="8" fill="none" strokeDasharray="226" strokeDashoffset="20" className="drop-shadow-lg" />
                                         </svg>
-                                        <span className="absolute text-xl font-bold text-[#3c3cf6]">94%</span>
+                                        <span className="absolute text-xl font-bold text-blue-300 drop-shadow-md">94%</span>
                                     </div>
                                     <div>
-                                        <h3 className="text-sm font-bold text-gray-500 uppercase">Consistency Score</h3>
-                                        <div className="text-xl font-bold text-gray-900">High Confidence</div>
-                                        <div className="text-sm text-green-600 font-medium">+2.4% vs median</div>
+                                        <h3 className="text-sm font-bold text-white/50 uppercase tracking-wider drop-shadow-sm">Consistency Score</h3>
+                                        <div className="text-xl font-bold text-white drop-shadow-md">High Confidence</div>
+                                        <div className="text-sm text-blue-300 font-medium drop-shadow-sm">+2.4% vs median</div>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-xs text-gray-500 mb-1">Device ID</div>
-                                    <div className="font-mono bg-gray-100 px-2 py-1 rounded text-sm">Citizen-APP-88A2</div>
+                                    <div className="text-xs text-white/50 mb-1 font-medium tracking-wider drop-shadow-sm">Device ID</div>
+                                    <div className="font-mono bg-white/10 border border-white/20 text-white/90 px-2 py-1 rounded text-sm shadow-inner drop-shadow-sm">Citizen-APP-88A2</div>
                                 </div>
                             </div>
                         </div>
@@ -468,31 +468,34 @@ const IssueDetail = () => {
 
                     {/* TAB: DETAILS */}
                     {activeTab === 'detail' && (
-                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm animate-fade-in">
-                            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                <Description className="text-gray-400" /> Issue Details
+                        <div className="bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg animate-fade-in hover:bg-white/15 transition-all">
+                            <h3 className="font-bold text-white mb-4 flex items-center gap-2 drop-shadow-md">
+                                <Description className="text-blue-300 filter drop-shadow hover:rotate-12 transition-transform duration-300" /> <span className="tracking-wide">Issue Details</span>
                             </h3>
                             <div className="space-y-4">
-                                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                    <div className="text-xs font-bold text-gray-500 uppercase mb-2">Description</div>
-                                    <p className="text-gray-800 leading-relaxed whitespace-pre-line">{issue.description || "No description provided."}</p>
+                                <div className="p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 shadow-inner group transition-all duration-300 hover:bg-white/10 active:scale-[0.99] hover:shadow-lg">
+                                    <div className="text-xs font-bold text-white/50 uppercase tracking-widest mb-2 flex items-center gap-2 drop-shadow-sm">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]"></div>
+                                        Description
+                                    </div>
+                                    <p className="text-white/90 leading-relaxed whitespace-pre-line drop-shadow-sm font-medium">{issue.description || "No description provided."}</p>
                                 </div>
                                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                        <div className="text-xs font-bold text-gray-500 uppercase mb-1">Sector</div>
-                                        <div className="font-medium text-gray-900">{issue.sector || 'General'}</div>
+                                    <div className="p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 shadow-inner group transition-all duration-300 hover:bg-white/10 active:scale-[0.99] hover:shadow-lg">
+                                        <div className="text-xs font-bold text-white/50 uppercase tracking-widest mb-1 drop-shadow-sm">Sector</div>
+                                        <div className="font-medium text-white drop-shadow-md">{issue.sector || 'General'}</div>
                                     </div>
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                        <div className="text-xs font-bold text-gray-500 uppercase mb-1">Category</div>
-                                        <div className="font-medium text-gray-900">{issue.type || 'Standard'}</div>
+                                    <div className="p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 shadow-inner group transition-all duration-300 hover:bg-white/10 active:scale-[0.99] hover:shadow-lg">
+                                        <div className="text-xs font-bold text-white/50 uppercase tracking-widest mb-1 drop-shadow-sm">Category</div>
+                                        <div className="font-medium text-white drop-shadow-md">{issue.type || 'Standard'}</div>
                                     </div>
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                        <div className="text-xs font-bold text-gray-500 uppercase mb-1">Reported By</div>
-                                        <div className="font-medium text-gray-900">{issue.citizenName || 'Anonymous'}</div>
+                                    <div className="p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 shadow-inner group transition-all duration-300 hover:bg-white/10 active:scale-[0.99] hover:shadow-lg">
+                                        <div className="text-xs font-bold text-white/50 uppercase tracking-widest mb-1 drop-shadow-sm">Reported By</div>
+                                        <div className="font-medium text-white drop-shadow-md">{issue.citizenName || 'Anonymous'}</div>
                                     </div>
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                        <div className="text-xs font-bold text-gray-500 uppercase mb-1">Address</div>
-                                        <div className="font-medium text-gray-900 truncate" title={issue.address}>{issue.address || '—'}</div>
+                                    <div className="p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 shadow-inner group transition-all duration-300 hover:bg-white/10 active:scale-[0.99] hover:shadow-lg lg:col-span-3">
+                                        <div className="text-xs font-bold text-white/50 uppercase tracking-widest mb-1 drop-shadow-sm flex items-center gap-1.5"><MapIcon sx={{fontSize: 14}} className="text-blue-300"/> Address</div>
+                                        <div className="font-medium text-white drop-shadow-md truncate" title={issue.address}>{issue.address || '—'}</div>
                                     </div>
                                 </div>
                             </div>
@@ -501,16 +504,15 @@ const IssueDetail = () => {
 
                     {/* TAB: AI ANALYSIS */}
                     {activeTab === 'ai' && (
-                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm animate-fade-in">
+                        <div className="bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg animate-fade-in hover:bg-white/15 transition-all">
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2">
-                                    <CheckCircle className="text-[#3c3cf6]" /> AI Priority Analysis
+                                <h3 className="font-bold text-lg text-white flex items-center gap-2 drop-shadow-md">
+                                    <CheckCircle className="text-blue-300 filter drop-shadow hover:scale-110 transition-transform duration-300" /> <span className="tracking-wide">AI Priority Analysis</span>
                                 </h3>
                                 <div className="text-right">
-                                    <div className="text-xs text-gray-400">Engine Model: UrbanLogic-v4.2</div>
+                                    <div className="text-xs text-white/50 font-medium tracking-wider drop-shadow-sm">Engine Model: UrbanLogic-v4.2</div>
                                 </div>
                             </div>
-
 
                             {/* Auto-Run Logic & Loader */}
                             {(!issue.aiAnalysis || !issue.aiAnalysis.priorityScore) && (
@@ -518,13 +520,13 @@ const IssueDetail = () => {
                             )}
 
                             {(!issue.aiAnalysis || !issue.aiAnalysis.priorityScore) ? (
-                                <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300 animate-pulse">
+                                <div className="text-center py-10 bg-white/5 backdrop-blur-md rounded-xl border border-dashed border-white/20 animate-pulse shadow-inner">
                                     <div className="mb-4">
-                                        <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                                            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                        <div className="w-16 h-16 bg-blue-500/20 text-blue-300 rounded-full flex items-center justify-center mx-auto mb-2 shadow-[0_0_15px_rgba(96,165,250,0.4)]">
+                                            <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
                                         </div>
-                                        <h4 className="text-lg font-bold text-gray-700">Running AI Analysis...</h4>
-                                        <p className="text-sm text-gray-500 max-w-md mx-auto">
+                                        <h4 className="text-lg font-bold text-white drop-shadow-md">Running AI Analysis...</h4>
+                                        <p className="text-sm text-white/60 max-w-md mx-auto drop-shadow-sm mt-1">
                                             Connecting to OpenRouter (Gemini 2.0 Flash) for real-time priority assessment...
                                         </p>
                                     </div>
@@ -534,27 +536,28 @@ const IssueDetail = () => {
                                     {/* SCOREBOARD HEADER */}
                                     <div className="flex gap-4">
                                         {/* Total Score Card */}
-                                        <div className="flex-1 bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-2xl border border-blue-100 flex items-center justify-between">
-                                            <div>
-                                                <div className="text-xs font-bold text-blue-500 uppercase mb-1">Total Priority Score</div>
-                                                <div className="text-4xl font-extrabold text-[#3c3cf6]">{issue.aiAnalysis?.priorityScore || issue.aiAnalysis?.confidenceScore || 0}<span className="text-xl text-gray-400">/100</span></div>
-                                                <div className="text-xs text-blue-400 mt-1">{issue.aiAnalysis?.priority || 'Moderate'} Risk Level</div>
+                                        <div className="flex-1 bg-gradient-to-br from-indigo-500/10 to-blue-500/10 backdrop-blur-md p-6 rounded-2xl border border-blue-400/30 flex items-center justify-between shadow-lg relative overflow-hidden group">
+                                            <div className="absolute inset-0 bg-blue-400/5 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                            <div className="relative z-10">
+                                                <div className="text-xs font-bold text-blue-300 uppercase mb-1 tracking-wider drop-shadow-sm">Total Priority Score</div>
+                                                <div className="text-4xl font-extrabold text-blue-200 drop-shadow-lg">{issue.aiAnalysis?.priorityScore || issue.aiAnalysis?.confidenceScore || 0}<span className="text-xl text-white/40 font-normal">/100</span></div>
+                                                <div className="text-xs text-blue-300/80 mt-1 font-medium bg-blue-500/20 px-2 py-0.5 rounded-full inline-block mt-2 border border-blue-400/20 shadow-sm">{issue.aiAnalysis?.priority || 'Moderate'} Risk Level</div>
                                             </div>
-                                            <div className="text-right">
-                                                <div className="text-xs font-bold text-gray-400 uppercase">Signals Checked</div>
-                                                <div className="text-xl font-bold text-gray-700">145</div>
-                                                <div className="text-[10px] text-gray-400">Across 9 Dim.</div>
+                                            <div className="text-right relative z-10">
+                                                <div className="text-xs font-bold text-white/50 uppercase tracking-wider drop-shadow-sm">Signals Checked</div>
+                                                <div className="text-xl font-bold text-white drop-shadow-md">145</div>
+                                                <div className="text-[10px] text-white/40 font-medium">Across 9 Dim.</div>
                                             </div>
                                         </div>
 
                                         {/* Seasonal Card */}
                                         {(issue.aiAnalysis?.seasonalFactor > 1.0 || issue.seasonalFactor > 1.0) && (
-                                            <div className="w-1/3 bg-[#f0f9ff] p-4 rounded-2xl border border-blue-100 flex flex-col justify-center">
-                                                <div className="text-xs font-bold text-blue-400 uppercase mb-1">Seasonal Factor</div>
-                                                <div className="text-2xl font-bold text-[#3c3cf6]">
+                                            <div className="w-1/3 bg-blue-500/10 backdrop-blur-md p-4 rounded-2xl border border-blue-400/30 flex flex-col justify-center shadow-lg hover:bg-blue-500/20 transition-all">
+                                                <div className="text-xs font-bold text-blue-300 uppercase mb-1 tracking-wider drop-shadow-sm">Seasonal Factor</div>
+                                                <div className="text-2xl font-bold text-blue-200 drop-shadow-lg">
                                                     {issue.aiAnalysis?.seasonalFactor || issue.seasonalFactor}x
                                                 </div>
-                                                <div className="text-[10px] text-blue-800 mt-1">Multiplier Active</div>
+                                                <div className="text-[10px] text-blue-200/70 mt-1 font-medium bg-blue-500/20 px-2 py-0.5 rounded-full self-start mt-2 border border-blue-400/20 shadow-sm">Multiplier Active</div>
                                             </div>
                                         )}
                                     </div>
@@ -577,10 +580,10 @@ const IssueDetail = () => {
                                         const liveCat = liveResult.advancedAnalysis?.signals || {};
 
                                         return (
-                                            <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
-                                                <div className="bg-gray-50 px-4 py-2 border-b flex justify-between">
-                                                    <span className="text-xs font-bold text-gray-500 uppercase">Category Breakdown (Scores)</span>
-                                                    <span className="text-xs text-gray-400">Points Awarded</span>
+                                            <div className="bg-white/5 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl hover:bg-white/10">
+                                                <div className="bg-white/5 px-4 py-2 border-b border-white/10 flex justify-between">
+                                                    <span className="text-xs font-bold text-white/60 uppercase tracking-widest drop-shadow-sm">Category Breakdown <span className="text-white/40 font-normal">(Scores)</span></span>
+                                                    <span className="text-xs text-white/40 font-bold uppercase tracking-widest drop-shadow-sm">Points Awarded</span>
                                                 </div>
                                                 <div className="grid grid-cols-2 text-sm">
                                                     {[
@@ -593,10 +596,10 @@ const IssueDetail = () => {
                                                         { l: 'Resource Ops', s: liveCat.resource || 0, max: 10 },
                                                         { l: 'Governance', s: liveCat.gov || 0, max: 30 },
                                                     ].map((cat, i) => (
-                                                        <div key={i} className={`p-3 border-b border-gray-100 flex justify-between ${i % 2 === 0 ? 'border-r' : ''}`}>
-                                                            <span className="text-gray-600">{cat.l}</span>
-                                                            <span className={`font-mono font-bold ${cat.s > 0 ? 'text-[#3c3cf6]' : 'text-gray-300'}`}>
-                                                                {cat.s} <span className="text-gray-300 font-normal">/ {cat.max}</span>
+                                                        <div key={i} className={`p-3 border-b border-white/5 flex justify-between group hover:bg-white/10 transition-colors ${i % 2 === 0 ? 'border-r border-white/5' : ''}`}>
+                                                            <span className="text-white/80 font-medium group-hover:text-white transition-colors">{cat.l}</span>
+                                                            <span className={`font-mono font-bold ${cat.s > 0 ? 'text-blue-300 drop-shadow-md' : 'text-white/30'}`}>
+                                                                {cat.s} <span className="text-white/20 font-normal">/ {cat.max}</span>
                                                             </span>
                                                         </div>
                                                     ))}
@@ -607,33 +610,33 @@ const IssueDetail = () => {
 
                                     {/* GEMINI / OPENROUTER AI MAIN CARD */}
                                     {issue.aiAnalysis?.gemini ? (
-                                        <div className={`p-6 rounded-xl border-2 shadow-sm ${issue.aiAnalysis.priority === 'Crisis' ? 'bg-red-50 border-red-200' : 'bg-white border-blue-100'}`}>
-                                            <div className="flex justify-between items-start mb-4">
-                                                <h4 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></div>
+                                        <div className={`p-6 rounded-2xl border backdrop-blur-xl shadow-lg relative overflow-hidden ${issue.aiAnalysis.priority === 'Crisis' ? 'bg-red-500/10 border-red-500/30' : 'bg-white/5 border-blue-400/20 hover:bg-white/10 transition-colors'}`}>
+                                            <div className="flex justify-between items-start mb-4 relative z-10">
+                                                <h4 className="text-lg font-bold text-white flex items-center gap-2 drop-shadow-md">
+                                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.8)] animate-pulse"></div>
                                                     Generative AI Assessment
                                                 </h4>
-                                                <span className={`px-3 py-1 rounded-full text-sm font-bold uppercase shadow-sm ${issue.aiAnalysis.gemini.priority === 'Crisis' ? 'bg-red-600 text-white' :
-                                                    issue.aiAnalysis.gemini.priority === 'Critical' ? 'bg-orange-500 text-white' :
-                                                        'bg-blue-600 text-white'
+                                                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase shadow-lg backdrop-blur-md border ${issue.aiAnalysis.gemini.priority === 'Crisis' ? 'bg-red-600/80 text-white border-red-400/50' :
+                                                    issue.aiAnalysis.gemini.priority === 'Critical' ? 'bg-orange-500/80 text-white border-orange-400/50' :
+                                                        'bg-blue-600/80 text-white border-blue-400/50'
                                                     }`}>
                                                     {issue.aiAnalysis.gemini.priority} Priority
                                                 </span>
                                             </div>
 
-                                            <div className="mb-4">
-                                                <h5 className="text-xs font-bold text-gray-500 uppercase mb-1">AI Reasoning</h5>
-                                                <p className="text-lg font-serif italic text-gray-800 leading-relaxed border-l-4 border-blue-200 pl-4 py-1">
+                                            <div className="mb-6 relative z-10">
+                                                <h5 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-2 drop-shadow-sm">AI Reasoning</h5>
+                                                <p className="text-lg font-serif italic text-white/90 leading-relaxed border-l-4 border-blue-400/50 pl-5 py-1.5 bg-blue-500/5 rounded-r-xl shadow-inner">
                                                     "{issue.aiAnalysis.gemini.reasoning}"
                                                 </p>
                                             </div>
 
                                             {issue.aiAnalysis.gemini.risks && issue.aiAnalysis.gemini.risks.length > 0 && (
-                                                <div>
-                                                    <h5 className="text-xs font-bold text-gray-500 uppercase mb-2">Key Risk Factors</h5>
+                                                <div className="mb-4 relative z-10">
+                                                    <h5 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-3 drop-shadow-sm">Key Risk Factors</h5>
                                                     <div className="flex flex-wrap gap-2">
                                                         {issue.aiAnalysis.gemini.risks.map((risk, idx) => (
-                                                            <span key={idx} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 shadow-sm">
+                                                            <span key={idx} className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-xl text-sm font-medium text-white shadow-sm hover:bg-white/20 transition-colors backdrop-blur-md">
                                                                 ⚠️ {risk}
                                                             </span>
                                                         ))}
@@ -642,21 +645,21 @@ const IssueDetail = () => {
                                             )}
 
                                             {issue.aiAnalysis.gemini.recommended_action && (
-                                                <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                                                    <h5 className="text-xs font-bold text-blue-600 uppercase mb-1">Recommended Action Plan</h5>
-                                                    <p className="text-sm text-gray-800 whitespace-pre-line">{issue.aiAnalysis.gemini.recommended_action}</p>
+                                                <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl relative z-10 shadow-inner group transition-all hover:bg-blue-500/15">
+                                                    <h5 className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-2 drop-shadow-sm group-hover:text-blue-200 transition-colors">Recommended Action Plan</h5>
+                                                    <p className="text-sm text-white/90 whitespace-pre-line leading-relaxed font-medium">{issue.aiAnalysis.gemini.recommended_action}</p>
                                                 </div>
                                             )}
 
-                                            <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-400 text-right">
+                                            <div className="mt-6 pt-4 border-t border-white/10 text-xs text-white/40 font-medium tracking-wide text-right relative z-10">
                                                 Analysis via OpenRouter • {new Date().toLocaleTimeString()}
                                             </div>
                                         </div>
                                     ) : (
                                         /* Fallback to legacy view if no Gemini data yet */
-                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                            <h4 className="text-xs font-bold text-slate-500 uppercase mb-2">Detailed Reasoning</h4>
-                                            <p className="text-sm text-slate-700 leading-relaxed font-mono">
+                                        <div className="bg-white/5 backdrop-blur-md p-5 rounded-2xl border border-white/10 shadow-inner">
+                                            <h4 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-3">Detailed Reasoning</h4>
+                                            <p className="text-sm text-white/80 leading-relaxed font-mono drop-shadow-sm bg-black/20 p-4 rounded-xl border border-white/5">
                                                 &gt; {issue.aiAnalysis?.explanation || "No detailed analysis available."}
                                             </p>
                                         </div>
@@ -664,14 +667,14 @@ const IssueDetail = () => {
 
                                     {/* Detected Signals (Flags) */}
                                     {(issue.aiAnalysis?.flags && issue.aiAnalysis.flags.length > 0) && (
-                                        <div className="bg-white p-4 rounded-xl border border-gray-200">
-                                            <h4 className="text-xs font-bold text-gray-800 uppercase mb-3 flex items-center gap-2">
-                                                <CheckCircle className="text-green-600" sx={{ fontSize: 16 }} />
+                                        <div className="bg-white/5 backdrop-blur-xl p-5 rounded-2xl border border-white/10 shadow-sm transition-all hover:bg-white/10">
+                                            <h4 className="text-xs font-bold text-white/80 uppercase tracking-widest mb-4 flex items-center gap-2 drop-shadow-sm">
+                                                <CheckCircle className="text-green-400 filter shadow-sm" sx={{ fontSize: 16 }} />
                                                 Active Priority Signals
                                             </h4>
                                             <div className="flex flex-wrap gap-2">
                                                 {issue.aiAnalysis.flags.map((flag, index) => (
-                                                    <span key={index} className="px-2 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded text-xs font-mono font-bold">
+                                                    <span key={index} className="px-2.5 py-1 bg-amber-500/10 text-amber-200 border border-amber-400/30 rounded-lg text-xs font-mono font-bold shadow-sm backdrop-blur-md">
                                                         {flag.replace('SIGNAL: ', '')}
                                                     </span>
                                                 ))}
@@ -680,7 +683,7 @@ const IssueDetail = () => {
                                     )}
 
                                     {/* RE-ANALYZE BUTTON (Always visible at bottom to refresh) */}
-                                    <div className="text-center pt-4 border-t">
+                                    <div className="text-center pt-6 border-t border-white/10 mt-2">
                                         <button
                                             onClick={async () => {
                                                 if (confirm("Re-run analysis to update score?")) {
@@ -716,26 +719,26 @@ const IssueDetail = () => {
                     {activeTab === 'history' && ( // Rename/Expand this tab to include comments
                         <div className="space-y-6 animate-fade-in">
                             {/* Assignment Section */}
-                            <div id="assignment-section" className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <Assignment className="text-blue-600" /> Task Assignment
+                            <div id="assignment-section" className="bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg transition-all hover:bg-white/15">
+                                <h3 className="font-bold text-white mb-4 flex items-center gap-2 drop-shadow-md">
+                                    <Assignment className="text-blue-300 filter drop-shadow hover:-rotate-12 transition-transform duration-300" /> Task Assignment
                                 </h3>
                                 {users.length === 0 && (
-                                    <div className="mb-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                                    <div className="mb-4 text-xs text-amber-200 bg-amber-500/10 border border-amber-400/30 rounded-xl px-4 py-3 shadow-inner backdrop-blur-md">
                                         ⚠️ No staff/workers found. Add staff via the <strong>Staff Management</strong> page first.
                                     </div>
                                 )}
-                                <div className="flex items-end gap-4">
+                                <div className="flex items-end gap-5">
                                     <div className="flex-1">
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Assigned To</label>
+                                        <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-1.5 drop-shadow-sm">Assigned To</label>
                                         <select
-                                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                                            className="w-full p-2.5 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 shadow-inner group transition-all hover:bg-white/10"
                                             value={issue.assignedTo || ''}
                                             onChange={(e) => setIssue({ ...issue, assignedTo: e.target.value })}
                                         >
-                                            <option value="">— Unassigned —</option>
+                                            <option value="" className="text-gray-900">— Unassigned —</option>
                                             {users.map(u => (
-                                                <option key={u.id} value={u.id}>
+                                                <option key={u.id} value={u.id} className="text-gray-900">
                                                     {u.name || u.username} · {u.sector || 'general'} ({u.role})
                                                 </option>
                                             ))}
@@ -743,27 +746,27 @@ const IssueDetail = () => {
                                         {issue.assignedTo && (() => {
                                             const assigned = users.find(u => u.id === issue.assignedTo);
                                             return assigned ? (
-                                                <p className="text-xs text-green-700 mt-1 font-medium">✓ Currently assigned to: <strong>{assigned.name || assigned.username}</strong> ({assigned.sector})</p>
+                                                <p className="text-xs text-green-300 mt-2 font-medium drop-shadow-sm">✓ Currently assigned to: <strong>{assigned.name || assigned.username}</strong> ({assigned.sector})</p>
                                             ) : null;
                                         })()}
                                     </div>
                                     <div className="flex-1">
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+                                        <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-1.5 drop-shadow-sm">Status</label>
                                         <select
-                                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                                            className="w-full p-2.5 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 shadow-inner transition-all hover:bg-white/10"
                                             value={issue.status || 'pending'}
                                             onChange={(e) => setIssue({ ...issue, status: e.target.value })}
                                         >
-                                            <option value="pending">Pending</option>
-                                            <option value="accepted">Accepted</option>
-                                            <option value="in_progress">In Progress</option>
-                                            <option value="resolved">Resolved</option>
-                                            <option value="rejected">Rejected</option>
+                                            <option value="pending" className="text-gray-900">Pending</option>
+                                            <option value="accepted" className="text-gray-900">Accepted</option>
+                                            <option value="in_progress" className="text-gray-900">In Progress</option>
+                                            <option value="resolved" className="text-gray-900">Resolved</option>
+                                            <option value="rejected" className="text-gray-900">Rejected</option>
                                         </select>
                                     </div>
                                     <button
                                         onClick={handleAssignmentUpdate}
-                                        className="px-5 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                                        className="px-6 py-2.5 liquid-btn liquid-btn-blue rounded-xl font-bold whitespace-nowrap shadow-lg"
                                     >
                                         Save Assignment
                                     </button>
@@ -771,44 +774,44 @@ const IssueDetail = () => {
                             </div>
 
                             {/* Comments Section */}
-                            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                                <h3 className="font-bold text-gray-800 mb-4">Discussion & Notes</h3>
+                            <div className="bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg transition-all hover:bg-white/15">
+                                <h3 className="font-bold text-white mb-6 drop-shadow-md tracking-wide">Discussion & Notes</h3>
 
                                 {/* Local State Comments List */}
-                                <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2">
+                                <div className="space-y-5 mb-6 max-h-60 overflow-y-auto pr-3 custom-scrollbar">
                                     {comments.map(c => (
-                                        <div key={c.id} className="flex gap-3 animate-fade-in">
-                                            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                                        <div key={c.id} className="flex gap-3 animate-fade-in group">
+                                            <div className="w-8 h-8 rounded-full border border-blue-400/50 bg-blue-500/20 backdrop-blur-md flex items-center justify-center text-blue-300 font-bold text-xs shadow-sm group-hover:scale-110 transition-transform">
                                                 {c.role === 'admin' ? 'A' : 'U'}
                                             </div>
-                                            <div className="bg-white p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border border-gray-100 flex-1 shadow-sm">
+                                            <div className="bg-white/5 backdrop-blur-md p-4 rounded-tr-2xl rounded-br-2xl rounded-bl-2xl border border-white/10 flex-1 shadow-inner group-hover:bg-white/10 transition-all">
                                                 <div className="flex justify-between items-center mb-1">
-                                                    <span className="text-xs font-bold text-gray-700">{c.user}</span>
-                                                    <span className="text-[10px] text-gray-400">{c.time}</span>
+                                                    <span className="text-xs font-bold text-white/90 drop-shadow-sm">{c.user}</span>
+                                                    <span className="text-[10px] text-white/40 tracking-wider">{c.time}</span>
                                                 </div>
-                                                <p className="text-sm text-gray-600">{c.text}</p>
+                                                <p className="text-sm text-white/80 drop-shadow-sm">{c.text}</p>
                                             </div>
                                         </div>
                                     ))}
 
-                                    <div className="flex gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">AS</div>
-                                        <div className="bg-gray-50 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border border-gray-100 flex-1">
+                                    <div className="flex gap-3 group">
+                                        <div className="w-8 h-8 rounded-full border border-white/20 bg-white/10 backdrop-blur-md flex items-center justify-center text-white/80 font-bold text-xs shadow-sm group-hover:scale-110 transition-transform">AS</div>
+                                        <div className="bg-white/5 backdrop-blur-md p-4 rounded-tr-2xl rounded-br-2xl rounded-bl-2xl border border-white/10 flex-1 shadow-inner group-hover:bg-white/10 transition-all">
                                             <div className="flex justify-between items-center mb-1">
-                                                <span className="text-xs font-bold text-gray-700">Amit Sharma</span>
-                                                <span className="text-[10px] text-gray-400">2 hours ago</span>
+                                                <span className="text-xs font-bold text-white/90 drop-shadow-sm">Sector Officer (Amit Sharma)</span>
+                                                <span className="text-[10px] text-white/40 tracking-wider">2 hours ago</span>
                                             </div>
-                                            <p className="text-sm text-gray-600">I have inspected the site. The valve issue is more severe than reported. Need replacement parts.</p>
+                                            <p className="text-sm text-white/80 drop-shadow-sm">I have inspected the site. The valve issue is more severe than reported. Need replacement parts.</p>
                                         </div>
                                     </div>
-                                    <div className="flex gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-xs">AI</div>
-                                        <div className="bg-purple-50 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border border-purple-100 flex-1">
+                                    <div className="flex gap-3 group">
+                                        <div className="w-8 h-8 rounded-full border border-purple-400/50 bg-purple-500/20 backdrop-blur-md flex items-center justify-center text-purple-300 font-bold text-xs shadow-[0_0_10px_rgba(168,85,247,0.3)] group-hover:scale-110 transition-transform">AI</div>
+                                        <div className="bg-purple-500/10 backdrop-blur-md p-4 rounded-tr-2xl rounded-br-2xl rounded-bl-2xl border border-purple-400/20 flex-1 shadow-inner group-hover:bg-purple-500/15 transition-all">
                                             <div className="flex justify-between items-center mb-1">
-                                                <span className="text-xs font-bold text-purple-700">System AI</span>
-                                                <span className="text-[10px] text-purple-400">5 hours ago</span>
+                                                <span className="text-xs font-bold text-purple-300 drop-shadow-sm">System AI</span>
+                                                <span className="text-[10px] text-purple-400/60 tracking-wider">5 hours ago</span>
                                             </div>
-                                            <p className="text-sm text-purple-800">Priority automatically escalated to High due to proximity to school zone.</p>
+                                            <p className="text-sm text-purple-200/90 drop-shadow-sm">Priority automatically escalated to High due to proximity to school zone.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -818,14 +821,14 @@ const IssueDetail = () => {
                                     <input
                                         type="text"
                                         placeholder="Add a comment or internal note..."
-                                        className="flex-1 p-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                                        className="flex-1 p-3 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 shadow-inner transition-all"
                                         value={comment}
                                         onChange={(e) => setComment(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && handlePostComment()}
                                     />
                                     <button
                                         onClick={handlePostComment}
-                                        className="px-4 py-2 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-colors"
+                                        className="px-4 py-2 liquid-btn liquid-btn-white rounded-xl font-bold"
                                     >
                                         Post
                                     </button>
@@ -833,9 +836,9 @@ const IssueDetail = () => {
                             </div>
 
                             {/* Detailed History (Existing) */}
-                            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                                <h3 className="font-bold text-gray-800 mb-4">Audit Log</h3>
-                                <div className="space-y-6 relative before:absolute before:left-[15px] before:top-2 before:h-full before:w-[2px] before:bg-gray-100">
+                            <div className="bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg">
+                                <h3 className="font-bold text-white mb-6 drop-shadow-md tracking-wide">Audit Log</h3>
+                                <div className="space-y-6 relative before:absolute before:left-[15px] before:top-2 before:h-full before:w-[2px] before:bg-white/10">
                                     <TimelineItem
                                         icon={<div className="w-2 h-2 rounded-full bg-[#3c3cf6]"></div>}
                                         time={new Date(issue.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -865,9 +868,9 @@ const IssueDetail = () => {
                 {/* Right Column (Map & Quick Info) */}
                 <div className="space-y-6">
                     {/* Location Card */}
-                    <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm sticky top-24">
-                        <h3 className="font-bold text-gray-800 mb-4">Location</h3>
-                        <div className="h-64 rounded-xl overflow-hidden mb-4 relative z-0 border border-gray-100">
+                    <div className="bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg sticky top-24">
+                        <h3 className="font-bold text-white mb-4 drop-shadow-md tracking-wide">Location Insights</h3>
+                        <div className="h-64 rounded-xl overflow-hidden mb-5 relative z-0 border border-white/20 shadow-inner">
                             {(issue.location && typeof issue.location.lat === 'number' && typeof issue.location.lng === 'number') ? (
                                 <MapContainer center={[issue.location.lat, issue.location.lng]} zoom={15} style={{ height: '100%', width: '100%' }}>
                                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -882,11 +885,11 @@ const IssueDetail = () => {
                                 </div>
                             )}
                         </div>
-                        <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                            <MapIcon className="text-gray-400 mt-0.5" sx={{ fontSize: 18 }} />
+                        <div className="flex items-start gap-4 p-4 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-inner hover:bg-white/10 transition-all">
+                            <MapIcon className="text-blue-300 mt-0.5 filter drop-shadow-sm" sx={{ fontSize: 20 }} />
                             <div>
-                                <div className="text-xs font-bold text-gray-500 uppercase">Address</div>
-                                <div className="text-sm font-medium text-gray-900 leading-tight">{issue.location?.address || issue.address || 'No address data'}</div>
+                                <div className="text-xs font-bold text-white/50 uppercase tracking-widest mb-1 drop-shadow-sm">Address</div>
+                                <div className="text-sm font-medium text-white/90 leading-relaxed drop-shadow-md">{issue.location?.address || issue.address || 'No address data'}</div>
                             </div>
                         </div>
                     </div>
@@ -899,22 +902,26 @@ const IssueDetail = () => {
 const TabButton = ({ active, onClick, icon: Icon, label }) => (
     <button
         onClick={onClick}
-        className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition-all ${active ? 'border-[#3c3cf6] text-[#3c3cf6]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+        className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition-all ${
+            active 
+                ? 'border-indigo-400 text-indigo-300 font-bold drop-shadow-md' 
+                : 'border-transparent text-white/60 hover:text-white/90 font-medium hover:border-white/30'
+        }`}
     >
-        <Icon sx={{ fontSize: 18 }} />
-        <span className="font-bold text-sm">{label}</span>
+        {Icon ? <Icon sx={{ fontSize: 18 }} /> : <History sx={{ fontSize: 18 }} />}
+        <span className="text-sm">{label}</span>
     </button>
 );
 
 const TimelineItem = ({ icon, time, title, desc, active, isLast }) => (
-    <div className="relative pl-10">
-        <div className={`absolute left-0 top-1 w-8 h-8 rounded-full border-4 border-white shadow-sm flex items-center justify-center z-10 ${active ? 'bg-blue-50' : 'bg-gray-50'}`}>
+    <div className="relative pl-10 group mt-4">
+        <div className={`absolute left-0 top-1 w-8 h-8 rounded-full border-2 shadow-sm flex items-center justify-center z-10 transition-all duration-300 group-hover:scale-110 ${active ? 'bg-blue-500/20 border-blue-400 backdrop-blur-md shadow-[0_0_10px_rgba(96,165,250,0.5)]' : 'bg-white/10 border-white/20 backdrop-blur-md'}`}>
             {icon}
         </div>
-        <div>
-            <div className="text-xs text-gray-400 font-medium mb-0.5">{time}</div>
-            <div className="font-bold text-gray-800 text-sm">{title}</div>
-            <div className="text-xs text-gray-500">{desc}</div>
+        <div className="bg-white/5 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-inner group-hover:bg-white/10 transition-all">
+            <div className="text-xs text-white/50 font-medium mb-1 tracking-wider">{time}</div>
+            <div className="font-bold text-white text-sm drop-shadow-md">{title}</div>
+            <div className="text-xs text-white/70 mt-1">{desc}</div>
         </div>
     </div>
 );

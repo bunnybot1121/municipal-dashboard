@@ -58,23 +58,23 @@ const Calendar = ({ selectedDate, onDateSelect, tasks = [] }) => {
     };
 
     return (
-        <div className="bg-white rounded-2xl border border-[var(--border)] shadow-sm p-6">
+        <div className="bg-white/10 backdrop-blur-xl rounded-[2rem] border border-white/20 shadow-lg p-6">
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
-                    <CalendarIcon className="text-[var(--primary)]" />
+                <h3 className="text-lg font-bold text-white drop-shadow-sm flex items-center gap-2">
+                    <CalendarIcon className="text-blue-400" />
                     {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
                 </h3>
                 <div className="flex gap-2">
                     <button
                         onClick={previousMonth}
-                        className="px-3 py-1.5 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors text-sm font-medium"
+                        className="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 transition-colors text-sm font-medium text-white/80"
                     >
                         ←
                     </button>
                     <button
                         onClick={nextMonth}
-                        className="px-3 py-1.5 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors text-sm font-medium"
+                        className="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 transition-colors text-sm font-medium text-white/80"
                     >
                         →
                     </button>
@@ -87,7 +87,7 @@ const Calendar = ({ selectedDate, onDateSelect, tasks = [] }) => {
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                     <div
                         key={day}
-                        className="text-center text-xs font-bold text-[var(--text-light)] uppercase py-2"
+                        className="text-center text-xs font-bold text-white/50 uppercase py-2"
                     >
                         {day}
                     </div>
@@ -109,19 +109,19 @@ const Calendar = ({ selectedDate, onDateSelect, tasks = [] }) => {
                             key={day}
                             onClick={() => handleDateClick(day)}
                             className={`
-                                aspect-square rounded-lg p-1 text-sm font-medium transition-all relative
-                                ${isToday(day) ? 'border-2 border-[var(--primary)]' : 'border border-transparent'}
-                                ${isSelected(day) ? 'bg-[var(--primary)] text-white shadow-md' :
-                                    dayTasks.length > 0 ? 'bg-blue-50 hover:bg-blue-100' :
-                                        'hover:bg-[var(--surface-hover)]'}
+                                aspect-square rounded-lg p-1 text-sm font-medium transition-all relative flex flex-col items-center justify-center
+                                ${isToday(day) ? 'border-2 border-blue-400' : 'border border-transparent'}
+                                ${isSelected(day) ? 'bg-blue-500 text-white shadow-md' :
+                                    dayTasks.length > 0 ? 'bg-white/10 text-white hover:bg-white/20' :
+                                        'text-white/80 hover:bg-white/10'}
                             `}
                         >
-                            <span className={isSelected(day) ? 'text-white' : 'text-[var(--text-main)]'}>
+                            <span>
                                 {day}
                             </span>
                             {dayTasks.length > 0 && (
-                                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
-                                    <div className={`w-1 h-1 rounded-full ${hasHighPriority ? 'bg-red-500' : isSelected(day) ? 'bg-white' : 'bg-[var(--primary)]'}`} />
+                                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5 mt-0.5">
+                                    <div className={`w-1 h-1 rounded-full ${hasHighPriority ? 'bg-red-400' : isSelected(day) ? 'bg-white' : 'bg-blue-400'}`} />
                                 </div>
                             )}
                         </button>
@@ -130,14 +130,14 @@ const Calendar = ({ selectedDate, onDateSelect, tasks = [] }) => {
             </div>
 
             {/* Legend */}
-            <div className="flex items-center gap-4 mt-6 pt-4 border-t border-[var(--border)] text-xs">
+            <div className="flex items-center gap-4 mt-6 pt-4 border-t border-white/20 text-xs text-white/70 font-medium">
                 <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-4 rounded border-2 border-[var(--primary)]" />
-                    <span className="text-[var(--text-secondary)]">Today</span>
+                    <div className="w-4 h-4 rounded border-2 border-blue-400" />
+                    <span>Today</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-4 rounded bg-blue-50" />
-                    <span className="text-[var(--text-secondary)]">Has tasks</span>
+                    <div className="w-4 h-4 rounded bg-white/10 backdrop-blur-sm" />
+                    <span>Has tasks</span>
                 </div>
             </div>
         </div>

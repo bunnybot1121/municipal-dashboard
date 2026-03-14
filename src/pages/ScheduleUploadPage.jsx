@@ -95,19 +95,18 @@ export default function ScheduleUploadPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6 animate-fade-in">
-            <div className="max-w-6xl mx-auto">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">Upload Yearly Schedule</h1>
-                    <p className="text-gray-600 mt-2">
-                        {city ? `For ${city}` : 'No city selected'}
-                    </p>
-                </div>
+        <div className="animate-fade-in max-w-6xl mx-auto">
+            <div className="mb-6">
+                <h1 className="text-3xl font-bold text-white drop-shadow-md">Upload Yearly Schedule</h1>
+                <p className="text-white/70 mt-2 font-medium">
+                    {city ? `For ${city}` : 'No city selected'}
+                </p>
+            </div>
 
                 {/* File Upload Area */}
-                <div className={`border-2 border-dashed rounded-xl p-12 mb-6 transition-colors ${file
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-300 bg-white hover:border-blue-500 hover:bg-blue-50'
+                <div className={`border-2 border-dashed rounded-[2rem] p-12 mb-6 transition-colors shadow-lg backdrop-blur-md ${file
+                    ? 'border-green-400/50 bg-green-500/10'
+                    : 'border-white/20 bg-white/10 hover:border-white/40 hover:bg-white/20'
                     }`}>
                     <input
                         type="file"
@@ -120,14 +119,14 @@ export default function ScheduleUploadPage() {
                     <label htmlFor="file-upload" className="block cursor-pointer text-center">
                         {parsing ? (
                             <div>
-                                <Loader className="w-16 h-16 text-blue-600 mx-auto mb-4 animate-spin" />
-                                <p className="font-semibold text-gray-900">Parsing markdown file...</p>
+                                <Loader className="w-16 h-16 text-blue-400 mx-auto mb-4 animate-spin" />
+                                <p className="font-semibold text-white">Parsing markdown file...</p>
                             </div>
                         ) : file ? (
                             <div>
-                                <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-                                <p className="font-semibold text-gray-900 text-lg">{file.name}</p>
-                                <p className="text-green-700 mt-2 font-medium">
+                                <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4 drop-shadow-sm" />
+                                <p className="font-semibold text-white/90 text-lg drop-shadow-sm">{file.name}</p>
+                                <p className="text-green-300 mt-2 font-medium">
                                     {parsedTasks.length} tasks ready to upload
                                 </p>
                                 <button
@@ -138,22 +137,22 @@ export default function ScheduleUploadPage() {
                                         setParsedTasks([]);
                                         setSuccess('');
                                     }}
-                                    className="mt-4 text-blue-600 hover:underline text-sm"
+                                    className="mt-4 text-blue-300 hover:text-white transition-colors hover:underline text-sm font-medium"
                                 >
                                     Choose different file
                                 </button>
                             </div>
                         ) : (
                             <div>
-                                <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                                <p className="font-semibold text-gray-900 text-lg mb-2">
+                                <FileText className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                                <p className="font-semibold text-white/90 text-lg mb-2 drop-shadow-sm">
                                     Click to upload schedule file
                                 </p>
-                                <p className="text-gray-600">Markdown (.md) files only</p>
-                                <p className="text-sm text-gray-500 mt-2">
+                                <p className="text-white/70">Markdown (.md) files only</p>
+                                <p className="text-sm text-white/50 mt-2">
                                     Upload your municipal schedule in markdown format
                                 </p>
-                                <p className="text-xs text-gray-400 mt-2">Format: **Month**, **Day**, * Sector, * Task</p>
+                                <p className="text-xs text-white/40 mt-2">Format: **Month**, **Day**, * Sector, * Task</p>
                             </div>
                         )}
                     </label>
@@ -161,56 +160,56 @@ export default function ScheduleUploadPage() {
 
                 {/* Success Message */}
                 {success && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                        <p className="text-green-900 font-medium">{success}</p>
+                    <div className="bg-green-500/20 border border-green-500/30 backdrop-blur-sm rounded-xl p-4 mb-6 flex items-start gap-3 shadow-md">
+                        <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-green-200 font-medium">{success}</p>
                     </div>
                 )}
 
                 {/* Error Message */}
                 {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="bg-red-500/20 border border-red-500/30 backdrop-blur-sm rounded-xl p-4 mb-6 flex items-start gap-3 shadow-md">
+                        <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
-                            <p className="text-red-900 font-medium">{error}</p>
+                            <p className="text-red-200 font-medium">{error}</p>
                         </div>
                     </div>
                 )}
 
                 {/* Preview Table */}
                 {parsedTasks.length > 0 && (
-                    <div className="bg-white rounded-lg border overflow-hidden mb-6 shadow-sm">
-                        <div className="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
-                            <h3 className="font-semibold text-lg text-gray-800">
+                    <div className="bg-white/10 backdrop-blur-xl rounded-[2rem] border border-white/20 overflow-hidden mb-6 shadow-lg">
+                        <div className="px-6 py-4 border-b border-white/10 bg-white/5 flex justify-between items-center">
+                            <h3 className="font-semibold text-lg text-white drop-shadow-sm">
                                 Preview: First 10 of {parsedTasks.length} tasks
                             </h3>
-                            <span className="text-xs font-medium text-gray-500 bg-white border px-2 py-1 rounded">Markdown Parsed</span>
+                            <span className="text-xs font-medium text-white/80 bg-white/10 border border-white/20 px-2 py-1 rounded backdrop-blur-sm">Markdown Parsed</span>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead className="bg-gray-50 border-b">
+                            <table className="w-full text-sm text-white/90">
+                                <thead className="bg-white/5 border-b border-white/10 text-white/70">
                                     <tr>
-                                        <th className="px-4 py-3 text-left font-semibold text-gray-700">Month</th>
-                                        <th className="px-4 py-3 text-left font-semibold text-gray-700">Day</th>
-                                        <th className="px-4 py-3 text-left font-semibold text-gray-700">Sector</th>
-                                        <th className="px-4 py-3 text-left font-semibold text-gray-700">Type</th>
-                                        <th className="px-4 py-3 text-left font-semibold text-gray-700 w-1/3">Description</th>
-                                        <th className="px-4 py-3 text-left font-semibold text-gray-700">Priority</th>
+                                        <th className="px-4 py-3 text-left font-semibold">Month</th>
+                                        <th className="px-4 py-3 text-left font-semibold">Day</th>
+                                        <th className="px-4 py-3 text-left font-semibold">Sector</th>
+                                        <th className="px-4 py-3 text-left font-semibold">Type</th>
+                                        <th className="px-4 py-3 text-left font-semibold w-1/3">Description</th>
+                                        <th className="px-4 py-3 text-left font-semibold">Priority</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-200">
+                                <tbody className="divide-y divide-white/10">
                                     {parsedTasks.slice(0, 10).map((task, idx) => (
-                                        <tr key={idx} className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 text-gray-900 font-medium">{task.month}</td>
-                                            <td className="px-4 py-3 text-gray-900">{task.day}</td>
-                                            <td className="px-4 py-3 capitalize text-gray-700">{task.sector}</td>
-                                            <td className="px-4 py-3 text-gray-700">{task.task_type}</td>
-                                            <td className="px-4 py-3 text-gray-600 text-xs">{task.description.substring(0, 80)}...</td>
+                                        <tr key={idx} className="hover:bg-white/5 transition-colors">
+                                            <td className="px-4 py-3 font-medium text-white">{task.month}</td>
+                                            <td className="px-4 py-3">{task.day}</td>
+                                            <td className="px-4 py-3 capitalize text-white/80">{task.sector}</td>
+                                            <td className="px-4 py-3 text-white/80">{task.task_type}</td>
+                                            <td className="px-4 py-3 text-white/60 text-xs">{task.description.substring(0, 80)}...</td>
                                             <td className="px-4 py-3">
-                                                <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${task.priority === 'critical' ? 'bg-red-100 text-red-800' :
-                                                    task.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                                                        task.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
-                                                            'bg-gray-100 text-gray-800'
+                                                <span className={`px-2 py-1 rounded-md text-xs font-bold uppercase shadow-sm border border-white/10 ${task.priority === 'critical' ? 'bg-red-500/20 text-red-300' :
+                                                    task.priority === 'high' ? 'bg-orange-500/20 text-orange-300' :
+                                                        task.priority === 'medium' ? 'bg-blue-500/20 text-blue-300' :
+                                                            'bg-white/10 text-white/80'
                                                     }`}>
                                                     {task.priority || 'P3'}
                                                 </span>
@@ -221,7 +220,7 @@ export default function ScheduleUploadPage() {
                             </table>
                         </div>
                         {parsedTasks.length > 10 && (
-                            <div className="bg-gray-50 px-6 py-3 border-t text-xs text-gray-500 text-center">
+                            <div className="bg-white/5 px-6 py-3 border-t border-white/10 text-xs text-white/50 text-center font-medium">
                                 ... and {parsedTasks.length - 10} more tasks
                             </div>
                         )}
@@ -232,7 +231,7 @@ export default function ScheduleUploadPage() {
                 {parsedTasks.length > 0 && !uploading && !success.includes('Successfully uploaded') && (
                     <button
                         onClick={handleUpload}
-                        className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                        className="w-full liquid-btn liquid-btn-emerald py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg"
                     >
                         <Upload className="w-5 h-5" />
                         Upload {parsedTasks.length} Tasks to Database
@@ -241,15 +240,14 @@ export default function ScheduleUploadPage() {
 
                 {/* Uploading State */}
                 {uploading && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 text-center">
-                        <Loader className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
-                        <p className="text-blue-900 font-bold text-xl">
+                    <div className="bg-blue-500/10 border border-blue-400/20 backdrop-blur-md rounded-[2rem] p-8 text-center shadow-lg">
+                        <Loader className="w-12 h-12 text-blue-400 mx-auto mb-4 animate-spin drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" />
+                        <p className="text-white drop-shadow-sm font-bold text-xl">
                             Uploading {parsedTasks.length} tasks to Supabase...
                         </p>
-                        <p className="text-blue-700 mt-2">Please wait, this may take a moment.</p>
-                    </div>
-                )}
+                        <p className="text-blue-200 mt-2 font-medium">Please wait, this may take a moment.</p>
             </div>
+        )}
         </div>
     );
 }

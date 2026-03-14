@@ -97,105 +97,91 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="h-screen w-full flex items-center justify-center overflow-hidden relative"
-            style={{ background: '#0f172a' }}> {/* Fallback bg */}
+        <div className="h-screen w-full flex items-center justify-center overflow-hidden relative font-sans">
 
-            {/* Background Image & Overlay */}
+            {/* Photorealistic Bright Background (Nature/Architecture) */}
             <div className="absolute inset-0 z-0">
                 <img
-                    src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2070&auto=format&fit=crop"
-                    className="w-full h-full object-cover opacity-40"
-                    alt="City Background"
+                    src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop"
+                    className="w-full h-full object-cover"
+                    alt="Elegant nature mountain background"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-slate-900/40"></div>
+                {/* Very light overlay just to ensure text readability, but keeping it bright like the reference */}
+                <div className="absolute inset-0 bg-black/10 mix-blend-overlay"></div>
             </div>
 
-            {/* Glass Card */}
+            {/* Elegant Thin Glass Card */}
             <div
                 id="login-card"
                 ref={cardRef}
-                className="glass-card z-10 p-10 rounded-2xl w-full max-w-md transform transition-all duration-100 ease-out"
-                style={{ transformStyle: 'preserve-3d' }}
+                className="z-10 p-12 w-full max-w-[450px] transform transition-all duration-300 ease-out bg-white/5 backdrop-blur-xl border border-white/30 rounded-[2rem] shadow-[0_8px_32px_rgba(0,0,0,0.1)] mx-4 relative overflow-hidden"
             >
 
                 {/* Header Section */}
-                <div className="text-center mb-8 levitate-icon" style={{ transform: 'translateZ(30px)' }}>
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600/20 text-blue-400 mb-4 ring-1 ring-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
-                        <ShieldCheck size={32} />
-                    </div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight mt-2">Nagarsevak AI</h1>
-                    <p className="text-slate-400 text-sm mt-1">Unified Municipal Command</p>
+                <div className="text-center mb-12 levitate-icon">
+                    <h1 className="text-4xl font-normal text-white tracking-tight drop-shadow-sm mb-2">Nagarsevak</h1>
+                    <p className="text-white/80 text-sm font-light tracking-wide uppercase drop-shadow-sm">Municipal Command</p>
                 </div>
 
-                {/* Role Toggle REMOVED */}
-
                 {/* Form Section */}
-                <form onSubmit={handleLogin} className="space-y-5" style={{ transform: 'translateZ(10px)' }}>
-
-
+                <form onSubmit={handleLogin} className="space-y-6">
 
                     {isRegistering && (
-                        <div className="relative group">
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" size={18} />
+                        <div className="relative group flex items-center">
                             <input
                                 type="text"
                                 placeholder="Full Name"
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
-                                className="w-full bg-slate-800/50 text-white pl-12 pr-4 py-3.5 rounded-xl border border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-slate-800 transition-all outline-none placeholder:text-slate-500"
+                                className="w-full bg-transparent text-white px-6 py-4 rounded-full border border-white/40 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300 outline-none placeholder:text-white/60 font-light"
                             />
                         </div>
                     )}
 
-                    <div className="relative group">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" size={18} />
+                    <div className="relative group flex items-center">
                         <input
                             type="email"
                             placeholder="Email Address"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full bg-slate-800/50 text-white pl-12 pr-4 py-3.5 rounded-xl border border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-slate-800 transition-all outline-none placeholder:text-slate-500"
+                            className="w-full bg-transparent text-white px-6 py-4 rounded-full border border-white/40 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300 outline-none placeholder:text-white/60 font-light"
                         />
                     </div>
 
-                    <div className="relative group">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" size={18} />
+                    <div className="relative group flex items-center">
                         <input
                             type="password"
                             placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-slate-800/50 text-white pl-12 pr-4 py-3.5 rounded-xl border border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-slate-800 transition-all outline-none placeholder:text-slate-500"
+                            className="w-full bg-transparent text-white px-6 py-4 rounded-full border border-white/40 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300 outline-none placeholder:text-white/60 font-light"
                         />
                     </div>
 
-                    <button
-                        ref={btnRef}
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full mt-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 transition-all relative overflow-hidden group disabled:opacity-70 disabled:cursor-not-allowed"
-                        style={{ transform: 'translateZ(20px)' }}
-                    >
-                        <span className="relative z-10">{isLoading ? 'Processing...' : (isRegistering ? 'Create Account' : 'Initialize System')}</span>
-                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                    </button>
+                    <div className="pt-4">
+                        <button
+                            ref={btnRef}
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-medium py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? 'Processing...' : (isRegistering ? 'Create Account' : 'Initialize System')}
+                        </button>
+                    </div>
 
-                    <div className="text-center mt-4" style={{ transform: 'translateZ(10px)' }}>
+                    <div className="text-center mt-6 pt-4">
                         <button
                             type="button"
                             onClick={() => {
                                 setIsRegistering(!isRegistering);
                                 setError('');
                             }}
-                            className="text-slate-400 hover:text-white text-sm transition-colors hover:underline"
+                            className="text-white/70 hover:text-white text-sm font-light transition-colors duration-300"
                         >
                             {isRegistering ? 'Already have credentials? Login' : 'No credentials? Register Access'}
                         </button>
                     </div>
                 </form>
-
-
-
             </div>
         </div>
     );

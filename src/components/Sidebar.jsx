@@ -38,17 +38,21 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     };
 
     return (
-        <div className={`sidebar ${isCollapsed ? 'collapsed' : 'expanded'}`}>
+        <div className={`
+            flex flex-col h-full bg-white/5 backdrop-blur-2xl border-r border-white/20 
+            text-white transition-all duration-300 shadow-2xl relative z-10
+            ${isCollapsed ? 'w-[72px]' : 'w-64'}
+        `}>
             {/* Header */}
-            <div className="sidebar-header">
+            <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0 min-h-[72px]">
                 {!isCollapsed && (
-                    <div className="sidebar-brand">
-                        <div className="brand-icon">🏛️</div>
-                        <span className="brand-text">Nagarsevak AI</span>
+                    <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="text-2xl drop-shadow-md">🏛️</div>
+                        <span className="font-bold text-lg tracking-wide whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-sm">Nagarsevak</span>
                     </div>
                 )}
                 <button
-                    className="sidebar-toggle"
+                    className="p-2 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors"
                     onClick={() => setIsCollapsed(!isCollapsed)}
                 >
                     {isCollapsed ? <Menu /> : <ChevronLeft />}
@@ -56,34 +60,53 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
             </div>
 
             {/* Navigation */}
-            <nav className="sidebar-nav">
-                {navItems.map((item) => (
-                    <Link
-                        key={item.path}
-                        to={item.path}
-                        className={`sidebar-nav-item ${isActive(item.path) ? 'active' : ''}`}
-                        title={isCollapsed ? item.label : ''}
-                    >
-                        <item.icon className="nav-icon" />
-                        {!isCollapsed && <span className="nav-label">{item.label}</span>}
-                        {isActive(item.path) && <div className="active-indicator" />}
-                    </Link>
-                ))}
+            <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 custom-scrollbar">
+                {navItems.map((item) => {
+                    const active = isActive(item.path);
+                    return (
+                        <Link
+                            key={item.path}
+                            to={item.path}
+                            className={`
+                                flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative
+                                ${active
+                                    ? 'bg-white/10 text-white font-medium border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]'
+                                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                                }
+                                ${isCollapsed ? 'justify-center' : ''}
+                            `}
+                            title={isCollapsed ? item.label : ''}
+                        >
+                            <item.icon className={`shrink-0 transition-colors ${active ? 'text-emerald-400' : 'text-white/50 group-hover:text-white'}`} style={{ fontSize: 22 }} />
+                            {!isCollapsed && <span className="truncate">{item.label}</span>}
+                            
+                            {/* Active dot indicator for collapsed state */}
+                            {active && isCollapsed && (
+                                <div className="absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                            )}
+                        </Link>
+                    )
+                })}
             </nav>
 
             {/* User Section */}
-            <div className="sidebar-footer">
-                <div className="sidebar-user">
-                    <AccountCircle className="user-avatar" />
+            <div className="p-4 border-t border-white/10 shrink-0">
+                <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''} mb-4`}>
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0 border border-white/20 shadow-md">
+                        <span className="text-white font-bold text-sm">A</span>
+                    </div>
                     {!isCollapsed && (
-                        <div className="user-info">
-                            <div className="user-name">Admin</div>
-                            <div className="user-role">System Admin</div>
+                        <div className="flex-1 overflow-hidden">
+                            <div className="text-white font-medium text-sm truncate">Admin</div>
+                            <div className="text-emerald-400 text-xs truncate">System Admin</div>
                         </div>
                     )}
                 </div>
                 {!isCollapsed && (
-                    <button className="sidebar-logout" onClick={logout}>
+                    <button 
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/5 hover:bg-red-500/20 text-white/70 hover:text-red-400 rounded-xl transition-colors border border-transparent hover:border-red-500/30 text-sm font-medium" 
+                        onClick={logout}
+                    >
                         <Logout fontSize="small" />
                         <span>Logout</span>
                     </button>

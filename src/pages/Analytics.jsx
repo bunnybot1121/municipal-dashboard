@@ -101,25 +101,25 @@ const Analytics = () => {
 
     const COLORS = ['#5B52FF', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6'];
 
-    if (loading) return <div className="p-10 text-center text-gray-500">Loading analytics...</div>;
-    if (!stats) return <div className="p-10 text-center text-gray-500">No data available for analytics.</div>;
+    if (loading) return <div className="p-10 text-center text-white/50">Loading analytics...</div>;
+    if (!stats) return <div className="p-10 text-center text-white/50">No data available for analytics.</div>;
 
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header */}
             <div>
-                <h1 className="text-xl font-bold text-gray-800">Analytics Dashboard</h1>
-                <p className="text-sm text-gray-500 font-medium">Insights and performance metrics</p>
+                <h1 className="text-xl font-bold text-white drop-shadow-md">Analytics Dashboard</h1>
+                <p className="text-sm text-white/70 font-medium">Insights and performance metrics</p>
             </div>
 
             {/* Charts Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 {/* Sector Distribution */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <div className="bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-lg border border-white/20">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                            <PieIcon className="text-[#5B52FF]" /> Issues by Sector
+                        <h3 className="font-bold text-white drop-shadow-sm flex items-center gap-2">
+                            <PieIcon className="text-white/90" /> Issues by Sector
                         </h3>
                     </div>
                     <div className="h-64">
@@ -138,27 +138,27 @@ const Analytics = () => {
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip />
-                                <Legend />
+                                <Tooltip contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', borderColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: '12px' }} itemStyle={{ color: '#fff' }} />
+                                <Legend wrapperStyle={{ color: '#fff' }} />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
                 {/* Status Distribution */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <div className="bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-lg border border-white/20">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                            <BarIcon className="text-[#5B52FF]" /> Resolution Status
+                        <h3 className="font-bold text-white drop-shadow-sm flex items-center gap-2">
+                            <BarIcon className="text-white/90" /> Resolution Status
                         </h3>
                     </div>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={stats.statusData} layout="vertical">
-                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="rgba(255,255,255,0.1)" />
                                 <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
-                                <Tooltip cursor={{ fill: 'transparent' }} />
+                                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.7)' }} />
+                                <Tooltip cursor={{ fill: 'rgba(255,255,255,0.1)' }} contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', borderColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: '12px' }} itemStyle={{ color: '#fff' }} />
                                 <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
                                     {stats.statusData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -170,10 +170,10 @@ const Analytics = () => {
                 </div>
 
                 {/* Trend Over Time */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 md:col-span-2">
+                <div className="bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-lg border border-white/20 md:col-span-2">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                            <TrendingUp className="text-[#5B52FF]" /> Issue Reporting Trend (Last 7 Days)
+                        <h3 className="font-bold text-white drop-shadow-sm flex items-center gap-2">
+                            <TrendingUp className="text-white/90" /> Issue Reporting Trend (Last 7 Days)
                         </h3>
                     </div>
                     <div className="h-72">
@@ -181,17 +181,18 @@ const Analytics = () => {
                             <AreaChart data={stats.timeData}>
                                 <defs>
                                     <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#5B52FF" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="#5B52FF" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#818cf8" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="#818cf8" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
+                                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.7)' }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.7)' }} />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', borderColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    itemStyle={{ color: '#fff' }}
                                 />
-                                <Area type="monotone" dataKey="count" stroke="#5B52FF" fillOpacity={1} fill="url(#colorCount)" strokeWidth={3} />
+                                <Area type="monotone" dataKey="count" stroke="#818cf8" fillOpacity={1} fill="url(#colorCount)" strokeWidth={3} />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>

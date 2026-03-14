@@ -130,23 +130,23 @@ const Staff = () => {
     return (
         <div className="space-y-6 animate-fade-in relative">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-lg border border-white/20">
                 <div>
-                    <h1 className="text-xl font-bold text-gray-800">Staff Management</h1>
-                    <p className="text-sm text-gray-500">Manage field workers and their login credentials</p>
+                    <h1 className="text-xl font-bold text-white drop-shadow-sm">Staff Management</h1>
+                    <p className="text-sm text-white/70">Manage field workers and their login credentials</p>
                 </div>
                 <div className="flex items-center gap-3 w-full md:w-auto">
                     <div className="relative flex-1 md:w-64">
-                        <Search sx={{ fontSize: 18 }} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search sx={{ fontSize: 18 }} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
                         <input
                             type="text" placeholder="Search staff..."
                             value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+                            className="w-full pl-10 pr-4 py-2 bg-white/10 rounded-xl border border-white/20 text-white placeholder-white/50 text-sm focus:ring-2 focus:ring-blue-500/50 outline-none"
                         />
                     </div>
                     <button
                         onClick={() => { setIsModalOpen(true); setError(''); }}
-                        className="px-4 py-2 bg-[#5B52FF] hover:bg-[#4338CA] text-white rounded-lg text-sm font-bold shadow-md transition-all flex items-center gap-2"
+                        className="px-5 py-2.5 liquid-btn liquid-btn-blue rounded-xl text-sm font-semibold flex items-center gap-2"
                     >
                         <Plus sx={{ fontSize: 18 }} />
                         <span className="hidden sm:inline">Add Staff</span>
@@ -156,48 +156,48 @@ const Staff = () => {
 
             {/* Success banner */}
             {successMsg && (
-                <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2">
-                    <CheckCircle sx={{ fontSize: 18 }} className="text-green-600" />
+                <div className="bg-green-500/20 border border-green-500/30 text-green-200 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2 backdrop-blur-sm shadow-sm">
+                    <CheckCircle sx={{ fontSize: 18 }} className="text-green-400" />
                     {successMsg}
                 </div>
             )}
 
             {/* Worker Login URL notice */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-800 flex items-center gap-2">
-                <Key sx={{ fontSize: 18 }} className="text-blue-500 flex-shrink-0" />
-                <span>Workers log in at <strong className="font-mono">/worker</strong> using their <strong>username</strong> and <strong>password</strong> set below.</span>
+            <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl px-4 py-3 text-sm text-blue-200 flex items-center gap-2 backdrop-blur-sm shadow-sm">
+                <Key sx={{ fontSize: 18 }} className="text-blue-400 flex-shrink-0" />
+                <span>Workers log in at <strong className="font-mono bg-white/10 px-1 rounded border border-white/10">/worker</strong> using their <strong>username</strong> and <strong>password</strong> set below.</span>
             </div>
 
             {/* Staff Grid */}
             {loading ? (
-                <div className="text-center py-10 text-gray-500">Loading staff...</div>
+                <div className="text-center py-10 text-white/50">Loading staff...</div>
             ) : filtered.length === 0 ? (
-                <div className="text-center py-10 text-gray-400 bg-white rounded-xl border border-gray-200">
+                <div className="text-center py-10 text-white/50 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
                     {searchTerm ? 'No staff match your search.' : 'No staff members yet. Click "Add Staff" to create one.'}
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {filtered.map(staff => (
-                        <div key={staff.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow group">
+                        <div key={staff.id} className="bg-white/10 backdrop-blur-md p-5 rounded-[2rem] shadow-lg border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all group">
                             {/* Top row */}
                             <div className="flex justify-between items-start mb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="relative">
-                                        <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-lg font-bold text-indigo-600 border border-indigo-100 group-hover:scale-105 transition-transform">
+                                        <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-lg font-bold text-blue-200 border border-blue-400/30 group-hover:scale-105 transition-transform backdrop-blur-sm">
                                             {(staff.full_name || staff.username || '?').charAt(0).toUpperCase()}
                                         </div>
-                                        <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${statusDot(staff.status)}`} />
+                                        <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-[var(--background)] ${statusDot(staff.status)}`} />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-gray-800">{staff.full_name || staff.username}</h3>
-                                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full uppercase tracking-wide font-semibold">
+                                        <h3 className="font-bold text-white drop-shadow-sm">{staff.full_name || staff.username}</h3>
+                                        <span className="text-xs text-white/80 bg-white/10 border border-white/20 px-2 py-0.5 rounded-full uppercase tracking-wide font-semibold backdrop-blur-sm">
                                             {staff.role}
                                         </span>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => handleDelete(staff)}
-                                    className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                    className="p-1.5 text-white/40 hover:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors"
                                     title="Remove staff"
                                 >
                                     <Delete sx={{ fontSize: 18 }} />
@@ -206,13 +206,13 @@ const Staff = () => {
 
                             {/* Details */}
                             <div className="space-y-2 mb-4">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <Badge sx={{ fontSize: 16 }} className="text-gray-400" />
+                                <div className="flex items-center gap-2 text-sm text-white/70">
+                                    <Badge sx={{ fontSize: 16 }} className="text-white/50" />
                                     <span className="font-mono font-semibold">@{staff.username || '—'}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-sm">
-                                    <SectorIcon sx={{ fontSize: 16 }} className="text-gray-400" />
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${sectorColor(staff.sector)}`}>
+                                    <SectorIcon sx={{ fontSize: 16 }} className="text-white/50" />
+                                    <span className={`px-2 py-0.5 rounded-md text-xs font-bold uppercase shadow-sm border border-white/10 ${sectorColor(staff.sector)}`}>
                                         {staff.sector || 'Unassigned'}
                                     </span>
                                 </div>
@@ -220,26 +220,26 @@ const Staff = () => {
 
                             {/* Credential card */}
                             {staff.username && (
-                                <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mt-3">
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-1">
+                                <div className="bg-black/20 border border-white/10 rounded-xl p-3 mt-3 backdrop-blur-sm">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 mb-1.5 flex items-center gap-1">
                                         <Key sx={{ fontSize: 12 }} /> Login Credentials
                                     </p>
                                     <div className="grid grid-cols-2 gap-2 text-xs">
                                         <div>
-                                            <p className="text-gray-400 text-[10px] mb-0.5">Username</p>
-                                            <p className="font-mono font-bold text-gray-700">{staff.username}</p>
+                                            <p className="text-white/50 text-[10px] mb-0.5">Username</p>
+                                            <p className="font-mono font-bold text-white/90">{staff.username}</p>
                                         </div>
                                         <div>
-                                            <p className="text-gray-400 text-[10px] mb-0.5">Portal</p>
-                                            <p className="font-mono font-bold text-indigo-600">/worker</p>
+                                            <p className="text-white/50 text-[10px] mb-0.5">Portal</p>
+                                            <p className="font-mono font-bold text-blue-300">/worker</p>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            <div className="pt-3 mt-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400">
+                            <div className="pt-3 mt-3 border-t border-white/10 flex justify-between items-center text-xs text-white/50">
                                 <span>Joined: {staff.created_at ? new Date(staff.created_at).toLocaleDateString() : '—'}</span>
-                                <span className={staff.status === 'available' ? 'text-green-600 font-semibold' : ''}>
+                                <span className={staff.status === 'available' ? 'text-green-400 font-semibold' : ''}>
                                     {staff.status || 'Offline'}
                                 </span>
                             </div>
@@ -250,41 +250,41 @@ const Staff = () => {
 
             {/* Add Staff Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-lg overflow-hidden animate-fade-in">
-                        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                            <h3 className="font-bold text-gray-800 text-lg">Add New Staff / Worker</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600"><Close /></button>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+                    <div className="bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl border border-white/20 w-full max-w-lg overflow-hidden animate-fade-in">
+                        <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/5">
+                            <h3 className="font-bold text-white drop-shadow-sm text-lg">Add New Staff / Worker</h3>
+                            <button onClick={() => setIsModalOpen(false)} className="text-white/50 hover:text-white bg-white/5 p-2 rounded-full hover:bg-white/10 transition-colors"><Close /></button>
                         </div>
                         <form onSubmit={handleAddStaff} className="p-6 space-y-4">
                             {error && (
-                                <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-2 text-sm">{error}</div>
+                                <div className="bg-red-500/20 border border-red-500/30 text-red-200 rounded-lg px-4 py-2 text-sm">{error}</div>
                             )}
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
+                                <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Full Name</label>
                                 <input required type="text" placeholder="e.g. Ravi Kumar"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-400"
+                                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 text-sm outline-none focus:ring-2 focus:ring-blue-500/50"
                                     value={newStaff.name} onChange={e => setNewStaff({ ...newStaff, name: e.target.value })} />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Username</label>
+                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Username</label>
                                     <input required type="text" placeholder="e.g. ravi123"
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-400 font-mono"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 font-mono"
                                         value={newStaff.username} onChange={e => setNewStaff({ ...newStaff, username: e.target.value.toLowerCase().replace(/\s/g, '') })} />
                                     {newStaff.username && (
-                                        <p className="text-[10px] text-gray-400 mt-0.5">Login email: {newStaff.username}@{DOMAIN}</p>
+                                        <p className="text-[10px] text-white/50 mt-0.5">Login email: {newStaff.username}@{DOMAIN}</p>
                                     )}
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
+                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Password</label>
                                     <div className="relative">
                                         <input required type={showPass.new ? 'text' : 'password'} placeholder="Min 6 chars"
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-400 pr-9"
+                                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 pr-9"
                                             value={newStaff.password} onChange={e => setNewStaff({ ...newStaff, password: e.target.value })} />
-                                        <button type="button" className="absolute right-2.5 top-2.5 text-gray-400"
+                                        <button type="button" className="absolute right-2.5 top-2.5 text-white/50 hover:text-white"
                                             onClick={() => setShowPass(p => ({ ...p, new: !p.new }))}>
                                             {showPass.new ? <VisibilityOff sx={{ fontSize: 16 }} /> : <Visibility sx={{ fontSize: 16 }} />}
                                         </button>
@@ -294,8 +294,8 @@ const Staff = () => {
 
                             <div className="grid grid-cols-3 gap-3">
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Role</label>
-                                    <select className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-400"
+                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Role</label>
+                                    <select className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:ring-2 focus:ring-blue-500/50 [&>option]:text-gray-900"
                                         value={newStaff.role} onChange={e => setNewStaff({ ...newStaff, role: e.target.value })}>
                                         <option value="worker">Worker</option>
                                         <option value="staff">Staff</option>
@@ -303,16 +303,16 @@ const Staff = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Sector</label>
-                                    <select className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-400"
+                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Sector</label>
+                                    <select className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:ring-2 focus:ring-blue-500/50 [&>option]:text-gray-900"
                                         value={newStaff.sector} onChange={e => setNewStaff({ ...newStaff, sector: e.target.value })}>
                                         {['roads', 'water', 'lighting', 'drainage', 'waste', 'power', 'other'].map(s =>
                                             <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
-                                    <select className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-400"
+                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Status</label>
+                                    <select className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:ring-2 focus:ring-blue-500/50 [&>option]:text-gray-900"
                                         value={newStaff.status} onChange={e => setNewStaff({ ...newStaff, status: e.target.value })}>
                                         <option value="available">Available</option>
                                         <option value="busy">Busy</option>
@@ -323,9 +323,9 @@ const Staff = () => {
 
                             <div className="pt-4 flex justify-end gap-3">
                                 <button type="button" onClick={() => setIsModalOpen(false)}
-                                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                                    className="px-4 py-2 text-sm font-medium text-white/70 hover:bg-white/10 rounded-xl transition-colors">Cancel</button>
                                 <button type="submit" disabled={adding}
-                                    className="px-5 py-2 bg-[#5B52FF] hover:bg-[#4338CA] text-white rounded-lg text-sm font-bold shadow-md disabled:opacity-60 flex items-center gap-2">
+                                    className="px-5 py-2 liquid-btn liquid-btn-blue text-white rounded-xl text-sm font-bold shadow-lg disabled:opacity-60 flex items-center gap-2">
                                     {adding ? 'Adding…' : '+ Add Staff'}
                                 </button>
                             </div>

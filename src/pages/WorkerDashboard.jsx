@@ -124,31 +124,41 @@ export default function WorkerDashboard() {
 
     if (loading) {
         return (
-            <div style={{ minHeight: '100vh', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px', color: '#6B7280' }}>
-                <Loader size={28} style={{ animation: 'spin 1s linear infinite' }} />
-                <p style={{ margin: 0, fontSize: '14px' }}>Loading your dashboard…</p>
-                <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
+            <div className="min-h-screen bg-transparent flex flex-col items-center justify-center gap-3 text-white/70">
+                <Loader size={28} className="animate-spin text-blue-400" />
+                <p className="m-0 text-sm font-medium drop-shadow-sm">Loading your dashboard…</p>
             </div>
         );
     }
 
     return (
-        <div style={{ minHeight: '100vh', background: '#F1F5F9', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+        <div className="min-h-screen font-sans relative overflow-hidden">
+            {/* Global Photorealistic Background */}
+            <div className="fixed inset-0 z-0">
+                <img
+                    src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop"
+                    className="w-full h-full object-cover"
+                    alt="Elegant nature background"
+                />
+                <div className="absolute inset-0 bg-black/30 mix-blend-overlay"></div>
+            </div>
+
+            <div className="relative z-10">
             {/* Header */}
-            <div style={{ background: 'linear-gradient(135deg, #1e1b4b, #4338ca)', padding: '0 16px', boxShadow: '0 4px 24px rgba(0,0,0,0.2)' }}>
-                <div style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.15)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+            <div className="bg-white/10 backdrop-blur-xl border-b border-white/20 shadow-lg px-4">
+                <div className="max-w-3xl mx-auto flex items-center justify-between h-16">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-xl text-white font-bold border border-white/20 shadow-inner">
                             {(profile?.full_name || 'W').charAt(0).toUpperCase()}
                         </div>
                         <div>
-                            <p style={{ color: '#fff', fontWeight: 700, fontSize: '15px', margin: 0 }}>{profile?.full_name || 'Worker'}</p>
-                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', margin: 0, textTransform: 'capitalize' }}>
+                            <p className="text-white font-bold text-sm m-0 drop-shadow-sm">{profile?.full_name || 'Worker'}</p>
+                            <p className="text-white/70 text-xs m-0 capitalize drop-shadow-sm">
                                 {profile?.sector || 'Field Worker'} • {profile?.status || 'Active'}
                             </p>
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div className="flex items-center gap-2">
                         {/* Bell */}
                         <div style={{ position: 'relative' }}>
                             <button onClick={() => { setShowBell(v => !v); setUnread(0); }}
@@ -188,63 +198,62 @@ export default function WorkerDashboard() {
                 </div>
             </div>
 
-            <div style={{ maxWidth: '720px', margin: '0 auto', padding: '20px 16px', paddingBottom: '40px' }}>
+            <div className="max-w-3xl mx-auto px-4 py-6 pb-12">
                 {/* Stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px', marginBottom: '20px' }}>
+                <div className="grid grid-cols-3 gap-4 mb-6">
                     {[
-                        { label: 'Total Tasks', value: tasks.length, icon: '📋', color: '#6366F1' },
-                        { label: 'Active', value: activeCt, icon: '⚡', color: '#F59E0B' },
-                        { label: 'Completed', value: doneCt, icon: '✅', color: '#10B981' },
+                        { label: 'Total Tasks', value: tasks.length, icon: '📋', color: 'text-blue-400' },
+                        { label: 'Active', value: activeCt, icon: '⚡', color: 'text-amber-400' },
+                        { label: 'Completed', value: doneCt, icon: '✅', color: 'text-green-400' },
                     ].map(s => (
-                        <div key={s.label} style={{ background: '#fff', borderRadius: '16px', padding: '16px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1px solid #F1F5F9' }}>
-                            <p style={{ fontSize: '22px', margin: '0 0 4px' }}>{s.icon}</p>
-                            <p style={{ fontSize: '22px', fontWeight: 800, color: s.color, margin: '0 0 2px' }}>{s.value}</p>
-                            <p style={{ fontSize: '11px', color: '#9CA3AF', margin: 0, fontWeight: 600 }}>{s.label}</p>
+                        <div key={s.label} className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 text-center border border-white/20 shadow-lg hover:bg-white/20 transition-all">
+                            <p className="text-2xl m-0 mb-1 drop-shadow-sm">{s.icon}</p>
+                            <p className={`text-2xl font-bold m-0 mb-0.5 drop-shadow-md ${s.color}`}>{s.value}</p>
+                            <p className="text-[11px] text-white/70 m-0 font-semibold uppercase tracking-wider">{s.label}</p>
                         </div>
                     ))}
                 </div>
 
                 {/* Filter tabs */}
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
+                <div className="flex gap-2 mb-6 overflow-x-auto pb-1 hide-scrollbar">
                     {[['all', 'All'], ['active', 'My Tasks'], ['problems', 'Sector Problems'], ['done', 'Completed']].map(([val, lbl]) => (
                         <button key={val} onClick={() => setFilter(val)}
-                            style={{
-                                padding: '6px 16px', borderRadius: '99px', border: '1.5px solid', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
-                                borderColor: filter === val ? '#5B52FF' : '#E5E7EB',
-                                background: filter === val ? '#5B52FF' : '#fff',
-                                color: filter === val ? '#fff' : '#6B7280',
-                            }}>
+                            className={`px-4 py-1.5 rounded-full border text-sm font-semibold cursor-pointer transition-all whitespace-nowrap shadow-sm ${
+                                filter === val 
+                                    ? 'border-white/40 bg-white/20 text-white backdrop-blur-md font-bold' 
+                                    : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white backdrop-blur-sm'
+                            }`}>
                             {lbl}
                         </button>
                     ))}
-                    <button onClick={init} style={{ marginLeft: 'auto', background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: '99px', padding: '6px 12px', cursor: 'pointer', color: '#6B7280', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 600 }}>
-                        <RefreshCw size={12} /> Refresh
+                    <button onClick={init} className="ml-auto bg-white/10 border border-white/20 hover:bg-white/20 rounded-full px-4 py-1.5 cursor-pointer text-white flex items-center gap-1 text-xs font-semibold backdrop-blur-md shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-white/50">
+                        <RefreshCw size={14} /> Refresh
                     </button>
                 </div>
 
                 {/* Dashboard Content */}
                 {filter === 'problems' ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <div style={{ background: '#EFF6FF', border: '1px solid #DBEAFE', p: '12px', borderRadius: '12px', padding: '12px', marginBottom: '8px' }}>
-                            <p style={{ margin: 0, fontSize: '13px', color: '#1E40AF', fontWeight: 600 }}>
-                                📍 Showing all reports for {profile?.sector || 'your sector'}
+                    <div className="flex flex-col gap-3 animate-fade-in">
+                        <div className="bg-blue-500/10 border border-blue-400/30 p-3 rounded-xl mb-2 backdrop-blur-sm shadow-sm">
+                            <p className="m-0 text-sm text-blue-200 font-semibold drop-shadow-sm flex items-center gap-2">
+                                <span>📍</span> Showing all reports for {profile?.sector || 'your sector'}
                             </p>
                         </div>
                         {sectorIssues.length === 0 ? (
-                            <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>No problems reported in your sector yet.</div>
+                            <div className="p-10 text-center text-white/50 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm shadow-sm">No problems reported in your sector yet.</div>
                         ) : sectorIssues.map(issue => (
-                            <div key={issue.id} style={{ background: '#fff', borderRadius: '16px', padding: '16px', border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                                <div style={{ display: 'flex', gap: '12px' }}>
-                                    {issue.imageUrl && <img src={issue.imageUrl} style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover' }} alt="Issue" />}
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <p style={{ fontWeight: 700, fontSize: '14px', margin: 0 }}>{issue.title}</p>
-                                            <span style={{ fontSize: '10px', color: '#9CA3AF' }}>{timeAgo(issue.created_at)}</span>
+                            <div key={issue.id} className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 border border-white/20 shadow-lg hover:bg-white/20 transition-all group">
+                                <div className="flex gap-3">
+                                    {issue.imageUrl && <img src={issue.imageUrl} className="w-16 h-16 rounded-xl object-cover shadow-sm border border-white/10 group-hover:scale-105 transition-transform" alt="Issue" />}
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-start">
+                                            <p className="font-bold text-sm m-0 text-white drop-shadow-sm">{issue.title}</p>
+                                            <span className="text-[10px] text-white/50 font-medium">{timeAgo(issue.created_at)}</span>
                                         </div>
-                                        <p style={{ fontSize: '12px', color: '#6B7280', margin: '4px 0' }}>{issue.description}</p>
-                                        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                                            <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '99px', background: '#FEF2F2', color: '#EF4444', fontWeight: 700 }}>{issue.priority || 'Medium'}</span>
-                                            <span style={{ fontSize: '10px', color: '#9CA3AF' }}>📍 {issue.address || 'Location provided'}</span>
+                                        <p className="text-xs text-white/70 my-1 line-clamp-2">{issue.description}</p>
+                                        <div className="flex gap-2 mt-2 items-center">
+                                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-200 border border-red-500/30 font-bold uppercase backdrop-blur-sm shadow-sm">{issue.priority || 'Medium'}</span>
+                                            <span className="text-[10px] text-white/60 font-medium flex items-center gap-1 drop-shadow-sm"><span className="text-[12px]">📍</span> {issue.address || 'Location provided'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -252,42 +261,50 @@ export default function WorkerDashboard() {
                         ))}
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div style={{ background: '#fff', borderRadius: '16px', padding: '40px', textAlign: 'center', color: '#D1D5DB', border: '1px solid #F1F5F9' }}>
-                        <p style={{ fontSize: '32px', margin: '0 0 8px' }}>📋</p>
-                        <p style={{ fontWeight: 600, margin: '0 0 4px', color: '#9CA3AF' }}>No tasks here</p>
-                        <p style={{ fontSize: '12px', margin: 0 }}>Your supervisor will assign tasks to you</p>
+                    <div className="bg-white/5 backdrop-blur-md rounded-2xl p-10 text-center text-white/50 border border-white/10 shadow-lg animate-fade-in">
+                        <p className="text-4xl m-0 mb-2 drop-shadow-sm">📋</p>
+                        <p className="font-bold text-white/80 m-0 mb-1 drop-shadow-sm">No tasks here</p>
+                        <p className="text-xs m-0">Your supervisor will assign tasks to you</p>
                     </div>
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div className="flex flex-col gap-3 animate-fade-in">
                         {filtered.map(task => {
                             const sCfg = STATUS_CONFIG[task.status] || STATUS_CONFIG.pending;
-                            const pCls = PRIORITY_COLORS[(task.priority || 'medium').toLowerCase()] || PRIORITY_COLORS.medium;
                             const isUpdating = updatingId === task.id;
 
+                            // Translate hardcoded colors to tailwind tokens for border/bg
+                            const statusColorCss = sCfg.color === '#F59E0B' ? 'border-amber-400/50 text-amber-300 bg-amber-500/20' : 
+                                                   sCfg.color === '#3B82F6' ? 'border-blue-400/50 text-blue-300 bg-blue-500/20' : 
+                                                   sCfg.color === '#10B981' ? 'border-green-400/50 text-green-300 bg-green-500/20' : 'border-gray-400/50 text-gray-300 bg-gray-500/20';
+                            
+                            const priorityColorCss = task.priority === 'critical' || task.priority === 'high' ? 'bg-red-500/20 text-red-300 border-red-500/30' : 
+                                                     task.priority === 'low' ? 'bg-white/10 text-white/70 border-white/20' :
+                                                     'bg-amber-500/20 text-amber-300 border-amber-500/30';
+
                             return (
-                                <div key={task.id} style={{ background: '#fff', borderRadius: '16px', padding: '16px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1px solid #F1F5F9', borderLeft: `4px solid ${sCfg.color}` }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '6px' }}>
-                                                <span style={{ fontWeight: 700, fontSize: '14px', color: '#111' }}>{task.title}</span>
-                                                <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '99px', background: sCfg.bg, color: sCfg.color }}>
+                                <div key={task.id} className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 shadow-lg border-y border-r border-white/20 border-l-[4px] relative overflow-hidden group hover:bg-white/20 transition-all" style={{ borderLeftColor: sCfg.color }}>
+                                    <div className="flex justify-between items-start gap-3">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                                                <span className="font-bold text-sm text-white drop-shadow-sm">{task.title}</span>
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border backdrop-blur-sm shadow-sm ${statusColorCss}`}>
                                                     {sCfg.label}
                                                 </span>
                                             </div>
                                             {task.description && (
-                                                <p style={{ fontSize: '12px', color: '#6B7280', margin: '0 0 8px', lineHeight: 1.4 }}>{task.description}</p>
+                                                <p className="text-xs text-white/70 m-0 mb-2 leading-relaxed max-w-lg">{task.description}</p>
                                             )}
-                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                                                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '99px' }} className={pCls}>
-                                                    {(task.priority || 'Medium').toUpperCase()}
+                                            <div className="flex gap-2 flex-wrap items-center">
+                                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase border shadow-sm backdrop-blur-sm ${priorityColorCss}`}>
+                                                    {(task.priority || 'Medium')}
                                                 </span>
                                                 {task.sector && (
-                                                    <span style={{ fontSize: '11px', color: '#9CA3AF', background: '#F9FAFB', padding: '2px 8px', borderRadius: '99px' }}>
-                                                        📍 {task.sector}
+                                                    <span className="text-[10px] font-medium text-white/80 bg-white/10 border border-white/20 px-2 py-0.5 rounded-full backdrop-blur-sm shadow-sm flex items-center gap-1">
+                                                        <span>📍</span> {task.sector}
                                                     </span>
                                                 )}
                                                 {task.scheduledDate && (
-                                                    <span style={{ fontSize: '11px', color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                                    <span className="text-[11px] font-medium text-white/60 flex items-center gap-1 bg-black/20 px-2 py-0.5 rounded-full border border-white/10 shadow-inner">
                                                         <Clock size={10} /> {formatDate(task.scheduledDate)}
                                                     </span>
                                                 )}
@@ -297,8 +314,9 @@ export default function WorkerDashboard() {
                                         {/* Action button */}
                                         {sCfg.next && (
                                             <button onClick={() => advanceStatus(task)} disabled={isUpdating}
-                                                style={{ flexShrink: 0, padding: '8px 14px', background: sCfg.color, color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '12px', cursor: isUpdating ? 'not-allowed' : 'pointer', opacity: isUpdating ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-                                                {isUpdating ? <Loader size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <CheckCircle size={12} />}
+                                                className={`flex-shrink-0 px-4 py-2 text-white border-0 rounded-xl font-bold text-xs cursor-pointer flex items-center gap-1 shadow-lg transition-transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:hover:scale-100 disabled:cursor-not-allowed`}
+                                                style={{ background: sCfg.color }}>
+                                                {isUpdating ? <Loader size={12} className="animate-spin" /> : <CheckCircle size={12} />}
                                                 {task.status === 'pending' ? 'Start' : 'Mark Done'}
                                             </button>
                                         )}
@@ -312,17 +330,16 @@ export default function WorkerDashboard() {
 
             {/* Toast notification */}
             {toastNote && (
-                <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: '#fff', border: `2px solid ${NOTIFICATION_TYPES[toastNote.type]?.color || '#3B82F6'}`, borderRadius: '16px', padding: '14px 18px', boxShadow: '0 8px 32px rgba(0,0,0,0.15)', zIndex: 9999, minWidth: '280px', maxWidth: '90vw', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                    <span style={{ fontSize: '18px' }}>{NOTIFICATION_TYPES[toastNote.type]?.icon || 'ℹ️'}</span>
-                    <div style={{ flex: 1 }}>
-                        <p style={{ fontWeight: 700, fontSize: '13px', margin: '0 0 2px' }}>{toastNote.title}</p>
-                        <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>{toastNote.message}</p>
+                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-2xl border-2 rounded-2xl p-4 shadow-2xl z-50 min-w-[280px] max-w-[90vw] flex gap-3 items-start animate-fade-in`} style={{ borderColor: NOTIFICATION_TYPES[toastNote.type]?.color || '#3B82F6' }}>
+                    <span className="text-xl drop-shadow-md">{NOTIFICATION_TYPES[toastNote.type]?.icon || 'ℹ️'}</span>
+                    <div className="flex-1">
+                        <p className="font-bold text-sm m-0 mb-0.5 text-white drop-shadow-sm">{toastNote.title}</p>
+                        <p className="text-xs text-white/70 m-0">{toastNote.message}</p>
                     </div>
-                    <button onClick={() => setToastNote(null)} style={{ background: 'none', border: 'none', color: '#D1D5DB', fontSize: '18px', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                    <button onClick={() => setToastNote(null)} className="bg-transparent border-0 text-white/40 hover:text-white/80 text-xl cursor-pointer transition-colors outline-none focus:outline-none focus:ring-2 focus:ring-white/20 rounded-full w-6 h-6 flex items-center justify-center p-0 leading-none">×</button>
                 </div>
             )}
-
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
         </div>
     );
 }
