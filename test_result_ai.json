@@ -1,0 +1,11 @@
+{
+  "isValid": false,
+  "confidence": 100,
+  "reason": "The image is a solid color and does not depict any road or infrastructure issue.",
+  "detectedIssueType": "Blank image",
+  "sectorMatch": false,
+  "descriptionMatch": false,
+  "suggestions": [
+    "Please submit a clear photo showing the road issue you are reporting."
+  ]
+}

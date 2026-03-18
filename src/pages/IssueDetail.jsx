@@ -103,7 +103,7 @@ const IssueDetail = () => {
                 setIsVerifying(true);
                 try {
                     console.log("🛡️ Auto-verifying issue photo...");
-                    const response = await fetch('http://localhost:5001/api/validate', {
+                    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/validate`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -687,7 +687,7 @@ const IssueDetail = () => {
                                         <button
                                             onClick={async () => {
                                                 if (confirm("Re-run analysis to update score?")) {
-                                                    const response = await fetch('http://localhost:5001/api/analyze', {
+                                                    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/analyze`, {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
                                                         body: JSON.stringify(issue)

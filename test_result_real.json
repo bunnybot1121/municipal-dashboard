@@ -1,0 +1,9 @@
+{
+  "isValid": false,
+  "confidence": 90,
+  "reason": "The image shows a bus and pedestrians on a city street, but there is no visible road damage or infrastructure issue.",
+  "detectedIssueType": "No visible infrastructure issue",
+  "sectorMatch": false,
+  "descriptionMatch": false,
+  "suggestions": []
+}

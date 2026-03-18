@@ -139,7 +139,7 @@ export const api = {
 
         try {
             // Call the local Express Server for analysis
-            const response = await fetch('http://localhost:5001/api/analyze', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/analyze`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(issueData)
@@ -192,7 +192,7 @@ export const api = {
             (async () => {
                 try {
                     console.log("🛡️ Triggering AI photo validation for issue:", savedIssue.id);
-                    const valResponse = await fetch('http://localhost:5001/api/validate', {
+                    const valResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/validate`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

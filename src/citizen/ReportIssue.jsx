@@ -146,7 +146,7 @@ export default function ReportIssue() {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 25000);
 
-                const valResponse = await fetch('http://localhost:5001/api/validate', {
+                const valResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/validate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

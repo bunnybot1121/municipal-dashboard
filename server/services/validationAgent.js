@@ -53,6 +53,7 @@ ACCEPT reports that show:
 - Any genuine public infrastructure problem
 
 REJECT reports that show:
+- AI-generated images, deepfakes, digitally altered photos, or synthetic media (look for typical AI artifacts like weird text, non-sensical geometry, unnatural lighting/textures)
 - Selfies, faces, or personal photos
 - Food, animals (unless related to waste), or unrelated objects
 - Blank/black/blurry images with no visible issue
@@ -60,7 +61,7 @@ REJECT reports that show:
 - Indoor personal spaces (bedroom, kitchen) unless showing infrastructure damage
 - Advertising or promotional content
 
-Be FAIR but STRICT. When in doubt about an edge case, ACCEPT with a note.`;
+Be FAIR but STRICT. When in doubt about an edge case, ACCEPT with a note. If you strongly suspect the image is AI-generated, REJECT it immediately and set reason specifying it appears AI generated.`;
 
         const userPrompt = `Analyze this citizen complaint:
 
