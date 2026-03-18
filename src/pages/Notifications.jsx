@@ -15,7 +15,7 @@ const TYPE_ICONS = {
     success: <CheckCircle size={16} className="text-green-500" />,
 };
 
-const SECTORS = ['All Sectors', 'Roads', 'Water', 'Electricity', 'Sanitation', 'Parks', 'Safety'];
+const SECTORS = ['All Departments', 'Roads', 'Water', 'Electricity', 'Sanitation', 'Parks', 'Safety'];
 
 function timeAgo(ts) {
     const m = Math.floor((Date.now() - new Date(ts)) / 60_000);
@@ -31,7 +31,7 @@ export default function Notifications() {
     const [message, setMessage] = useState('');
     const [type, setType] = useState('info');
     const [target, setTarget] = useState('all');
-    const [sector, setSector] = useState('All Sectors');
+    const [sector, setSector] = useState('All Departments');
     const [sending, setSending] = useState(false);
     const [sent, setSent] = useState(false);
     const [history, setHistory] = useState([]);
@@ -65,10 +65,10 @@ export default function Notifications() {
                 message: message.trim(),
                 type,
                 target,
-                sector: sector === 'All Sectors' ? null : sector,
+                sector: sector === 'All Departments' ? null : sector,
             });
             setSent(true);
-            setTitle(''); setMessage(''); setType('info'); setTarget('all'); setSector('All Sectors');
+            setTitle(''); setMessage(''); setType('info'); setTarget('all'); setSector('All Departments');
             setTimeout(() => setSent(false), 3000);
             loadHistory();
         } catch (err) {
@@ -159,7 +159,7 @@ export default function Notifications() {
                                 {['all', 'sector'].map(t => (
                                     <button key={t} type="button" onClick={() => setTarget(t)}
                                         className={`py-2.5 rounded-xl text-xs font-bold border border-white/20 transition-all shadow-sm ${target === t ? 'border-blue-400 bg-blue-500/20 text-blue-200 shadow-[0_0_10px_rgba(59,130,246,0.3)]' : 'border-transparent bg-black/20 text-white/50 hover:bg-white/10 hover:text-white'}`}>
-                                        {t === 'all' ? '🌍 All Citizens' : '📍 By Sector'}
+                                        {t === 'all' ? '🌍 All Citizens' : '📍 By Department'}
                                     </button>
                                 ))}
                             </div>

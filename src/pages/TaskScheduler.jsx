@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/apiClient';
 import Calendar from '../components/Calendar';
 import {
     Add as Plus,
+    UploadFile,
     Search,
     FilterList as Filter,
     MoreVert as MoreHorizontal,
@@ -16,7 +18,8 @@ import {
 import { useAuth } from '../contexts/AuthContext'; // Import useAuth
 
 const TaskScheduler = () => {
-    const { user } = useAuth(); // Get user from context
+    const { user, isDepartment, department } = useAuth(); // Get user from context
+    const navigate = useNavigate();
     const [selectedDate, setSelectedDate] = useState(null);
     const [tasks, setTasks] = useState([]);
     const [staffList, setStaffList] = useState([]);
@@ -64,7 +67,9 @@ const TaskScheduler = () => {
             });
 
             if (tasksData && Array.isArray(tasksData)) {
-                const normalizedTasks = tasksData.map(t => ({
+                const relevantTasks = isDepartment ? tasksData.filter(t => (t.sector || '').toLowerCase() === (department || '').toLowerCase()) : tasksData;
+
+                const normalizedTasks = relevantTasks.map(t => ({
                     ...t,
                     id: t.id,
                     assignee: t.assignedTo || 'Unassigned',
@@ -95,7 +100,7 @@ const TaskScheduler = () => {
 
             const payload = {
                 title: newTask.title,
-                sector: newTask.sector,
+                sector: isDepartment ? department : newTask.sector,
                 priority: newTask.priority,
                 description: newTask.description,
                 scheduledStart: startDateTime,
@@ -175,13 +180,22 @@ const TaskScheduler = () => {
                     <h1 className="text-3xl font-bold text-white drop-shadow-md">Maintenance Scheduler <span className="text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-1 rounded-full ml-2">v2.0 LIVE</span></h1>
                     <p className="text-sm text-white/70 mt-1 drop-shadow-sm">Manage resources and schedule maintenance tasks</p>
                 </div>
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="px-5 py-2.5 liquid-btn liquid-btn-blue rounded-xl text-sm font-semibold flex items-center gap-2"
-                >
-                    <Plus sx={{ fontSize: 18 }} />
-                    <span>New Task</span>
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => navigate('/schedule-upload')}
+                        className="px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors text-white shadow-sm hover:shadow-md"
+                    >
+                        <UploadFile sx={{ fontSize: 18 }} />
+                        <span>Upload .md</span>
+                    </button>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="px-5 py-2.5 liquid-btn liquid-btn-blue rounded-xl text-sm font-semibold flex items-center gap-2"
+                    >
+                        <Plus sx={{ fontSize: 18 }} />
+                        <span>New Task</span>
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -359,11 +373,12 @@ const TaskScheduler = () => {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-semibold text-white/90 mb-2 drop-shadow-sm">Sector</label>
+                                <label className="block text-sm font-semibold text-white/90 mb-2 drop-shadow-sm">Department</label>
                                 <select
-                                    value={newTask.sector}
+                                    value={isDepartment ? department : newTask.sector}
                                     onChange={(e) => setNewTask({ ...newTask, sector: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 [&>option]:text-gray-900"
+                                    disabled={isDepartment}
+                                    className={`w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 [&>option]:text-gray-900 ${isDepartment ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                     <option value="roads">Roads</option>
                                     <option value="drainage">Drainage</option>

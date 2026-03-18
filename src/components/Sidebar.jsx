@@ -18,7 +18,7 @@ import {
 
 const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     const location = useLocation();
-    const { logout } = useAuth();
+    const { logout, isAdmin, isDepartment, department } = useAuth();
 
     const navItems = [
         { path: '/', icon: DashboardIcon, label: 'Dashboard' },
@@ -97,8 +97,8 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                     </div>
                     {!isCollapsed && (
                         <div className="flex-1 overflow-hidden">
-                            <div className="text-white font-medium text-sm truncate">Admin</div>
-                            <div className="text-emerald-400 text-xs truncate">System Admin</div>
+                            <div className="text-white font-medium text-sm truncate">{isAdmin ? 'System Admin' : (department ? `${department.charAt(0).toUpperCase() + department.slice(1)} Dept` : 'Staff')}</div>
+                            <div className="text-emerald-400 text-xs truncate">{isAdmin ? 'Overview Mode' : 'Department View'}</div>
                         </div>
                     )}
                 </div>

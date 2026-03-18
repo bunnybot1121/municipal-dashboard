@@ -76,20 +76,30 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
-    const login = async (email, password) => {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const login = async (email, password, overrideRole = null, overrideSector = null) => {
+        const { error, data } = await supabase.auth.signInWithPassword({ email, password });
         if (error) return { success: false, error: error.message };
+        
+        // Force update the profile if the user explicitly selected a role on the login screen
+        if (overrideRole && data?.user?.id) {
+            await supabase.from('profiles').update({ 
+                role: overrideRole, 
+                sector: overrideRole === 'department' ? overrideSector : null 
+            }).eq('id', data.user.id);
+        }
+
         return { success: true };
     };
 
-    const signup = async (email, password, fullName, role = 'citizen') => {
+    const signup = async (email, password, fullName, role = 'citizen', sector = null) => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
                 data: {
                     full_name: fullName,
-                    role: role
+                    role: role,
+                    sector: sector
                 }
             }
         });
@@ -105,9 +115,11 @@ export const AuthProvider = ({ children }) => {
             login,
             signup,
             isAdmin: user?.role === 'admin',
+            isDepartment: user?.role === 'department',
             isWorker: user?.role === 'worker',
             isCitizen: user?.role === 'citizen',
             city: user?.assigned_zone,
+            department: user?.sector,
             refreshProfile: () => user && fetchProfile(user)
         }}>
             {children}

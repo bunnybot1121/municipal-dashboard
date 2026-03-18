@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import { calculatePriorityScore } from '../utils/aiPriority';
 import {
     Close,
@@ -314,6 +315,7 @@ const InfoRow = ({ icon, label, value }) => (
 /* ─── Main Page ───────────────────────────────────── */
 const CitizenReports = () => {
     const navigate = useNavigate();
+    const { isDepartment, department } = useAuth();
     const [issues, setIssues] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -330,8 +332,21 @@ const CitizenReports = () => {
                 .from('issues')
                 .select('*')
                 .order('created_at', { ascending: false });
+
             if (err) throw err;
-            setIssues(data || []);
+
+            // Filter in Javascript — match on sector field OR issue_type string prefix
+            // This handles both cases: data stored as sector:'roads' and issue_type:'Roads - Severe'
+            const filteredData = (isDepartment && department)
+                ? (data || []).filter(i => {
+                    const dept = department.toLowerCase();
+                    const sectorMatch = (i.sector || '').toLowerCase() === dept;
+                    const typeMatch = (i.issue_type || '').toLowerCase().startsWith(dept);
+                    return sectorMatch || typeMatch;
+                  })
+                : (data || []);
+
+            setIssues(filteredData);
         } catch (e) {
             console.error('Failed to fetch issues:', e);
             setError(e.message);

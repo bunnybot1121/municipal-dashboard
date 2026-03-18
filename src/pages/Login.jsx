@@ -9,6 +9,7 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
     const [role, setRole] = useState('admin');
+    const [selectedDept, setSelectedDept] = useState('roads');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
@@ -81,11 +82,9 @@ const LoginPage = () => {
 
         let authResult;
         if (isRegistering) {
-            // Default to 'admin' or 'citizen' since Staff role is removed from UI
-            // For now, we defaults to 'admin' for this dashboard app as per context
-            authResult = await signup(username, password, fullName, 'admin');
+            authResult = await signup(username, password, fullName, role, role === 'department' ? selectedDept : null);
         } else {
-            authResult = await login(username, password);
+            authResult = await login(username, password, role, role === 'department' ? selectedDept : null);
         }
 
         if (authResult?.success) {
@@ -135,6 +134,39 @@ const LoginPage = () => {
                                 onChange={(e) => setFullName(e.target.value)}
                                 className="w-full bg-transparent text-white px-6 py-4 rounded-full border border-white/40 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300 outline-none placeholder:text-white/60 font-light"
                             />
+                        </div>
+                    )}
+
+                    {/* Role Toggle for Registration and Login context */}
+                    <div className="flex bg-white/10 rounded-full p-1 border border-white/20">
+                        <button 
+                            type="button" 
+                            onClick={() => setRole('admin')} 
+                            className={`flex-1 py-3 text-sm font-medium rounded-full transition-all duration-300 ${role === 'admin' ? 'bg-white text-emerald-950 shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
+                        >
+                           Admin Access
+                        </button>
+                        <button 
+                            type="button" 
+                            onClick={() => setRole('department')} 
+                            className={`flex-1 py-3 text-sm font-medium rounded-full transition-all duration-300 ${role === 'department' ? 'bg-white text-emerald-950 shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
+                        >
+                           Department
+                        </button>
+                    </div>
+
+                    {role === 'department' && (
+                        <div className="relative group flex items-center">
+                            <select
+                                value={selectedDept}
+                                onChange={(e) => setSelectedDept(e.target.value)}
+                                className="w-full bg-black/20 text-white px-6 py-4 rounded-full border border-white/40 focus:border-white tracking-wide transition-all duration-300 outline-none appearance-none [&>option]:text-gray-900"
+                            >
+                                <option value="" disabled>Select Department</option>
+                                {['roads', 'water', 'lighting', 'drainage', 'waste', 'power', 'parks', 'safety', 'other'].map(d => (
+                                    <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)} Department</option>
+                                ))}
+                            </select>
                         </div>
                     )}
 

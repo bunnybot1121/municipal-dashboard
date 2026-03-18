@@ -303,7 +303,7 @@ const Staff = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Sector</label>
+                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Department</label>
                                     <select className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:ring-2 focus:ring-blue-500/50 [&>option]:text-gray-900"
                                         value={newStaff.sector} onChange={e => setNewStaff({ ...newStaff, sector: e.target.value })}>
                                         {['roads', 'water', 'lighting', 'drainage', 'waste', 'power', 'other'].map(s =>

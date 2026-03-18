@@ -15,7 +15,7 @@ export default function ScheduleUploadPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const navigate = useNavigate();
-    const { city } = useAuth(); // Use Auth Context for City
+    const { city, isDepartment, department } = useAuth(); // Use Auth Context for City
 
     async function handleFileSelect(e) {
         const selectedFile = e.target.files[0];
@@ -34,12 +34,17 @@ export default function ScheduleUploadPage() {
 
         try {
             // USE MARKDOWN PARSER
-            const tasks = await parseMarkdownSchedule(selectedFile);
+            const rawTasks = await parseMarkdownSchedule(selectedFile);
 
-            setParsedTasks(tasks);
-            setSuccess(`✅ Successfully parsed ${tasks.length} tasks from markdown file`);
+            // Enforce Department Ownership
+            const finalTasks = isDepartment 
+                ? rawTasks.map(t => ({ ...t, sector: department }))
+                : rawTasks; // Admins keep the original parsed distribution
 
-            console.log(`✅ READY TO UPLOAD: ${tasks.length} real tasks`);
+            setParsedTasks(finalTasks);
+            setSuccess(`✅ Successfully parsed ${finalTasks.length} tasks from markdown file`);
+
+            console.log(`✅ READY TO UPLOAD: ${finalTasks.length} real tasks`);
 
         } catch (err) {
             setError(`Parse failed: ${err.message}`);

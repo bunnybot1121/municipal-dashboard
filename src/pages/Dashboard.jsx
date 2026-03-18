@@ -87,7 +87,7 @@ function CitizenAnalysisPanel({ issue, onClose, onViewFull }) {
                             <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-3">7D Framework Output</p>
                             <div className="bg-white/5 rounded-2xl border border-white/10 divide-y divide-white/5 overflow-hidden">
                                 {[
-                                    ['Sector Assessment', dims.sector],
+                                    ['Department Assessment', dims.sector],
                                     ['Event Risk', dims.event],
                                     ['Severity Level', dims.severity],
                                     ['Time Boost', dims.timeBoost != null ? `+${dims.timeBoost} pts` : null],
@@ -116,7 +116,7 @@ function CitizenAnalysisPanel({ issue, onClose, onViewFull }) {
                         {/* Meta info */}
                         <div className="bg-white/5 rounded-2xl border border-white/10 divide-y divide-white/5 overflow-hidden mt-6">
                             {[
-                                ['Sector', issue.sector],
+                                ['Department', issue.sector],
                                 ['Status', issue.status],
                                 ['Reported', new Date(issue.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })],
                                 ['Address', issue.address || issue.location?.address || '—'],
@@ -158,7 +158,7 @@ export default function Dashboard() {
     const [sensorsLoading, setSensorsLoading] = useState(true);
     const [sensorsError, setSensorsError] = useState(null);
     const [error, setError] = useState('');
-    const { city } = useAuth();
+    const { city, isAdmin, isDepartment, department } = useAuth();
     const navigate = useNavigate();
 
     // Custom Hook for Real-time Issues
@@ -180,7 +180,8 @@ export default function Dashboard() {
         setSensorsError(null);
         fetchSensorReadings()
             .then(data => {
-                setSensors(data);
+                const relevant = isDepartment ? data.filter(s => s.sector === department || (s.type === 'ultrasonic' && department === 'waste') || (s.type === 'gas' && department === 'safety')) : data;
+                setSensors(relevant);
                 setSensorsLoading(false);
             })
             .catch(err => {
@@ -209,7 +210,8 @@ export default function Dashboard() {
         const currentCityId = city || 'Khargar';
         try {
             const realTasks = await fetchTasksFromSupabase(currentCityId);
-            setTasks(realTasks || []);
+            const filteredTasks = isDepartment ? realTasks.filter(t => (t.sector || '').toLowerCase() === (department || '').toLowerCase()) : realTasks;
+            setTasks(filteredTasks || []);
         } catch (err) {
             setError(`Failed to load tasks: ${err.message}`);
             console.error('âŒ DASHBOARD TASK LOAD ERROR:', err);
@@ -221,8 +223,12 @@ export default function Dashboard() {
     // 2. Process Real-time Issues when they change
     useEffect(() => {
         if (realTimeIssues.length > 0) {
+            const relevantIssues = isDepartment 
+                ? realTimeIssues.filter(i => (i.sector || '').toLowerCase() === (department || '').toLowerCase())
+                : realTimeIssues;
+
             // Apply 145-Signal Priority Analysis
-            const analyzedIssues = realTimeIssues.map(issue => {
+            const analyzedIssues = relevantIssues.map(issue => {
                 // If backend already has score, use it, otherwise calculate frontend fallback
                 // The hook already maps `calculatedPriority` but let's ensure consistency
                 const priorityAnalysis = issue.calculatedPriority || calculatePriorityScore({
@@ -443,7 +449,7 @@ export default function Dashboard() {
                                                 <tr>
                                                     <th className="px-6 py-3 text-left text-xs font-semibold text-white/90 uppercase">Priority</th>
                                                     <th className="px-6 py-3 text-left text-xs font-semibold text-white/90 uppercase">Title</th>
-                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-white/90 uppercase hidden md:table-cell">Sector</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-white/90 uppercase hidden md:table-cell">Department</th>
                                                     <th className="px-6 py-3 text-left text-xs font-semibold text-white/90 uppercase hidden md:table-cell">Status</th>
                                                     <th className="px-6 py-3 text-left text-xs font-semibold text-white/90 uppercase hidden lg:table-cell">Date</th>
                                                     <th className="px-6 py-3"></th>
@@ -675,7 +681,7 @@ export default function Dashboard() {
                                     <thead className="bg-[#1a2235]/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-10 shadow-md">
                                         <tr>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-white/90 uppercase tracking-wider">Title</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-white/90 uppercase tracking-wider">Sector</th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-white/90 uppercase tracking-wider">Department</th>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-white/90 uppercase tracking-wider">Priority</th>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-white/90 uppercase tracking-wider">Date</th>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-white/90 uppercase tracking-wider">Status</th>

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/apiClient';
 import { SECTORS } from '../services/mockData';
 import {
@@ -27,6 +28,7 @@ import {
 
 const IssueList = () => {
     const navigate = useNavigate();
+    const { isDepartment, department } = useAuth();
     const [issues, setIssues] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState('all');
@@ -48,7 +50,9 @@ const IssueList = () => {
             let combinedData = [];
 
             if (tasksData && Array.isArray(tasksData)) {
-                combinedData = tasksData.map(task => ({
+                const relevantTasks = isDepartment ? tasksData.filter(t => (t.sector || '').toLowerCase() === (department || '').toLowerCase()) : tasksData;
+
+                combinedData = relevantTasks.map(task => ({
                     ...task,
                     uniqueId: `tsk-${task.id}`,
                     type: 'task',
@@ -212,7 +216,7 @@ const IssueList = () => {
                             onChange={(e) => setFilterSector(e.target.value)}
                             className="appearance-none w-full md:w-40 px-4 py-3 pr-10 rounded-xl border border-white/10 bg-black/20 text-sm font-medium text-white focus:bg-black/40 focus:ring-1 focus:ring-white/30 focus:border-white/30 outline-none cursor-pointer"
                         >
-                            <option value="all" className="bg-slate-900">All Sectors</option>
+                            <option value="all" className="bg-slate-900">All Departments</option>
                             {SECTORS.map(s => <option key={s.id} value={s.id} className="bg-slate-900">{s.label}</option>)}
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" sx={{ fontSize: 18 }} />
@@ -229,7 +233,7 @@ const IssueList = () => {
                                 {[
                                     { key: 'id', label: 'Task ID', width: 'w-28' },
                                     { key: 'title', label: 'Title & Desc', width: 'w-auto' },
-                                    { key: 'sector', label: 'Sector', width: 'w-32' },
+                                    { key: 'sector', label: 'Department', width: 'w-32' },
                                     { key: 'priority', label: 'Priority', width: 'w-28' },
                                     { key: 'status', label: 'Status', width: 'w-32' },
                                     { key: 'createdAt', label: 'Scheduled', width: 'w-40' },
