@@ -9,6 +9,7 @@ export const api = {
         if (filters.sector && filters.sector !== 'all') query = query.eq('sector', filters.sector);
         if (filters.status && filters.status !== 'all') query = query.eq('status', filters.status);
         if (filters.priority) query = query.eq('priority', filters.priority);
+        if (filters.assignedTo) query = query.eq('assigned_to', filters.assignedTo);
 
         const { data, error } = await query;
         if (error) {

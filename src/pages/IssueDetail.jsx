@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/apiClient';
 import { calculatePriorityScore } from '../utils/aiPriority';
+import { useAuth } from '../contexts/AuthContext';
 import {
     ArrowBack,
     AccessTime,
@@ -43,6 +44,7 @@ L.Icon.Default.mergeOptions({
 const IssueDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { department, isAdmin } = useAuth();
     const [issue, setIssue] = useState(null);
     const [loading, setLoading] = useState(true);
     const [overridePriority, setOverridePriority] = useState('');
@@ -303,7 +305,7 @@ const IssueDetail = () => {
                         onClick={handleAssign}
                         className="px-4 py-2 liquid-btn liquid-btn-blue rounded-lg font-bold"
                     >
-                        Assign to Dept
+                        Assign to Field Supervisor
                     </button>
                 </div>
             </div>
@@ -737,9 +739,22 @@ const IssueDetail = () => {
                                             onChange={(e) => setIssue({ ...issue, assignedTo: e.target.value })}
                                         >
                                             <option value="" className="text-gray-900">— Unassigned —</option>
-                                            {users.map(u => (
+                                            {users
+                                                .filter(u => {
+                                                    // Only show field workers/supervisors (role = 'worker' or 'archived' soft-deleted workers)
+                                                    const isFieldStaff = u.role === 'worker' || u.role === 'archived';
+                                                    if (!isFieldStaff) return false;
+                                                    // Must have a name to display
+                                                    if (!u.name && !u.username) return false;
+                                                    // Admins see all field staff
+                                                    if (isAdmin) return true;
+                                                    // Department users only see field staff in their department
+                                                    if (department) return u.sector && u.sector.toLowerCase() === department.toLowerCase();
+                                                    return true;
+                                                })
+                                                .map(u => (
                                                 <option key={u.id} value={u.id} className="text-gray-900">
-                                                    {u.name || u.username} · {u.sector || 'general'} ({u.role})
+                                                    {u.name || u.username} · {u.assignedZone || 'Zone N/A'}
                                                 </option>
                                             ))}
                                         </select>

@@ -27,7 +27,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
         { path: '/notifications', icon: NotificationsOutlined, label: 'Notifications' },
         { path: '/scheduler', icon: CalendarMonth, label: 'Maintenance' },
         { path: '/analytics', icon: BarChart, label: 'Analytics' },
-        { path: '/staff', icon: People, label: 'Staff' },
+        { path: '/staff', icon: People, label: 'Field Supervisors' },
         { path: '/settings', icon: SettingsIcon, label: 'Settings' }
     ];
 

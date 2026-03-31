@@ -44,6 +44,7 @@ export default function WorkerLogin() {
                 full_name: profile.full_name,
                 role: profile.role,
                 sector: profile.sector,
+                assigned_zone: profile.assigned_zone
             }));
 
             navigate('/worker/dashboard', { replace: true });

@@ -5,6 +5,7 @@ import {
     Person as UserIcon, Badge, Work as RoleIcon,
     Domain as SectorIcon, Key, Visibility, VisibilityOff
 } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
 
 const DOMAIN = 'nagarsevak.com';
 
@@ -13,25 +14,35 @@ const Staff = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingStaff, setEditingStaff] = useState(null);
     const [adding, setAdding] = useState(false);
     const [showPass, setShowPass] = useState({});
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
 
     const [newStaff, setNewStaff] = useState({
-        name: '', username: '', password: '', role: 'worker', sector: 'other', status: 'available'
+        name: '', username: '', password: '', assigned_zone: 'North'
     });
+
+    const { isAdmin, department, isSeniorEngineer, isJuniorEngineer, isDepartment } = useAuth();
 
     useEffect(() => { loadData(); }, []);
 
     async function loadData() {
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('profiles')
                 .select('*')
-                .in('role', ['admin', 'staff', 'worker'])
+                .neq('role', 'citizen')
                 .order('created_at', { ascending: false });
+
+            // If not a system admin, only show staff in the user's sector
+            if (!isAdmin && department) {
+                query = query.eq('sector', department);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
             setStaffList(data || []);
@@ -76,20 +87,46 @@ const Staff = () => {
                 full_name: newStaff.name.trim(),
                 username: username,
                 password: newStaff.password, // stored for internal login
-                role: newStaff.role,
-                sector: newStaff.sector,
-                status: newStaff.status,
+                role: 'worker',
+                sector: department || 'other',
+                assigned_zone: newStaff.assigned_zone,
+                status: 'available',
             });
 
             if (insertError) throw insertError;
 
             setSuccessMsg(`✅ ${newStaff.name} added! Login: ${username} / ${newStaff.password}`);
             setIsModalOpen(false);
-            setNewStaff({ name: '', username: '', password: '', role: 'worker', sector: 'other', status: 'available' });
+            setNewStaff({ name: '', username: '', password: '', assigned_zone: 'North' });
             loadData();
             setTimeout(() => setSuccessMsg(''), 5000);
         } catch (err) {
             setError(err.message || 'Failed to add staff.');
+        } finally {
+            setAdding(false);
+        }
+    }
+
+    async function handleEditStaff(e) {
+        e.preventDefault();
+        setError('');
+        setAdding(true);
+
+        try {
+            const { error: updateError } = await supabase.from('profiles').update({
+                full_name: editingStaff.full_name.trim(),
+                password: editingStaff.password,
+                assigned_zone: editingStaff.assigned_zone
+            }).eq('id', editingStaff.id);
+
+            if (updateError) throw updateError;
+
+            setSuccessMsg(`✅ ${editingStaff.full_name || editingStaff.username} updated!`);
+            setEditingStaff(null);
+            loadData();
+            setTimeout(() => setSuccessMsg(''), 5000);
+        } catch (err) {
+            setError(err.message || 'Failed to update supervisor.');
         } finally {
             setAdding(false);
         }
@@ -108,38 +145,22 @@ const Staff = () => {
     const filtered = staffList.filter(s =>
         (s.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (s.username || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (s.role || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (s.sector || '').toLowerCase().includes(searchTerm.toLowerCase())
+        (s.assigned_zone || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-    const sectorColor = (sector) => ({
-        water: 'bg-blue-100 text-blue-700',
-        roads: 'bg-slate-100 text-slate-700',
-        lighting: 'bg-yellow-100 text-yellow-700',
-        drainage: 'bg-cyan-100 text-cyan-700',
-        waste: 'bg-green-100 text-green-700',
-        power: 'bg-orange-100 text-orange-700',
-        other: 'bg-gray-100 text-gray-700',
-    }[(sector || 'other').toLowerCase()] || 'bg-gray-100 text-gray-700');
-
-    const statusDot = (s) => ({
-        available: 'bg-green-500',
-        busy: 'bg-amber-500',
-    }[(s || 'offline').toLowerCase()] || 'bg-gray-400');
 
     return (
         <div className="space-y-6 animate-fade-in relative">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-lg border border-white/20">
                 <div>
-                    <h1 className="text-xl font-bold text-white drop-shadow-sm">Staff Management</h1>
-                    <p className="text-sm text-white/70">Manage field workers and their login credentials</p>
+                    <h1 className="text-xl font-bold text-white drop-shadow-sm">Field Supervisors</h1>
+                    <p className="text-sm text-white/70">Manage field supervisors and their login credentials</p>
                 </div>
                 <div className="flex items-center gap-3 w-full md:w-auto">
                     <div className="relative flex-1 md:w-64">
                         <Search sx={{ fontSize: 18 }} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
                         <input
-                            type="text" placeholder="Search staff..."
+                            type="text" placeholder="Search field supervisors..."
                             value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 bg-white/10 rounded-xl border border-white/20 text-white placeholder-white/50 text-sm focus:ring-2 focus:ring-blue-500/50 outline-none"
                         />
@@ -149,7 +170,7 @@ const Staff = () => {
                         className="px-5 py-2.5 liquid-btn liquid-btn-blue rounded-xl text-sm font-semibold flex items-center gap-2"
                     >
                         <Plus sx={{ fontSize: 18 }} />
-                        <span className="hidden sm:inline">Add Staff</span>
+                        <span className="hidden sm:inline">Add Field Staff</span>
                     </button>
                 </div>
             </div>
@@ -178,7 +199,9 @@ const Staff = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {filtered.map(staff => (
-                        <div key={staff.id} className="bg-white/10 backdrop-blur-md p-5 rounded-[2rem] shadow-lg border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all group">
+                        <div key={staff.id} 
+                             onClick={() => { setEditingStaff({...staff}); setError(''); setShowPass({}); }}
+                             className="bg-white/10 backdrop-blur-md p-5 rounded-[2rem] shadow-lg border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all group cursor-pointer relative">
                             {/* Top row */}
                             <div className="flex justify-between items-start mb-4">
                                 <div className="flex items-center gap-3">
@@ -186,18 +209,17 @@ const Staff = () => {
                                         <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-lg font-bold text-blue-200 border border-blue-400/30 group-hover:scale-105 transition-transform backdrop-blur-sm">
                                             {(staff.full_name || staff.username || '?').charAt(0).toUpperCase()}
                                         </div>
-                                        <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-[var(--background)] ${statusDot(staff.status)}`} />
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-white drop-shadow-sm">{staff.full_name || staff.username}</h3>
-                                        <span className="text-xs text-white/80 bg-white/10 border border-white/20 px-2 py-0.5 rounded-full uppercase tracking-wide font-semibold backdrop-blur-sm">
-                                            {staff.role}
+                                        <span className="text-xs text-blue-200 bg-blue-500/20 border border-blue-500/30 px-2 py-0.5 rounded-full uppercase tracking-wide font-semibold backdrop-blur-sm">
+                                            Field Staff
                                         </span>
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => handleDelete(staff)}
-                                    className="p-1.5 text-white/40 hover:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors"
+                                    onClick={(e) => { e.stopPropagation(); handleDelete(staff); }}
+                                    className="p-1.5 z-10 text-white/40 hover:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors relative"
                                     title="Remove staff"
                                 >
                                     <Delete sx={{ fontSize: 18 }} />
@@ -212,8 +234,8 @@ const Staff = () => {
                                 </div>
                                 <div className="flex items-center gap-2 text-sm">
                                     <SectorIcon sx={{ fontSize: 16 }} className="text-white/50" />
-                                    <span className={`px-2 py-0.5 rounded-md text-xs font-bold uppercase shadow-sm border border-white/10 ${sectorColor(staff.sector)}`}>
-                                        {staff.sector || 'Unassigned'}
+                                    <span className="px-2 py-0.5 rounded-md text-xs font-bold shadow-sm border border-emerald-500/30 text-emerald-200 bg-emerald-500/20">
+                                        {staff.assigned_zone || 'Unassigned'} Zone
                                     </span>
                                 </div>
                             </div>
@@ -239,9 +261,6 @@ const Staff = () => {
 
                             <div className="pt-3 mt-3 border-t border-white/10 flex justify-between items-center text-xs text-white/50">
                                 <span>Joined: {staff.created_at ? new Date(staff.created_at).toLocaleDateString() : '—'}</span>
-                                <span className={staff.status === 'available' ? 'text-green-400 font-semibold' : ''}>
-                                    {staff.status || 'Offline'}
-                                </span>
                             </div>
                         </div>
                     ))}
@@ -253,7 +272,7 @@ const Staff = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
                     <div className="bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl border border-white/20 w-full max-w-lg overflow-hidden animate-fade-in">
                         <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/5">
-                            <h3 className="font-bold text-white drop-shadow-sm text-lg">Add New Staff / Worker</h3>
+                            <h3 className="font-bold text-white drop-shadow-sm text-lg">Add New Field Supervisor</h3>
                             <button onClick={() => setIsModalOpen(false)} className="text-white/50 hover:text-white bg-white/5 p-2 rounded-full hover:bg-white/10 transition-colors"><Close /></button>
                         </div>
                         <form onSubmit={handleAddStaff} className="p-6 space-y-4">
@@ -292,31 +311,13 @@ const Staff = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 gap-3">
                                 <div>
-                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Role</label>
+                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Assigned Zone</label>
                                     <select className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:ring-2 focus:ring-blue-500/50 [&>option]:text-gray-900"
-                                        value={newStaff.role} onChange={e => setNewStaff({ ...newStaff, role: e.target.value })}>
-                                        <option value="worker">Worker</option>
-                                        <option value="staff">Staff</option>
-                                        <option value="admin">Admin</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Department</label>
-                                    <select className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:ring-2 focus:ring-blue-500/50 [&>option]:text-gray-900"
-                                        value={newStaff.sector} onChange={e => setNewStaff({ ...newStaff, sector: e.target.value })}>
-                                        {['roads', 'water', 'lighting', 'drainage', 'waste', 'power', 'other'].map(s =>
-                                            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Status</label>
-                                    <select className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:ring-2 focus:ring-blue-500/50 [&>option]:text-gray-900"
-                                        value={newStaff.status} onChange={e => setNewStaff({ ...newStaff, status: e.target.value })}>
-                                        <option value="available">Available</option>
-                                        <option value="busy">Busy</option>
-                                        <option value="offline">Offline</option>
+                                        value={newStaff.assigned_zone} onChange={e => setNewStaff({ ...newStaff, assigned_zone: e.target.value })}>
+                                        {['North', 'South', 'East', 'West', 'Central'].map(z =>
+                                            <option key={z} value={z}>{z} Zone</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -327,6 +328,72 @@ const Staff = () => {
                                 <button type="submit" disabled={adding}
                                     className="px-5 py-2 liquid-btn liquid-btn-blue text-white rounded-xl text-sm font-bold shadow-lg disabled:opacity-60 flex items-center gap-2">
                                     {adding ? 'Adding…' : '+ Add Staff'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Staff Modal */}
+            {editingStaff && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+                    <div className="bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl border border-white/20 w-full max-w-lg overflow-hidden animate-fade-in">
+                        <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/5">
+                            <h3 className="font-bold text-white drop-shadow-sm text-lg">Edit Field Supervisor</h3>
+                            <button onClick={() => setEditingStaff(null)} className="text-white/50 hover:text-white bg-white/5 p-2 rounded-full hover:bg-white/10 transition-colors"><Close /></button>
+                        </div>
+                        <form onSubmit={handleEditStaff} className="p-6 space-y-4">
+                            {error && (
+                                <div className="bg-red-500/20 border border-red-500/30 text-red-200 rounded-lg px-4 py-2 text-sm">{error}</div>
+                            )}
+
+                            <div>
+                                <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Full Name</label>
+                                <input required type="text" placeholder="e.g. Ravi Kumar"
+                                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 text-sm outline-none focus:ring-2 focus:ring-blue-500/50"
+                                    value={editingStaff.full_name || ''} onChange={e => setEditingStaff({ ...editingStaff, full_name: e.target.value })} />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm flex items-center gap-1">Login ID <span className="text-[9px] text-white/30 font-normal normal-case tracking-normal">(Read Only)</span></label>
+                                    <input readOnly type="text"
+                                        className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-blue-300 font-bold text-lg outline-none font-mono tracking-wide"
+                                        value={editingStaff.username} />
+                                    <p className="text-[10px] text-white/60 mt-1.5">Use this exact ID to log in at <strong className="text-white">/worker</strong></p>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Password</label>
+                                    <div className="relative">
+                                        <input required type={showPass.edit ? 'text' : 'password'}
+                                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 pr-9 font-mono"
+                                            value={editingStaff.password || ''} onChange={e => setEditingStaff({ ...editingStaff, password: e.target.value })} />
+                                        <button type="button" className="absolute right-2.5 top-2.5 text-white/50 hover:text-white"
+                                            onClick={() => setShowPass(p => ({ ...p, edit: !p.edit }))}>
+                                            {showPass.edit ? <VisibilityOff sx={{ fontSize: 16 }} /> : <Visibility sx={{ fontSize: 16 }} />}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-3">
+                                <div>
+                                    <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Assigned Zone</label>
+                                    <select className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:ring-2 focus:ring-blue-500/50 [&>option]:text-gray-900"
+                                        value={editingStaff.assigned_zone || 'North'} onChange={e => setEditingStaff({ ...editingStaff, assigned_zone: e.target.value })}>
+                                        {['North', 'South', 'East', 'West', 'Central'].map(z =>
+                                            <option key={z} value={z}>{z} Zone</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 flex justify-end gap-3">
+                                <button type="button" onClick={() => setEditingStaff(null)}
+                                    className="px-4 py-2 text-sm font-medium text-white/70 hover:bg-white/10 rounded-xl transition-colors">Cancel</button>
+                                <button type="submit" disabled={adding}
+                                    className="px-5 py-2 liquid-btn liquid-btn-blue text-white rounded-xl text-sm font-bold shadow-lg disabled:opacity-60 flex items-center gap-2">
+                                    {adding ? 'Saving…' : 'Save Changes'}
                                 </button>
                             </div>
                         </form>

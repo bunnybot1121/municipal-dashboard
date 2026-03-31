@@ -61,12 +61,29 @@ export default function WorkerDashboard() {
         try {
             setProfile(user);
 
-            const [workerTasks, issues, notes] = await Promise.all([
+            const [workerTasks, issues, notes, assignedIssues] = await Promise.all([
                 api.getWorkerTasks(user.id),
                 api.getIssues({ sector: user.sector || 'other' }),
                 fetchNotifications(20),
+                api.getIssues({ assignedTo: user.id })
             ]);
-            setTasks(workerTasks);
+            
+            const mappedIssues = assignedIssues.map(i => ({
+                id: i.id,
+                title: i.issue_type || i.title || 'Citizen Issue',
+                description: i.description,
+                sector: i.sector,
+                priority: i.priority || i.severity,
+                status: (i.status === 'open' || i.status === 'pending') ? 'pending' : 
+                        (i.status === 'accepted' || i.status === 'in_progress') ? 'in_progress' : 
+                        (i.status === 'resolved' ? 'done' : 'pending'),
+                scheduledDate: i.created_at?.split('T')[0],
+                isIssueType: true,
+                address: i.location?.address || 'Location provided',
+                imageUrl: i.imageUrl
+            }));
+            
+            setTasks([...workerTasks, ...mappedIssues]);
             setSectorIssues(issues);
             setNotifications(notes);
             setUnread(notes.length);
@@ -98,7 +115,13 @@ export default function WorkerDashboard() {
         if (!cfg.next) return;
         setUpdatingId(task.id);
         try {
-            await api.updateTaskStatus(task.id, cfg.next);
+            if (task.isIssueType) {
+                let nextDbStatus = cfg.next;
+                if (nextDbStatus === 'done') nextDbStatus = 'resolved';
+                await api.updateIssue(task.id, { status: nextDbStatus });
+            } else {
+                await api.updateTaskStatus(task.id, cfg.next);
+            }
             setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: cfg.next } : t));
         } catch (e) {
             alert('Failed to update: ' + e.message);
