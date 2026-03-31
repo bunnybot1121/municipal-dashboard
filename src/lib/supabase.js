@@ -1,8 +1,8 @@
-
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Fallback to hardcoded credentials for GitHub Pages deployment where .env is not present
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://itflkttrcrtxfxdrqysn.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0ZmxrdHRyY3J0eGZ4ZHJxeXNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MzI4MjgsImV4cCI6MjA4NjMwODgyOH0.dVOZuI1luH7KvgSfwK3cNyP7AVDjtzYLjE1hvIEvrAo';
 
 // VALIDATE credentials exist
 if (!supabaseUrl || !supabaseAnonKey) {

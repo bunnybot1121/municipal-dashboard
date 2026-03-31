@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/', // Use '/' for Vercel, '/municipal-dashboard/' for GitHub Pages
+  base: '/municipal-dashboard/', // Updated specifically for GitHub Pages deployment
   server: {
     host: true,
     port: 5173,
