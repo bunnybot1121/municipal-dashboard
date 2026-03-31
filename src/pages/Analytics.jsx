@@ -10,8 +10,11 @@ import {
     BarChart as BarIcon,
     ShowChart as LineIcon
 } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
 
 const Analytics = () => {
+    const { isDepartment, isSeniorEngineer, isJuniorEngineer, department } = useAuth();
+    const isDeptScoped = isDepartment || isSeniorEngineer || isJuniorEngineer;
     const [issues, setIssues] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -37,7 +40,12 @@ const Analytics = () => {
             }));
 
             // Combine both
-            const combined = [...(issuesData || []), ...normalizedTasks];
+            let combined = [...(issuesData || []), ...normalizedTasks];
+            
+            if (isDeptScoped && department) {
+                combined = combined.filter(i => (i.sector || '').toLowerCase() === department.toLowerCase());
+            }
+
             setIssues(combined);
         } catch (error) {
             console.error("Failed to fetch analytics data", error);
@@ -115,8 +123,9 @@ const Analytics = () => {
             {/* Charts Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                {/* Sector Distribution */}
-                <div className="bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-lg border border-white/20">
+                {/* Sector Distribution (Only for Global Admins) */}
+                {!isDeptScoped && (
+                    <div className="bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-lg border border-white/20">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-bold text-white drop-shadow-sm flex items-center gap-2">
                             <PieIcon className="text-white/90" /> Issues by Sector
@@ -144,9 +153,10 @@ const Analytics = () => {
                         </ResponsiveContainer>
                     </div>
                 </div>
+                )}
 
                 {/* Status Distribution */}
-                <div className="bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-lg border border-white/20">
+                <div className={`bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-lg border border-white/20 ${isDeptScoped ? 'md:col-span-2' : ''}`}>
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-bold text-white drop-shadow-sm flex items-center gap-2">
                             <BarIcon className="text-white/90" /> Resolution Status

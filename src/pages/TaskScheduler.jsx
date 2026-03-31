@@ -18,7 +18,8 @@ import {
 import { useAuth } from '../contexts/AuthContext'; // Import useAuth
 
 const TaskScheduler = () => {
-    const { user, isDepartment, department } = useAuth(); // Get user from context
+    const { user, isDepartment, isSeniorEngineer, isJuniorEngineer, department } = useAuth(); // Get user from context
+    const isDeptScoped = isDepartment || isSeniorEngineer || isJuniorEngineer;
     const navigate = useNavigate();
     const [selectedDate, setSelectedDate] = useState(null);
     const [tasks, setTasks] = useState([]);
@@ -67,7 +68,7 @@ const TaskScheduler = () => {
             });
 
             if (tasksData && Array.isArray(tasksData)) {
-                const relevantTasks = isDepartment ? tasksData.filter(t => (t.sector || '').toLowerCase() === (department || '').toLowerCase()) : tasksData;
+                const relevantTasks = isDeptScoped ? tasksData.filter(t => (t.sector || '').toLowerCase() === (department || '').toLowerCase()) : tasksData;
 
                 const normalizedTasks = relevantTasks.map(t => ({
                     ...t,
@@ -100,7 +101,7 @@ const TaskScheduler = () => {
 
             const payload = {
                 title: newTask.title,
-                sector: isDepartment ? department : newTask.sector,
+                sector: isDeptScoped ? department : newTask.sector,
                 priority: newTask.priority,
                 description: newTask.description,
                 scheduledStart: startDateTime,
@@ -375,10 +376,10 @@ const TaskScheduler = () => {
                             <div>
                                 <label className="block text-sm font-semibold text-white/90 mb-2 drop-shadow-sm">Department</label>
                                 <select
-                                    value={isDepartment ? department : newTask.sector}
+                                    value={isDeptScoped ? department : newTask.sector}
                                     onChange={(e) => setNewTask({ ...newTask, sector: e.target.value })}
-                                    disabled={isDepartment}
-                                    className={`w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 [&>option]:text-gray-900 ${isDepartment ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={isDeptScoped}
+                                    className={`w-full px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 [&>option]:text-gray-900 ${isDeptScoped ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                     <option value="roads">Roads</option>
                                     <option value="drainage">Drainage</option>

@@ -18,9 +18,9 @@ import {
 
 const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     const location = useLocation();
-    const { logout, isAdmin, isDepartment, department } = useAuth();
+    const { logout, isAdmin, isDepartment, isSeniorEngineer, isJuniorEngineer, department } = useAuth();
 
-    const navItems = [
+    const allNavItems = [
         { path: '/', icon: DashboardIcon, label: 'Dashboard' },
         { path: '/issues', icon: Assignment, label: 'Scheduled Tasks' },
         { path: '/citizen-reports', icon: ReportProblem, label: 'Citizen Reports' },
@@ -30,6 +30,17 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
         { path: '/staff', icon: People, label: 'Staff' },
         { path: '/settings', icon: SettingsIcon, label: 'Settings' }
     ];
+
+    const hodNavItems = [
+        { path: '/', icon: DashboardIcon, label: 'Dashboard' },
+        { path: '/issues', icon: Assignment, label: 'Scheduled Tasks' },
+        { path: '/citizen-reports', icon: ReportProblem, label: 'Citizen Reports' },
+        { path: '/scheduler', icon: CalendarMonth, label: 'Maintenance' },
+        { path: '/analytics', icon: BarChart, label: 'Analytics' },
+        { path: '/settings', icon: SettingsIcon, label: 'Settings' }
+    ];
+
+    const navItems = isDepartment ? hodNavItems : allNavItems;
 
     const isActive = (path) => {
         if (path === '/' && location.pathname === '/') return true;
@@ -97,8 +108,20 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                     </div>
                     {!isCollapsed && (
                         <div className="flex-1 overflow-hidden">
-                            <div className="text-white font-medium text-sm truncate">{isAdmin ? 'System Admin' : (department ? `${department.charAt(0).toUpperCase() + department.slice(1)} Dept` : 'Staff')}</div>
-                            <div className="text-emerald-400 text-xs truncate">{isAdmin ? 'Overview Mode' : 'Department View'}</div>
+                            <div className="text-white font-medium text-sm truncate">
+                                {isAdmin ? 'System Admin' : 
+                                 isDepartment ? `${department ? department.charAt(0).toUpperCase() + department.slice(1) : ''} Command Center` :
+                                 isSeniorEngineer ? `${department ? department.charAt(0).toUpperCase() + department.slice(1) : ''} Senior Eng.` :
+                                 isJuniorEngineer ? `${department ? department.charAt(0).toUpperCase() + department.slice(1) : ''} Junior Eng.` :
+                                 (department ? `${department.charAt(0).toUpperCase() + department.slice(1)} Dept` : 'Staff')}
+                            </div>
+                            <div className="text-emerald-400 text-xs truncate">
+                                {isAdmin ? 'System Admin View' : 
+                                 isDepartment ? 'Head of Department' :
+                                 isSeniorEngineer ? 'Senior Engineer View' :
+                                 isJuniorEngineer ? 'Junior Engineer View' :
+                                 'Department View'}
+                            </div>
                         </div>
                     )}
                 </div>

@@ -28,7 +28,7 @@ import {
 
 const IssueList = () => {
     const navigate = useNavigate();
-    const { isDepartment, department } = useAuth();
+    const { isDepartment, isSeniorEngineer, isJuniorEngineer, department } = useAuth();
     const [issues, setIssues] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState('all');
@@ -50,7 +50,7 @@ const IssueList = () => {
             let combinedData = [];
 
             if (tasksData && Array.isArray(tasksData)) {
-                const relevantTasks = isDepartment ? tasksData.filter(t => (t.sector || '').toLowerCase() === (department || '').toLowerCase()) : tasksData;
+                const relevantTasks = (isDepartment || isSeniorEngineer || isJuniorEngineer) ? tasksData.filter(t => (t.sector || '').toLowerCase() === (department || '').toLowerCase()) : tasksData;
 
                 combinedData = relevantTasks.map(task => ({
                     ...task,

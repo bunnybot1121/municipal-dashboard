@@ -158,7 +158,7 @@ export default function Dashboard() {
     const [sensorsLoading, setSensorsLoading] = useState(true);
     const [sensorsError, setSensorsError] = useState(null);
     const [error, setError] = useState('');
-    const { city, isAdmin, isDepartment, department } = useAuth();
+    const { city, isAdmin, isDepartment, isSeniorEngineer, isJuniorEngineer, department } = useAuth();
     const navigate = useNavigate();
 
     // Custom Hook for Real-time Issues
@@ -180,7 +180,7 @@ export default function Dashboard() {
         setSensorsError(null);
         fetchSensorReadings()
             .then(data => {
-                const relevant = isDepartment ? data.filter(s => s.sector === department || (s.type === 'ultrasonic' && department === 'waste') || (s.type === 'gas' && department === 'safety')) : data;
+                const relevant = (isDepartment || isSeniorEngineer || isJuniorEngineer) ? data.filter(s => s.sector === department || (s.type === 'ultrasonic' && department === 'waste') || (s.type === 'gas' && department === 'safety')) : data;
                 setSensors(relevant);
                 setSensorsLoading(false);
             })
@@ -210,7 +210,7 @@ export default function Dashboard() {
         const currentCityId = city || 'Khargar';
         try {
             const realTasks = await fetchTasksFromSupabase(currentCityId);
-            const filteredTasks = isDepartment ? realTasks.filter(t => (t.sector || '').toLowerCase() === (department || '').toLowerCase()) : realTasks;
+            const filteredTasks = (isDepartment || isSeniorEngineer || isJuniorEngineer) ? realTasks.filter(t => (t.sector || '').toLowerCase() === (department || '').toLowerCase()) : realTasks;
             setTasks(filteredTasks || []);
         } catch (err) {
             setError(`Failed to load tasks: ${err.message}`);
@@ -223,7 +223,7 @@ export default function Dashboard() {
     // 2. Process Real-time Issues when they change
     useEffect(() => {
         if (realTimeIssues.length > 0) {
-            const relevantIssues = isDepartment 
+            const relevantIssues = (isDepartment || isSeniorEngineer || isJuniorEngineer) 
                 ? realTimeIssues.filter(i => (i.sector || '').toLowerCase() === (department || '').toLowerCase())
                 : realTimeIssues;
 

@@ -80,12 +80,16 @@ export const AuthProvider = ({ children }) => {
         const { error, data } = await supabase.auth.signInWithPassword({ email, password });
         if (error) return { success: false, error: error.message };
         
-        // Force update the profile if the user explicitly selected a role on the login screen
+        // Force update or create the profile if the user explicitly selected a role on the login screen
         if (overrideRole && data?.user?.id) {
-            await supabase.from('profiles').update({ 
+            await supabase.from('profiles').upsert({ 
+                id: data.user.id,
+                email: email,
                 role: overrideRole, 
-                sector: overrideRole === 'department' ? overrideSector : null 
-            }).eq('id', data.user.id);
+                sector: (overrideRole === 'department' || overrideRole === 'senior_engineer' || overrideRole === 'junior_engineer') ? overrideSector : null 
+            }, { onConflict: 'id' });
+            // Fetch immediately so UI knows we are the new role
+            await fetchProfile(data.user);
         }
 
         return { success: true };
@@ -118,6 +122,8 @@ export const AuthProvider = ({ children }) => {
             isDepartment: user?.role === 'department',
             isWorker: user?.role === 'worker',
             isCitizen: user?.role === 'citizen',
+            isSeniorEngineer: user?.role === 'senior_engineer',
+            isJuniorEngineer: user?.role === 'junior_engineer',
             city: user?.assigned_zone,
             department: user?.sector,
             refreshProfile: () => user && fetchProfile(user)

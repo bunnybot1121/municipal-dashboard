@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { ShieldCheck, User, Lock } from 'lucide-react';
+import { ShieldCheck, User, Lock, ChevronDown } from 'lucide-react';
 
 const LoginPage = () => {
     const { login, signup, user, loading } = useAuth();
@@ -10,9 +10,12 @@ const LoginPage = () => {
     const [fullName, setFullName] = useState('');
     const [role, setRole] = useState('admin');
     const [selectedDept, setSelectedDept] = useState('roads');
+    const [deptRole, setDeptRole] = useState('department');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
+    const [isDeptDropdownOpen, setIsDeptDropdownOpen] = useState(false);
+    const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
     const navigate = useNavigate();
     const cardRef = useRef(null);
@@ -81,10 +84,13 @@ const LoginPage = () => {
         setError('');
 
         let authResult;
+        const finalRole = role === 'department' ? deptRole : role;
+        const finalSector = role === 'department' ? selectedDept : null;
+
         if (isRegistering) {
-            authResult = await signup(username, password, fullName, role, role === 'department' ? selectedDept : null);
+            authResult = await signup(username, password, fullName, finalRole, finalSector);
         } else {
-            authResult = await login(username, password, role, role === 'department' ? selectedDept : null);
+            authResult = await login(username, password, finalRole, finalSector);
         }
 
         if (authResult?.success) {
@@ -105,7 +111,6 @@ const LoginPage = () => {
                     className="w-full h-full object-cover"
                     alt="Elegant nature mountain background"
                 />
-                {/* Very light overlay just to ensure text readability, but keeping it bright like the reference */}
                 <div className="absolute inset-0 bg-black/10 mix-blend-overlay"></div>
             </div>
 
@@ -129,9 +134,15 @@ const LoginPage = () => {
                         <div className="relative group flex items-center">
                             <input
                                 type="text"
-                                placeholder="Full Name"
+                                placeholder="Full Name (Alphabets only)"
                                 value={fullName}
-                                onChange={(e) => setFullName(e.target.value)}
+                                maxLength={50}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (/^[A-Za-z\s]*$/.test(val)) {
+                                        setFullName(val);
+                                    }
+                                }}
                                 className="w-full bg-transparent text-white px-6 py-4 rounded-full border border-white/40 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300 outline-none placeholder:text-white/60 font-light"
                             />
                         </div>
@@ -156,17 +167,101 @@ const LoginPage = () => {
                     </div>
 
                     {role === 'department' && (
-                        <div className="relative group flex items-center">
-                            <select
-                                value={selectedDept}
-                                onChange={(e) => setSelectedDept(e.target.value)}
-                                className="w-full bg-black/20 text-white px-6 py-4 rounded-full border border-white/40 focus:border-white tracking-wide transition-all duration-300 outline-none appearance-none [&>option]:text-gray-900"
-                            >
-                                <option value="" disabled>Select Department</option>
-                                {['roads', 'water', 'lighting', 'drainage', 'waste', 'power', 'parks', 'safety', 'other'].map(d => (
-                                    <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)} Department</option>
-                                ))}
-                            </select>
+                        <div className="space-y-4">
+                            {/* Department Selection */}
+                            <div className="relative group">
+                                <div 
+                                    onClick={() => {
+                                        setIsDeptDropdownOpen(!isDeptDropdownOpen);
+                                        setIsRoleDropdownOpen(false);
+                                    }}
+                                    className="w-full bg-black/20 text-white px-6 py-4 rounded-full border border-white/40 hover:border-white cursor-pointer flex justify-between items-center transition-all duration-300 shadow-inner"
+                                >
+                                    <span className="font-light tracking-wide">{selectedDept.charAt(0).toUpperCase() + selectedDept.slice(1)} Department</span>
+                                    <ChevronDown className={`w-5 h-5 text-white/70 transition-transform duration-300 ${isDeptDropdownOpen ? 'rotate-180' : ''}`} />
+                                </div>
+                                
+                                {isDeptDropdownOpen && (
+                                    <div className="absolute top-full left-0 w-full mt-2 bg-black/90 backdrop-blur-2xl border border-white/20 rounded-2xl overflow-hidden z-50 shadow-[0_8px_32px_rgba(0,0,0,0.5)] transform opacity-100 scale-100 transition-all duration-200">
+                                        {['roads', 'water', 'electricity', 'sewage'].map((d) => (
+                                            <div 
+                                                key={d}
+                                                onClick={() => {
+                                                    setSelectedDept(d);
+                                                    setIsDeptDropdownOpen(false);
+                                                }}
+                                                className={`px-6 py-3.5 cursor-pointer transition-colors duration-200 font-light tracking-wide ${
+                                                    selectedDept === d 
+                                                    ? 'bg-emerald-500/20 text-emerald-300 border-l-2 border-emerald-400' 
+                                                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                                }`}
+                                            >
+                                                {d.charAt(0).toUpperCase() + d.slice(1)} Department
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Role Selection */}
+                            <div className="relative group">
+                                <div 
+                                    onClick={() => {
+                                        setIsRoleDropdownOpen(!isRoleDropdownOpen);
+                                        setIsDeptDropdownOpen(false);
+                                    }}
+                                    className="w-full bg-black/20 text-white px-6 py-4 rounded-full border border-white/40 hover:border-white cursor-pointer flex justify-between items-center transition-all duration-300 shadow-inner"
+                                >
+                                    <span className="font-light tracking-wide">
+                                        {deptRole === 'department' ? 'HOD (Head of Department)' : (deptRole === 'senior_engineer' ? 'Senior Engineer' : 'Junior Engineer')}
+                                    </span>
+                                    <ChevronDown className={`w-5 h-5 text-white/70 transition-transform duration-300 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
+                                </div>
+                                
+                                {isRoleDropdownOpen && (
+                                    <div className="absolute top-full left-0 w-full mt-2 bg-black/90 backdrop-blur-2xl border border-white/20 rounded-2xl overflow-hidden z-50 shadow-[0_8px_32px_rgba(0,0,0,0.5)] transform opacity-100 scale-100 transition-all duration-200">
+                                        <div 
+                                            onClick={() => {
+                                                setDeptRole('department');
+                                                setIsRoleDropdownOpen(false);
+                                            }}
+                                            className={`px-6 py-3.5 cursor-pointer transition-colors duration-200 font-light tracking-wide ${
+                                                deptRole === 'department' 
+                                                ? 'bg-emerald-500/20 text-emerald-300 border-l-2 border-emerald-400' 
+                                                : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                            }`}
+                                        >
+                                            HOD (Head of Department)
+                                        </div>
+                                        <div 
+                                            onClick={() => {
+                                                setDeptRole('senior_engineer');
+                                                setIsRoleDropdownOpen(false);
+                                            }}
+                                            className={`px-6 py-3.5 cursor-pointer transition-colors duration-200 font-light tracking-wide ${
+                                                deptRole === 'senior_engineer' 
+                                                ? 'bg-emerald-500/20 text-emerald-300 border-l-2 border-emerald-400' 
+                                                : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                            }`}
+                                        >
+                                            Senior Engineer
+                                        </div>
+                                        <div 
+                                            onClick={() => {
+                                                setDeptRole('junior_engineer');
+                                                setIsRoleDropdownOpen(false);
+                                            }}
+                                            className={`px-6 py-3.5 cursor-pointer transition-colors duration-200 font-light tracking-wide ${
+                                                deptRole === 'junior_engineer' 
+                                                ? 'bg-emerald-500/20 text-emerald-300 border-l-2 border-emerald-400' 
+                                                : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                            }`}
+                                        >
+                                            Junior Engineer
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
@@ -175,7 +270,8 @@ const LoginPage = () => {
                             type="email"
                             placeholder="Email Address"
                             value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            maxLength={50}
+                            onChange={(e) => setUsername(e.target.value.trim())}
                             className="w-full bg-transparent text-white px-6 py-4 rounded-full border border-white/40 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300 outline-none placeholder:text-white/60 font-light"
                         />
                     </div>
