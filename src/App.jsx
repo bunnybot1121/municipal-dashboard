@@ -16,6 +16,8 @@ import CitizenReports from './pages/CitizenReports';
 import Notifications from './pages/Notifications';
 import WorkerLogin from './pages/WorkerLogin';
 import WorkerDashboard from './pages/WorkerDashboard';
+import PhotoVerificationDashboard from './pages/PhotoVerificationDashboard';
+import PhotoCatalog from './pages/PhotoCatalog';
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
@@ -89,6 +91,8 @@ function App() {
                         <Route path="staff" element={<Staff />} />
                         <Route path="settings" element={<Settings />} />
                         <Route path="upload" element={<ScheduleUploadPage />} />
+                        <Route path="verification" element={<PhotoVerificationDashboard />} />
+                        <Route path="catalog" element={<PhotoCatalog />} />
                         <Route path="citizen-reports" element={<CitizenReports />} />
                         <Route path="notifications" element={<Notifications />} />
                         {/* Redirects */}

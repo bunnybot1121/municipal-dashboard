@@ -44,7 +44,7 @@ L.Icon.Default.mergeOptions({
 const IssueDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { department, isAdmin } = useAuth();
+    const { department, isAdmin, isDepartment } = useAuth();
     const [issue, setIssue] = useState(null);
     const [loading, setLoading] = useState(true);
     const [overridePriority, setOverridePriority] = useState('');
@@ -255,7 +255,7 @@ const IssueDetail = () => {
                     </div>
                 </div>
                 <div className="flex gap-3">
-                    {issue.status === 'open' && (
+                    {(issue.status === 'new' || issue.status === 'in_progress' || issue.status === 'open') && isDepartment && (
                         <>
                             <button
                                 onClick={async () => {
@@ -289,24 +289,28 @@ const IssueDetail = () => {
                             </button>
                         </>
                     )}
-                    <button
-                        onClick={() => setIsOverrideOpen(true)}
-                        className="px-4 py-2 liquid-btn liquid-btn-white rounded-lg font-bold"
-                    >
-                        Override Analysis
-                    </button>
-                    <button
-                        onClick={handleResolve}
-                        className="px-4 py-2 liquid-btn liquid-btn-emerald rounded-lg font-bold"
-                    >
-                        Mark Resolved
-                    </button>
-                    <button
-                        onClick={handleAssign}
-                        className="px-4 py-2 liquid-btn liquid-btn-blue rounded-lg font-bold"
-                    >
-                        Assign to Field Supervisor
-                    </button>
+                    {!isDepartment && (
+                        <>
+                            <button
+                                onClick={() => setIsOverrideOpen(true)}
+                                className="px-4 py-2 liquid-btn liquid-btn-white rounded-lg font-bold"
+                            >
+                                Override Analysis
+                            </button>
+                            <button
+                                onClick={handleResolve}
+                                className="px-4 py-2 liquid-btn liquid-btn-emerald rounded-lg font-bold"
+                            >
+                                Mark Resolved
+                            </button>
+                            <button
+                                onClick={handleAssign}
+                                className="px-4 py-2 liquid-btn liquid-btn-blue rounded-lg font-bold"
+                            >
+                                Assign to Field Supervisor
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -721,72 +725,74 @@ const IssueDetail = () => {
                     {activeTab === 'history' && ( // Rename/Expand this tab to include comments
                         <div className="space-y-6 animate-fade-in">
                             {/* Assignment Section */}
-                            <div id="assignment-section" className="bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg transition-all hover:bg-white/15">
-                                <h3 className="font-bold text-white mb-4 flex items-center gap-2 drop-shadow-md">
-                                    <Assignment className="text-blue-300 filter drop-shadow hover:-rotate-12 transition-transform duration-300" /> Task Assignment
-                                </h3>
-                                {users.length === 0 && (
-                                    <div className="mb-4 text-xs text-amber-200 bg-amber-500/10 border border-amber-400/30 rounded-xl px-4 py-3 shadow-inner backdrop-blur-md">
-                                        ⚠️ No staff/workers found. Add staff via the <strong>Staff Management</strong> page first.
-                                    </div>
-                                )}
-                                <div className="flex items-end gap-5">
-                                    <div className="flex-1">
-                                        <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-1.5 drop-shadow-sm">Assigned To</label>
-                                        <select
-                                            className="w-full p-2.5 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 shadow-inner group transition-all hover:bg-white/10"
-                                            value={issue.assignedTo || ''}
-                                            onChange={(e) => setIssue({ ...issue, assignedTo: e.target.value })}
+                            {!isDepartment && (
+                                <div id="assignment-section" className="bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg transition-all hover:bg-white/15">
+                                    <h3 className="font-bold text-white mb-4 flex items-center gap-2 drop-shadow-md">
+                                        <Assignment className="text-blue-300 filter drop-shadow hover:-rotate-12 transition-transform duration-300" /> Task Assignment
+                                    </h3>
+                                    {users.length === 0 && (
+                                        <div className="mb-4 text-xs text-amber-200 bg-amber-500/10 border border-amber-400/30 rounded-xl px-4 py-3 shadow-inner backdrop-blur-md">
+                                            ⚠️ No staff/workers found. Add staff via the <strong>Staff Management</strong> page first.
+                                        </div>
+                                    )}
+                                    <div className="flex items-end gap-5">
+                                        <div className="flex-1">
+                                            <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-1.5 drop-shadow-sm">Assigned To</label>
+                                            <select
+                                                className="w-full p-2.5 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 shadow-inner group transition-all hover:bg-white/10"
+                                                value={issue.assignedTo || ''}
+                                                onChange={(e) => setIssue({ ...issue, assignedTo: e.target.value })}
+                                            >
+                                                <option value="" className="text-gray-900">— Unassigned —</option>
+                                                {users
+                                                    .filter(u => {
+                                                        // Only show field workers/supervisors (role = 'worker' or 'archived' soft-deleted workers)
+                                                        const isFieldStaff = u.role === 'worker' || u.role === 'archived';
+                                                        if (!isFieldStaff) return false;
+                                                        // Must have a name to display
+                                                        if (!u.name && !u.username) return false;
+                                                        // Admins see all field staff
+                                                        if (isAdmin) return true;
+                                                        // Department users only see field staff in their department
+                                                        if (department) return u.sector && u.sector.toLowerCase() === department.toLowerCase();
+                                                        return true;
+                                                    })
+                                                    .map(u => (
+                                                    <option key={u.id} value={u.id} className="text-gray-900">
+                                                        {u.name || u.username} · {u.assignedZone || 'Zone N/A'}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {issue.assignedTo && (() => {
+                                                const assigned = users.find(u => u.id === issue.assignedTo);
+                                                return assigned ? (
+                                                    <p className="text-xs text-green-300 mt-2 font-medium drop-shadow-sm">✓ Currently assigned to: <strong>{assigned.name || assigned.username}</strong> ({assigned.sector})</p>
+                                                ) : null;
+                                            })()}
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-1.5 drop-shadow-sm">Status</label>
+                                            <select
+                                                className="w-full p-2.5 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 shadow-inner transition-all hover:bg-white/10"
+                                                value={issue.status || 'pending'}
+                                                onChange={(e) => setIssue({ ...issue, status: e.target.value })}
+                                            >
+                                                <option value="pending" className="text-gray-900">Pending</option>
+                                                <option value="accepted" className="text-gray-900">Accepted</option>
+                                                <option value="in_progress" className="text-gray-900">In Progress</option>
+                                                <option value="resolved" className="text-gray-900">Resolved</option>
+                                                <option value="rejected" className="text-gray-900">Rejected</option>
+                                            </select>
+                                        </div>
+                                        <button
+                                            onClick={handleAssignmentUpdate}
+                                            className="px-6 py-2.5 liquid-btn liquid-btn-blue rounded-xl font-bold whitespace-nowrap shadow-lg"
                                         >
-                                            <option value="" className="text-gray-900">— Unassigned —</option>
-                                            {users
-                                                .filter(u => {
-                                                    // Only show field workers/supervisors (role = 'worker' or 'archived' soft-deleted workers)
-                                                    const isFieldStaff = u.role === 'worker' || u.role === 'archived';
-                                                    if (!isFieldStaff) return false;
-                                                    // Must have a name to display
-                                                    if (!u.name && !u.username) return false;
-                                                    // Admins see all field staff
-                                                    if (isAdmin) return true;
-                                                    // Department users only see field staff in their department
-                                                    if (department) return u.sector && u.sector.toLowerCase() === department.toLowerCase();
-                                                    return true;
-                                                })
-                                                .map(u => (
-                                                <option key={u.id} value={u.id} className="text-gray-900">
-                                                    {u.name || u.username} · {u.assignedZone || 'Zone N/A'}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {issue.assignedTo && (() => {
-                                            const assigned = users.find(u => u.id === issue.assignedTo);
-                                            return assigned ? (
-                                                <p className="text-xs text-green-300 mt-2 font-medium drop-shadow-sm">✓ Currently assigned to: <strong>{assigned.name || assigned.username}</strong> ({assigned.sector})</p>
-                                            ) : null;
-                                        })()}
+                                            Save Assignment
+                                        </button>
                                     </div>
-                                    <div className="flex-1">
-                                        <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-1.5 drop-shadow-sm">Status</label>
-                                        <select
-                                            className="w-full p-2.5 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 shadow-inner transition-all hover:bg-white/10"
-                                            value={issue.status || 'pending'}
-                                            onChange={(e) => setIssue({ ...issue, status: e.target.value })}
-                                        >
-                                            <option value="pending" className="text-gray-900">Pending</option>
-                                            <option value="accepted" className="text-gray-900">Accepted</option>
-                                            <option value="in_progress" className="text-gray-900">In Progress</option>
-                                            <option value="resolved" className="text-gray-900">Resolved</option>
-                                            <option value="rejected" className="text-gray-900">Rejected</option>
-                                        </select>
-                                    </div>
-                                    <button
-                                        onClick={handleAssignmentUpdate}
-                                        className="px-6 py-2.5 liquid-btn liquid-btn-blue rounded-xl font-bold whitespace-nowrap shadow-lg"
-                                    >
-                                        Save Assignment
-                                    </button>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Comments Section */}
                             <div className="bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg transition-all hover:bg-white/15">

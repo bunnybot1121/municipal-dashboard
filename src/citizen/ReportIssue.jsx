@@ -11,6 +11,7 @@ export default function ReportIssue() {
         severity: '',
         description: ''
     });
+    const [trackingNumber, setTrackingNumber] = useState(null);
 
     const [validationState, setValidationState] = useState(null); // null | 'validating' | 'rejected' | 'accepted'
     const [validationResult, setValidationResult] = useState(null);
@@ -197,6 +198,7 @@ export default function ReportIssue() {
             const response = await api.createIssue(issueData);
 
             if (response && response.id) {
+                setTrackingNumber('CTZ-' + String(response.id).substring(0, 8).toUpperCase());
                 setStep('success');
             } else {
                 throw new Error("Failed to create issue");
@@ -415,12 +417,24 @@ export default function ReportIssue() {
                 <h2 className="text-2xl font-bold mb-2">Report Submitted!</h2>
                 <p className="text-gray-600 mb-6">
                     Your issue has been recorded and will be reviewed by the municipal team.
+                    <div className="mt-4 p-3 bg-gray-50 rounded border border-gray-200">
+                        <p className="text-xs text-gray-500 uppercase font-bold">Tracking Number</p>
+                        <button 
+                            onClick={() => navigator.clipboard.writeText(trackingNumber)}
+                            className="text-lg font-mono font-bold text-blue-600 hover:underline"
+                        >
+                            {trackingNumber} 📋
+                        </button>
+                    </div>
                 </p>
                 <button
                     onClick={() => {
                         setStep('camera');
                         setPhoto(null);
                         setFormData({ sector: '', severity: '', description: '' });
+                        setTrackingNumber(null);
+                        setValidationState(null);
+                        setValidationResult(null);
                         startCamera();
                     }}
                     className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold"

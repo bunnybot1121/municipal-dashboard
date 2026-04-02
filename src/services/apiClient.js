@@ -7,6 +7,7 @@ export const api = {
         let query = supabase.from('issues').select('*').order('created_at', { ascending: false });
 
         if (filters.sector && filters.sector !== 'all') query = query.eq('sector', filters.sector);
+        if (filters.assignedZone) query = query.eq('assigned_zone', filters.assignedZone);
         if (filters.status && filters.status !== 'all') query = query.eq('status', filters.status);
         if (filters.priority) query = query.eq('priority', filters.priority);
         if (filters.assignedTo) query = query.eq('assigned_to', filters.assignedTo);
@@ -402,13 +403,20 @@ export const api = {
         }));
     },
 
-    // Worker: fetch only tasks assigned to them
-    async getWorkerTasks(workerId) {
-        const { data, error } = await supabase
-            .from('tasks')
-            .select('*')
-            .eq('assigned_to', workerId)
-            .order('scheduled_start', { ascending: true });
+    // Worker: fetch tasks assigned to them OR in their sector & zone
+    async getWorkerTasks(workerId, sector = null, assignedZone = null) {
+        let query = supabase.from('tasks').select('*');
+        if (assignedZone && sector && sector !== 'other') {
+            query = query.or(`assigned_to.eq.${workerId},and(sector.eq.${sector},assigned_zone.eq.${assignedZone})`);
+        } else if (sector && sector !== 'other') {
+            query = query.or(`assigned_to.eq.${workerId},sector.eq.${sector}`);
+        } else if (assignedZone) {
+            query = query.or(`assigned_to.eq.${workerId},assigned_zone.eq.${assignedZone}`);
+        } else {
+            query = query.eq('assigned_to', workerId);
+        }
+        
+        const { data, error } = await query.order('scheduled_start', { ascending: true });
         if (error) throw error;
         return (data || []).map(t => ({
             ...t,

@@ -64,7 +64,7 @@ const StatCard = ({ label, value, color, Icon }) => (
 
 
 /* ─── Side Panel ──────────────────────────────────── */
-const DetailPanel = ({ issue, onClose, onStatusChange, onViewFull }) => {
+const DetailPanel = ({ issue, onClose, onStatusChange, onViewFull, isDepartment }) => {
     const [savingStatus, setSavingStatus] = useState(false);
     const [aiResult, setAiResult] = useState(null);
 
@@ -262,7 +262,7 @@ const DetailPanel = ({ issue, onClose, onStatusChange, onViewFull }) => {
                 {/* Footer CTA */}
                 <div className="p-5 border-t border-white/10 bg-black/20 space-y-3">
                     {/* Accept / Reject quick actions */}
-                    {(issue.status === 'new' || issue.status === 'in_progress') && (
+                    {(issue.status === 'new' || issue.status === 'in_progress') && isDepartment && (
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 disabled={savingStatus}
@@ -637,24 +637,30 @@ const CitizenReports = () => {
                                             {/* Actions */}
                                             <td className="px-5 py-4" onClick={e => e.stopPropagation()}>
                                                 {(issue.status === 'new' || issue.status === 'in_progress') ? (
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <button
-                                                            onClick={() => handleStatusChange(issue.id, 'accepted')}
-                                                            title="Accept Issue"
-                                                            className="p-1.5 rounded-xl bg-green-500/20 border border-green-500/30 text-green-300 hover:bg-green-500/30 transition-colors shadow-lg hover:-translate-y-0.5"
-                                                        >
-                                                            <CheckIcon sx={{ fontSize: 16 }} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                if (window.confirm('Reject this issue?')) handleStatusChange(issue.id, 'rejected');
-                                                            }}
-                                                            title="Reject Issue"
-                                                            className="p-1.5 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 transition-colors shadow-lg hover:-translate-y-0.5"
-                                                        >
-                                                            <RejectIcon sx={{ fontSize: 16 }} />
-                                                        </button>
-                                                    </div>
+                                                    isDepartment ? (
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <button
+                                                                onClick={() => handleStatusChange(issue.id, 'accepted')}
+                                                                title="Accept Issue"
+                                                                className="p-1.5 rounded-xl bg-green-500/20 border border-green-500/30 text-green-300 hover:bg-green-500/30 transition-colors shadow-lg hover:-translate-y-0.5"
+                                                            >
+                                                                <CheckIcon sx={{ fontSize: 16 }} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    if (window.confirm('Reject this issue?')) handleStatusChange(issue.id, 'rejected');
+                                                                }}
+                                                                title="Reject Issue"
+                                                                className="p-1.5 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 transition-colors shadow-lg hover:-translate-y-0.5"
+                                                            >
+                                                                <RejectIcon sx={{ fontSize: 16 }} />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <span className={`text-[10px] font-bold uppercase tracking-wide px-3 py-1.5 rounded-lg border inline-block text-center shadow-sm w-full ${sm.color}`}>
+                                                            {sm.label}
+                                                        </span>
+                                                    )
                                                 ) : (
                                                     <span className={`text-[10px] font-bold uppercase tracking-wide px-3 py-1.5 rounded-lg border inline-block text-center shadow-sm w-full ${sm.color}`}>
                                                         {sm.label}
@@ -680,6 +686,7 @@ const CitizenReports = () => {
             {selectedIssue && (
                 <DetailPanel
                     issue={selectedIssue}
+                    isDepartment={isDepartment}
                     onClose={() => setSelectedIssue(null)}
                     onStatusChange={handleStatusChange}
                     onViewFull={() => {

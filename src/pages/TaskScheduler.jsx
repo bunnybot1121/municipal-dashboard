@@ -75,13 +75,16 @@ const TaskScheduler = () => {
                     id: t.id,
                     assignee: t.assignedTo || 'Unassigned',
                     assigneeId: t.assignedToId,
-                    scheduledDate: t.scheduledStart ? new Date(t.scheduledStart).toISOString().split('T')[0] : '',
+                    scheduledDate: t.scheduledStart ? t.scheduledStart.split('T')[0] : (t.scheduledDate || ''),
                 }));
                 setTasks(normalizedTasks);
             }
 
             if (usersData && Array.isArray(usersData)) {
-                const staffOnly = usersData.filter(u => ['admin', 'staff', 'worker'].includes(u.role));
+                let staffOnly = usersData.filter(u => ['admin', 'staff', 'worker'].includes(u.role));
+                if (isDeptScoped && department) {
+                    staffOnly = staffOnly.filter(u => u.sector && u.sector.toLowerCase() === department.toLowerCase());
+                }
                 setStaffList(staffOnly);
             }
         } catch (error) {

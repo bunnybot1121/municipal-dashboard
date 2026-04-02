@@ -20,12 +20,7 @@ const Layout = () => {
             {/* Content Container - z-index ensures it sits above the background */}
             <div className="flex w-full h-screen relative z-10">
                 <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-                <main
-                    className="flex-1 p-6 md:p-8 overflow-y-auto transition-all duration-300"
-                    style={{
-                        marginLeft: isCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)'
-                    }}
-                >
+                <main className="flex-1 min-w-0 p-6 md:p-8 overflow-y-auto overflow-x-hidden transition-all duration-300">
                     <Outlet />
                 </main>
             </div>

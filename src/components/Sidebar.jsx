@@ -13,7 +13,9 @@ import {
     AccountCircle,
     Settings as SettingsIcon,
     ReportProblem,
-    NotificationsOutlined
+    NotificationsOutlined,
+    Shield,
+    PhotoLibrary
 } from '@mui/icons-material';
 
 const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
@@ -23,6 +25,8 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     const allNavItems = [
         { path: '/', icon: DashboardIcon, label: 'Dashboard' },
         { path: '/issues', icon: Assignment, label: 'Scheduled Tasks' },
+        { path: '/verification', icon: Shield, label: 'Work Verification' },
+        { path: '/catalog', icon: PhotoLibrary, label: 'Photo Archive' },
         { path: '/citizen-reports', icon: ReportProblem, label: 'Citizen Reports' },
         { path: '/notifications', icon: NotificationsOutlined, label: 'Notifications' },
         { path: '/scheduler', icon: CalendarMonth, label: 'Maintenance' },
@@ -31,16 +35,30 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
         { path: '/settings', icon: SettingsIcon, label: 'Settings' }
     ];
 
+    const adminNavItems = [
+        { path: '/', icon: DashboardIcon, label: 'Overview' },
+        { path: '/analytics', icon: BarChart, label: 'Analytics' },
+        { path: '/staff', icon: People, label: 'Staff Management' },
+        { path: '/settings', icon: SettingsIcon, label: 'Settings' }
+    ];
+
     const hodNavItems = [
         { path: '/', icon: DashboardIcon, label: 'Dashboard' },
         { path: '/issues', icon: Assignment, label: 'Scheduled Tasks' },
+        { path: '/verification', icon: Shield, label: 'Work Verification' },
+        { path: '/catalog', icon: PhotoLibrary, label: 'Photo Archive' },
         { path: '/citizen-reports', icon: ReportProblem, label: 'Citizen Reports' },
         { path: '/scheduler', icon: CalendarMonth, label: 'Maintenance' },
         { path: '/analytics', icon: BarChart, label: 'Analytics' },
         { path: '/settings', icon: SettingsIcon, label: 'Settings' }
     ];
 
-    const navItems = isDepartment ? hodNavItems : allNavItems;
+    const engineerNavItems = [...allNavItems];
+
+    let navItems = allNavItems;
+    if (isAdmin) navItems = adminNavItems;
+    else if (isDepartment) navItems = hodNavItems;
+    else if (isSeniorEngineer || isJuniorEngineer) navItems = engineerNavItems;
 
     const isActive = (path) => {
         if (path === '/' && location.pathname === '/') return true;

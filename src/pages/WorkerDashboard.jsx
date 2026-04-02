@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { api } from '../services/apiClient';
 import { subscribeToNotifications, fetchNotifications, NOTIFICATION_TYPES } from '../services/notificationService';
-import { LogOut, Bell, CheckCircle, Clock, AlertTriangle, RefreshCw, Loader, ChevronDown } from 'lucide-react';
+import { LogOut, Bell, CheckCircle, Clock, AlertTriangle, RefreshCw, Loader, ChevronDown, Camera, X } from 'lucide-react';
 
 import { useAuth } from '../contexts/AuthContext';
 const STATUS_CONFIG = {
@@ -49,6 +49,20 @@ export default function WorkerDashboard() {
     const [toastNote, setToastNote] = useState(null);
     const [unread, setUnread] = useState(0);
 
+    // Photo Upload Modal State
+    const [uploadModalTask, setUploadModalTask] = useState(null);
+    const [beforePhoto, setBeforePhoto] = useState(null);
+    const [afterPhoto, setAfterPhoto] = useState(null);
+    const [beforePhotoFile, setBeforePhotoFile] = useState(null);
+    const [afterPhotoFile, setAfterPhotoFile] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const beforeInputRef = React.useRef(null);
+    const afterInputRef = React.useRef(null);
+
+    // Reports State (For Supervisors)
+    const [completedReports, setCompletedReports] = useState([]);
+    const [loadingReports, setLoadingReports] = useState(false);
+
     /* eslint-disable react-hooks/exhaustive-deps */
     useEffect(() => {
         if (user) init();
@@ -62,8 +76,8 @@ export default function WorkerDashboard() {
             setProfile(user);
 
             const [workerTasks, issues, notes, assignedIssues] = await Promise.all([
-                api.getWorkerTasks(user.id),
-                api.getIssues({ sector: user.sector || 'other' }),
+                api.getWorkerTasks(user.id, user.sector, user.assigned_zone),
+                api.getIssues({ sector: user.sector || 'other', assignedZone: user.assigned_zone }),
                 fetchNotifications(20),
                 api.getIssues({ assignedTo: user.id })
             ]);
@@ -87,10 +101,70 @@ export default function WorkerDashboard() {
             setSectorIssues(issues);
             setNotifications(notes);
             setUnread(notes.length);
+
+            // Fetch completed reports for the sector
+            fetchSectorReports(user.sector);
+
         } catch (e) {
             console.error("Dashboard Init Error:", e);
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function fetchSectorReports(sector) {
+        if (!sector) return;
+        setLoadingReports(true);
+        try {
+            // Fetch resolved issues
+            let queryIssues = supabase.from('issues')
+                .select('*')
+                .in('status', ['done', 'resolved', 'completed', 'closed']);
+
+            // Fetch completed tasks
+            let queryTasks = supabase.from('tasks')
+                .select('*')
+                .in('status', ['done', 'completed', 'closed']);
+
+            const [resIssues, resTasks] = await Promise.all([queryIssues, queryTasks]);
+            
+            let allItems = [];
+            
+            if (resIssues.data) {
+                allItems = [...allItems, ...resIssues.data.map(i => ({
+                    ...i,
+                    isTask: false,
+                    title: i.issue_type || 'Citizen Issue',
+                    refId: i.id
+                }))];
+            }
+            
+            if (resTasks.data) {
+                allItems = [...allItems, ...resTasks.data.map(t => ({
+                    ...t,
+                    isTask: true,
+                    title: t.title || 'Assigned Task',
+                    refId: t.id
+                }))];
+            }
+
+            // Filter for sector
+            const sect = sector.toLowerCase();
+            allItems = allItems.filter(item => {
+                const sectorMatch = (item.sector || '').toLowerCase() === sect;
+                const typeMatch = (item.title || '').toLowerCase().startsWith(sect);
+                return sectorMatch || typeMatch;
+            });
+
+            // Must have photos to be a valid visual report
+            allItems = allItems.filter(item => item.before_photo_url || item.after_photo_url);
+            allItems.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+            
+            setCompletedReports(allItems);
+        } catch (e) {
+            console.error("Failed fetching reports:", e);
+        } finally {
+            setLoadingReports(false);
         }
     }
 
@@ -113,20 +187,107 @@ export default function WorkerDashboard() {
     async function advanceStatus(task) {
         const cfg = STATUS_CONFIG[task.status] || STATUS_CONFIG.pending;
         if (!cfg.next) return;
+
+        // If next is 'done', we must intercept and ask for photos
+        if (cfg.next === 'done' || cfg.next === 'completed') {
+            setUploadModalTask(task);
+            return;
+        }
+
+        performStatusUpdate(task, cfg.next, {});
+    }
+
+    async function performStatusUpdate(task, nextStatus, extraFields = {}) {
         setUpdatingId(task.id);
         try {
             if (task.isIssueType) {
-                let nextDbStatus = cfg.next;
+                let nextDbStatus = nextStatus;
                 if (nextDbStatus === 'done') nextDbStatus = 'resolved';
-                await api.updateIssue(task.id, { status: nextDbStatus });
+                await api.updateIssue(task.id, { status: nextDbStatus, ...extraFields });
             } else {
-                await api.updateTaskStatus(task.id, cfg.next);
+                await api.updateTask(task.id, { status: nextStatus, ...extraFields });
             }
-            setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: cfg.next } : t));
+            setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: nextStatus } : t));
+            
+            // Refresh reports just in case we completed something
+            if (nextStatus === 'done' || nextStatus === 'completed' || nextStatus === 'resolved') {
+                fetchSectorReports(profile?.sector);
+            }
         } catch (e) {
             alert('Failed to update: ' + e.message);
         } finally {
             setUpdatingId(null);
+        }
+    }
+
+    async function handlePhotoCapture(e, type) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (type === 'before') setBeforePhotoFile(file);
+        else setAfterPhotoFile(file);
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            if (type === 'before') setBeforePhoto(reader.result);
+            else setAfterPhoto(reader.result);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function submitTaskCompletion() {
+        if (!beforePhoto || !afterPhoto) {
+            alert("Both before and after photos are required to complete this task.");
+            return;
+        }
+
+        const task = uploadModalTask;
+        setIsUploading(true);
+        
+        try {
+            let beforeUrl = beforePhoto;
+            let afterUrl = afterPhoto;
+
+            const uploadToBucket = async (file, label) => {
+                const ext = file.name.split('.').pop() || 'jpg';
+                const fileName = `${task.id}_${label}_${Date.now()}.${ext}`;
+                const { data, error } = await supabase.storage.from('photos').upload(fileName, file);
+                
+                if (error) {
+                    console.warn(`Bucket upload failed, falling back to base64:`, error);
+                    return null;
+                }
+                const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(fileName);
+                return publicUrl;
+            };
+
+            if (beforePhotoFile) {
+                const url = await uploadToBucket(beforePhotoFile, 'before');
+                if (url) beforeUrl = url;
+            }
+            if (afterPhotoFile) {
+                const url = await uploadToBucket(afterPhotoFile, 'after');
+                if (url) afterUrl = url;
+            }
+
+            const cfg = STATUS_CONFIG[task.status] || STATUS_CONFIG.pending;
+            
+            await performStatusUpdate(task, cfg.next, {
+                before_photo_url: beforeUrl,
+                after_photo_url: afterUrl
+            });
+
+            // Clear modal state
+            setUploadModalTask(null);
+            setBeforePhoto(null);
+            setAfterPhoto(null);
+            setBeforePhotoFile(null);
+            setAfterPhotoFile(null);
+        } catch (e) {
+            console.error("Task completion failed: ", e);
+            alert("Failed to submit photos. Check connection.");
+        } finally {
+            setIsUploading(false);
         }
     }
 
@@ -239,7 +400,7 @@ export default function WorkerDashboard() {
 
                 {/* Filter tabs */}
                 <div className="flex gap-2 mb-6 overflow-x-auto pb-1 hide-scrollbar">
-                    {[['all', 'All'], ['active', 'My Tasks'], ['problems', 'Sector Problems'], ['done', 'Completed']].map(([val, lbl]) => (
+                    {[['all', 'All'], ['active', 'My Tasks'], ['problems', 'Sector Problems'], ['reports', 'Completed Reports']].map(([val, lbl]) => (
                         <button key={val} onClick={() => setFilter(val)}
                             className={`px-4 py-1.5 rounded-full border text-sm font-semibold cursor-pointer transition-all whitespace-nowrap shadow-sm ${
                                 filter === val 
@@ -278,6 +439,43 @@ export default function WorkerDashboard() {
                                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-200 border border-red-500/30 font-bold uppercase backdrop-blur-sm shadow-sm">{issue.priority || 'Medium'}</span>
                                             <span className="text-[10px] text-white/60 font-medium flex items-center gap-1 drop-shadow-sm"><span className="text-[12px]">📍</span> {issue.address || 'Location provided'}</span>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : filter === 'reports' ? (
+                    <div className="flex flex-col gap-4 animate-fade-in">
+                        <div className="bg-emerald-500/10 border border-emerald-400/30 p-3 rounded-xl mb-2 backdrop-blur-sm shadow-sm flex items-center justify-between">
+                            <p className="m-0 text-sm text-emerald-200 font-semibold drop-shadow-sm flex items-center gap-2">
+                                <span>📸</span> Completed Reports for {profile?.sector || 'your sector'}
+                            </p>
+                        </div>
+                        {loadingReports ? (
+                            <div className="p-10 text-center text-white flex justify-center"><Loader className="animate-spin text-emerald-400" /></div>
+                        ) : completedReports.length === 0 ? (
+                            <div className="p-10 text-center text-white/50 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm shadow-sm">No completed reports with photos found.</div>
+                        ) : completedReports.map(item => (
+                            <div key={item.refId} className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 border border-white/20 shadow-lg hover:bg-white/20 transition-all group overflow-hidden">
+                                <div className="flex justify-between items-start mb-3 border-b border-white/10 pb-2">
+                                    <div>
+                                        <p className="font-bold text-sm m-0 text-white drop-shadow-sm">{item.title}</p>
+                                        <p className="text-xs text-emerald-300 font-medium">Status: {item.status.toUpperCase()}</p>
+                                    </div>
+                                    <span className="text-[10px] text-white/50 font-medium">{timeAgo(item.updated_at || item.created_at)}</span>
+                                </div>
+                                <div className="flex gap-2 h-28">
+                                    <div className="w-1/2 relative bg-black/40 rounded-xl overflow-hidden border border-white/10">
+                                        <div className="absolute top-1 left-1 bg-red-500/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded backdrop-blur-md">BEFORE</div>
+                                        {item.before_photo_url ? (
+                                            <img src={item.before_photo_url} className="w-full h-full object-cover" alt="Before" />
+                                        ) : <div className="w-full h-full flex justify-center items-center text-white/30 text-xs">No Photo</div>}
+                                    </div>
+                                    <div className="w-1/2 relative bg-black/40 rounded-xl overflow-hidden border border-white/10">
+                                        <div className="absolute top-1 right-1 bg-emerald-500/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded backdrop-blur-md">AFTER</div>
+                                        {item.after_photo_url ? (
+                                            <img src={item.after_photo_url} className="w-full h-full object-cover" alt="After" />
+                                        ) : <div className="w-full h-full flex justify-center items-center text-white/30 text-xs">No Photo</div>}
                                     </div>
                                 </div>
                             </div>
@@ -360,6 +558,109 @@ export default function WorkerDashboard() {
                         <p className="text-xs text-white/70 m-0">{toastNote.message}</p>
                     </div>
                     <button onClick={() => setToastNote(null)} className="bg-transparent border-0 text-white/40 hover:text-white/80 text-xl cursor-pointer transition-colors outline-none focus:outline-none focus:ring-2 focus:ring-white/20 rounded-full w-6 h-6 flex items-center justify-center p-0 leading-none">×</button>
+                </div>
+            )}
+
+            {/* Photo Upload Modal */}
+            {uploadModalTask && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-[2rem] p-6 max-w-sm w-full shadow-2xl">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 className="font-extrabold text-xl m-0 text-gray-900">Task Completion</h3>
+                                <p className="text-xs text-gray-500 font-bold uppercase mt-1">Upload Required Photos</p>
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    setUploadModalTask(null);
+                                    setBeforePhoto(null);
+                                    setAfterPhoto(null);
+                                    setBeforePhotoFile(null);
+                                    setAfterPhotoFile(null);
+                                }} 
+                                disabled={isUploading}
+                                className="p-2 border border-gray-200 rounded-full text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Before Photo */}
+                            <div>
+                                <input type="file" accept="image/*" capture="environment" ref={beforeInputRef} className="hidden" onChange={(e) => handlePhotoCapture(e, 'before')} />
+                                <div 
+                                    onClick={() => beforeInputRef.current?.click()}
+                                    className={`h-32 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative ${beforePhoto ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}
+                                >
+                                    {beforePhoto ? (
+                                        <>
+                                            <img src={beforePhoto} alt="Before" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white opacity-0 hover:opacity-100 transition-opacity">
+                                                <Camera size={24} />
+                                                <span className="text-xs font-bold mt-1">Retake Before</span>
+                                            </div>
+                                            <div className="absolute top-2 left-2 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">BEFORE</div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Camera size={28} className="text-gray-400 mb-2" />
+                                            <span className="text-sm font-bold text-gray-600">Take "Before" Photo</span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* After Photo */}
+                            <div>
+                                <input type="file" accept="image/*" capture="environment" ref={afterInputRef} className="hidden" onChange={(e) => handlePhotoCapture(e, 'after')} />
+                                <div 
+                                    onClick={() => afterInputRef.current?.click()}
+                                    className={`h-32 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all relative ${afterPhoto ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}
+                                >
+                                    {afterPhoto ? (
+                                        <>
+                                            <img src={afterPhoto} alt="After" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white opacity-0 hover:opacity-100 transition-opacity">
+                                                <Camera size={24} />
+                                                <span className="text-xs font-bold mt-1">Retake After</span>
+                                            </div>
+                                            <div className="absolute top-2 right-2 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">AFTER</div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Camera size={28} className="text-gray-400 mb-2" />
+                                            <span className="text-sm font-bold text-gray-600">Take "After" Photo</span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 mt-6">
+                            <button
+                                onClick={() => {
+                                    setUploadModalTask(null);
+                                    setBeforePhoto(null);
+                                    setAfterPhoto(null);
+                                    setBeforePhotoFile(null);
+                                    setAfterPhotoFile(null);
+                                }}
+                                disabled={isUploading}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={submitTaskCompletion}
+                                disabled={!beforePhoto || !afterPhoto || isUploading || updatingId}
+                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                                {(isUploading || updatingId) ? <Loader size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                                {(isUploading || updatingId) ? 'Uploading...' : 'Submit Verification'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
             </div>

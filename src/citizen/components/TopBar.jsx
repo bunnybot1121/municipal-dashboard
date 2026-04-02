@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bell, MapPin, AlertTriangle } from 'lucide-react';
 
-const TopBar = ({ address }) => {
+const TopBar = ({ address, onTrackClick }) => {
     return (
         <div className="fixed top-0 left-0 right-0 z-overlay flex flex-col gap-2 p-4">
             {/* Glass Header */}
@@ -18,10 +18,18 @@ const TopBar = ({ address }) => {
                     </div>
                 </div>
 
-                <button className="relative p-2 bg-white rounded-full shadow-sm border border-gray-100">
-                    <Bell size={20} className="text-gray-600" />
-                    <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
-                </button>
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={onTrackClick}
+                        className="p-2 bg-blue-50 text-blue-600 font-bold text-xs px-3 rounded-full shadow-sm border border-blue-100 flex items-center gap-1 hover:bg-blue-100 transition-colors"
+                    >
+                        TRACK
+                    </button>
+                    <button className="relative p-2 bg-white rounded-full shadow-sm border border-gray-100 mt-0">
+                        <Bell size={20} className="text-gray-600" />
+                        <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+                    </button>
+                </div>
             </div>
 
             {/* Alert Banner */}

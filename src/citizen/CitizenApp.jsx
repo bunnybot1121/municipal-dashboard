@@ -8,6 +8,7 @@ import ActionFab from './components/ActionFab';
 import BottomSheet from './components/BottomSheet';
 import ReportingModal from './components/ReportingModal';
 import CitizenNotifications from './components/CitizenNotifications';
+import TrackIssueModal from './components/TrackIssueModal';
 
 const CitizenApp = () => {
     // State
@@ -15,6 +16,7 @@ const CitizenApp = () => {
     const [loading, setLoading] = useState(true);
     const [fullAddress, setFullAddress] = useState("Locating...");
     const [isReporting, setIsReporting] = useState(false);
+    const [isTracking, setIsTracking] = useState(false);
 
     // 1. Initial GPS Fix
     useEffect(() => {
@@ -51,13 +53,19 @@ const CitizenApp = () => {
             </div>
 
             {/* 2. Top UI Layer (Glass Header) */}
-            <TopBar address={fullAddress} />
+            <TopBar address={fullAddress} onTrackClick={() => setIsTracking(true)} />
 
             {/* 3. Action Layer (Center FAB) */}
             <ActionFab onClick={() => setIsReporting(true)} />
 
             {/* 4. Bottom Layer (Status Sheet) */}
             <BottomSheet />
+
+            {/* tracking modal */}
+            <TrackIssueModal 
+                isOpen={isTracking} 
+                onClose={() => setIsTracking(false)} 
+            />
 
             {/* 5. Reporting Modal (Overlay) */}
             <ReportingModal
