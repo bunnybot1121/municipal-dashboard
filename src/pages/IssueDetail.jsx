@@ -495,13 +495,17 @@ const IssueDetail = () => {
                                         <div className="text-xs font-bold text-white/50 uppercase tracking-widest mb-1 drop-shadow-sm">Category</div>
                                         <div className="font-medium text-white drop-shadow-md">{issue.type || 'Standard'}</div>
                                     </div>
-                                    <div className="p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 shadow-inner group transition-all duration-300 hover:bg-white/10 active:scale-[0.99] hover:shadow-lg">
-                                        <div className="text-xs font-bold text-white/50 uppercase tracking-widest mb-1 drop-shadow-sm">Reported By</div>
-                                        <div className="font-medium text-white drop-shadow-md">{issue.citizenName || 'Anonymous'}</div>
-                                    </div>
+                                    
+                                    {(!issue.isTask && issue.type !== 'Scheduled Maintenance') && (
+                                        <div className="p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 shadow-inner group transition-all duration-300 hover:bg-white/10 active:scale-[0.99] hover:shadow-lg">
+                                            <div className="text-xs font-bold text-white/50 uppercase tracking-widest mb-1 drop-shadow-sm">Reported By</div>
+                                            <div className="font-medium text-white drop-shadow-md">{issue.citizenName || issue.reportedBy || 'Anonymous'}</div>
+                                        </div>
+                                    )}
+
                                     <div className="p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 shadow-inner group transition-all duration-300 hover:bg-white/10 active:scale-[0.99] hover:shadow-lg lg:col-span-3">
                                         <div className="text-xs font-bold text-white/50 uppercase tracking-widest mb-1 drop-shadow-sm flex items-center gap-1.5"><MapIcon sx={{fontSize: 14}} className="text-blue-300"/> Address</div>
-                                        <div className="font-medium text-white drop-shadow-md truncate" title={issue.address}>{issue.address || '—'}</div>
+                                        <div className="font-medium text-white drop-shadow-md truncate" title={issue.address || (issue.location && issue.location.address)}>{issue.address || (issue.location && issue.location.address) || '—'}</div>
                                     </div>
                                 </div>
                             </div>

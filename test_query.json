@@ -1,0 +1,78 @@
+{
+  "error": null,
+  "data": [
+    {
+      "id": "1fc0a13d-f2e4-47e8-9632-ada0cab5d629",
+      "sector": "roads",
+      "issue_type": "parks"
+    },
+    {
+      "id": "0bb83522-3656-495a-abf1-3dd7920d6158",
+      "sector": "roads",
+      "issue_type": "pothole"
+    },
+    {
+      "id": "1d8be768-7701-4846-a090-61eb1e9e11e4",
+      "sector": "roads",
+      "issue_type": "roads"
+    },
+    {
+      "id": "011f6732-3d76-46fe-8514-610b088e37b5",
+      "sector": "roads",
+      "issue_type": "water"
+    },
+    {
+      "id": "219f8d79-0ae4-4686-b6a6-b3e2341ac07e",
+      "sector": "roads",
+      "issue_type": "roads"
+    },
+    {
+      "id": "1ce4a900-e9a7-4d58-84c6-a22e77963ec9",
+      "sector": "roads",
+      "issue_type": "roads"
+    },
+    {
+      "id": "14b35515-0b06-432e-8919-56b0fc550496",
+      "sector": "roads",
+      "issue_type": "water"
+    },
+    {
+      "id": "1f634a85-1a42-4a63-9065-ad30e5dd4949",
+      "sector": "roads",
+      "issue_type": "water"
+    },
+    {
+      "id": "1e826135-10e2-46ce-8214-4b7b86ac413e",
+      "sector": "roads",
+      "issue_type": "water"
+    },
+    {
+      "id": "655a944c-073d-4cc0-9c73-6bdfb85ef954",
+      "sector": "waste",
+      "issue_type": "roads"
+    },
+    {
+      "id": "432675f7-416f-4c2f-ba07-200db6a388e8",
+      "sector": "waste",
+      "issue_type": "roads"
+    },
+    {
+      "id": "3003f695-b214-4629-915c-c5bab93c4cd7",
+      "sector": "water",
+      "issue_type": "roads"
+    },
+    {
+      "id": "4981d120-a19f-4058-8656-1821126478cb",
+      "sector": "general",
+      "issue_type": "roads"
+    },
+    {
+      "id": "076701b4-de61-4e21-a828-bb0e5c5b3c5f",
+      "sector": "roads",
+      "issue_type": "roads"
+    }
+  ],
+  "count": null,
+  "status": 200,
+  "statusText": "OK"
+}

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "1fc0a13d-f2e4-47e8-9632-ada0cab5d629",
+    "sector": "roads",
+    "issue_type": "parks"
+  },
+  {
+    "id": "0bb83522-3656-495a-abf1-3dd7920d6158",
+    "sector": "roads",
+    "issue_type": "pothole"
+  },
+  {
+    "id": "80c958ab-5fa1-4120-b7ff-9ce2ce87c4c2",
+    "sector": "water",
+    "issue_type": "streetlight"
+  },
+  {
+    "id": "1d8be768-7701-4846-a090-61eb1e9e11e4",
+    "sector": "roads",
+    "issue_type": "roads"
+  },
+  {
+    "id": "d74d9b5f-edaa-450f-bfce-f919b445991d",
+    "sector": "waste",
+    "issue_type": "water"
+  },
+  {
+    "id": "effce141-e668-4e75-acba-5758b6393017",
+    "sector": "waste",
+    "issue_type": "water"
+  },
+  {
+    "id": "a7753e46-fac1-4a88-bb9c-671d72f76b6a",
+    "sector": "water",
+    "issue_type": "parks"
+  },
+  {
+    "id": "011f6732-3d76-46fe-8514-610b088e37b5",
+    "sector": "roads",
+    "issue_type": "water"
+  },
+  {
+    "id": "b72a4d82-9f17-4686-8f85-b720bf7c8c12",
+    "sector": "water",
+    "issue_type": "parks"
+  },
+  {
+    "id": "c074ef53-caca-46e4-b0b6-1b70cdb0ae91",
+    "sector": "water",
+    "issue_type": "lights"
+  }
+]

@@ -359,18 +359,32 @@ export default function Dashboard() {
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-8">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div>
-                                <h1 className="text-3xl font-bold flex items-center gap-2 drop-shadow-md">
-                                    Dashboard
-                                    <span className="flex items-center gap-1.5 text-xs bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-full border border-emerald-500/30">
-                                        <span className="relative flex h-2 w-2">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            <div className="flex w-full md:w-auto items-center justify-between">
+                                <div>
+                                    <h1 className="text-3xl font-bold flex items-center gap-2 drop-shadow-md">
+                                        Dashboard
+                                        <span className="flex items-center gap-1.5 text-xs bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-full border border-emerald-500/30">
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                            </span>
+                                            v2.3 Live
                                         </span>
-                                        v2.3 Live
-                                    </span>
-                                </h1>
-                                <p className="text-white/70 mt-1 drop-shadow-sm">{city || 'Khargar'}</p>
+                                    </h1>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <p className="text-white/70 drop-shadow-sm">{city || 'Khargar'}</p>
+                                        <span className="text-white/30">•</span>
+                                        {(isDepartment || isSeniorEngineer || isJuniorEngineer) && department ? (
+                                            <span className="px-2 py-0.5 bg-blue-500/20 border border-blue-400/30 text-blue-200 text-[11px] font-bold rounded uppercase tracking-wider">
+                                                {department} Department
+                                            </span>
+                                        ) : (
+                                            <span className="px-2 py-0.5 bg-purple-500/20 border border-purple-400/30 text-purple-200 text-[11px] font-bold rounded uppercase tracking-wider">
+                                                Global Admin
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="flex items-center gap-3">

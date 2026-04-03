@@ -328,26 +328,24 @@ const CitizenReports = () => {
         setLoading(true);
         setError(null);
         try {
-            const { data, error: err } = await supabase
+            let query = supabase
                 .from('issues')
                 .select('*')
                 .order('created_at', { ascending: false });
 
+            const isDeptScoped = isDepartment || isSeniorEngineer || isJuniorEngineer;
+            if (isDeptScoped && department) {
+                const dept = department.toLowerCase();
+                // Filter natively in Supabase using .or()
+                // Matches exact sector or issue_type that starts with the department name
+                query = query.or(`sector.eq.${dept},issue_type.ilike.${dept}%`);
+            }
+
+            const { data, error: err } = await query;
+
             if (err) throw err;
 
-            // Filter in Javascript — match on sector field OR issue_type string prefix
-            // This handles both cases: data stored as sector:'roads' and issue_type:'Roads - Severe'
-            const isDeptScoped = isDepartment || isSeniorEngineer || isJuniorEngineer;
-            const filteredData = (isDeptScoped && department)
-                ? (data || []).filter(i => {
-                    const dept = department.toLowerCase();
-                    const sectorMatch = (i.sector || '').toLowerCase() === dept;
-                    const typeMatch = (i.issue_type || '').toLowerCase().startsWith(dept);
-                    return sectorMatch || typeMatch;
-                  })
-                : (data || []);
-
-            setIssues(filteredData);
+            setIssues(data || []);
         } catch (e) {
             console.error('Failed to fetch issues:', e);
             setError(e.message);
@@ -435,11 +433,26 @@ const CitizenReports = () => {
             {/* ── Page Header ── */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-extrabold text-white drop-shadow-md flex items-center gap-3">
-                        <Assignment sx={{ fontSize: 28 }} className="text-blue-400" />
-                        Citizen Reports
-                    </h1>
-                    <p className="text-sm text-white/70 mt-1 font-medium">All submitted issues from citizens — live from Supabase</p>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-extrabold text-white drop-shadow-md flex items-center gap-3">
+                            <Assignment sx={{ fontSize: 28 }} className="text-blue-400" />
+                            Citizen Reports
+                        </h1>
+                        {(isDepartment || isSeniorEngineer || isJuniorEngineer) && department ? (
+                            <span className="px-3 py-1 bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-xs font-bold rounded-lg uppercase tracking-wider backdrop-blur-sm shadow-sm inline-flex items-center">
+                                {department} Department
+                            </span>
+                        ) : (
+                            <span className="px-3 py-1 bg-purple-500/20 border border-purple-400/30 text-purple-200 text-xs font-bold rounded-lg uppercase tracking-wider backdrop-blur-sm shadow-sm inline-flex items-center">
+                                All Departments (Admin)
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-sm text-white/70 mt-1 font-medium">
+                        {(isDepartment || isSeniorEngineer || isJuniorEngineer) && department 
+                            ? `Showing issues strictly filtered for the ${department} department.` 
+                            : 'All submitted issues from citizens — live from Supabase'}
+                    </p>
                 </div>
                 <button
                     onClick={fetchIssues}
@@ -507,7 +520,7 @@ const CitizenReports = () => {
                             <tr>
                                 <th className="px-5 py-5">Issue ID</th>
                                 <th className="px-5 py-5">Preview</th>
-                                <th className="px-5 py-5">Type & Description</th>
+                                <th className="px-5 py-5">Sector & Type</th>
                                 <th className="px-5 py-5">Location</th>
                                 <th className="px-5 py-5">Priority</th>
                                 <th className="px-5 py-5">AI Verified</th>
@@ -560,12 +573,17 @@ const CitizenReports = () => {
                                                 </div>
                                             </td>
 
-                                            {/* Type & Description */}
+                                            {/* Sector & Type & Description */}
                                             <td className="px-5 py-4 max-w-[280px]">
-                                                <span className="text-[10px] font-bold text-blue-200 bg-blue-500/20 border border-blue-400/30 px-2 py-1 rounded uppercase tracking-wide shadow-sm">
-                                                    {issue.issue_type || 'General'}
-                                                </span>
-                                                <p className="text-sm text-white font-medium truncate mt-2 group-hover:text-blue-100 transition-colors drop-shadow-sm">
+                                                <div className="flex gap-2 mb-2 items-center">
+                                                    <span className="text-[10px] font-bold text-emerald-200 bg-emerald-500/20 border border-emerald-400/30 px-2 py-1 rounded uppercase tracking-wide shadow-sm" title="Sector (Department)">
+                                                        {issue.sector || 'General'}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-blue-200 bg-blue-500/20 border border-blue-400/30 px-2 py-1 rounded uppercase tracking-wide shadow-sm" title="Issue Type / Title">
+                                                        {issue.issue_type || 'General'}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm text-white font-medium truncate group-hover:text-blue-100 transition-colors drop-shadow-sm" title={issue.description}>
                                                     {issue.description || '—'}
                                                 </p>
                                             </td>
