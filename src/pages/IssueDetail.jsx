@@ -16,7 +16,8 @@ import {
     MoreHoriz,
     Close,
     Add,
-    Image as ImageIcon
+    Image as ImageIcon,
+    AutoFixHigh
 } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -230,6 +231,64 @@ const IssueDetail = () => {
         setTimeout(() => {
             document.querySelector('#assignment-section')?.scrollIntoView({ behavior: 'smooth' });
         }, 100);
+    };
+
+    const handleAutoAssign = async () => {
+        // 1. Identify Sector
+        const targetSector = (issue.sector || 'general').toLowerCase();
+        
+        // 2. Try to infer Zone from issue address/description, or fallback to any zone
+        const textToAnalyze = `${issue.address || ''} ${issue.location?.address || ''} ${issue.description || ''}`.toLowerCase();
+        
+        let inferredZone = null;
+        if(textToAnalyze.includes('north')) inferredZone = 'north';
+        else if(textToAnalyze.includes('south')) inferredZone = 'south';
+        else if(textToAnalyze.includes('east')) inferredZone = 'east';
+        else if(textToAnalyze.includes('west')) inferredZone = 'west';
+        else if(textToAnalyze.includes('central')) inferredZone = 'central';
+
+        // 3. Filter candidate staff
+        let candidates = users.filter(u => {
+            const isFieldStaff = u.role === 'worker' || u.role === 'field supervisor' || u.role === 'archived';
+            if (!isFieldStaff) return false;
+            if (!u.name && !u.username) return false;
+            
+            const uSector = (u.sector || 'general').toLowerCase();
+            // allow mapping 'general' sector to fallbacks if needed, but strict for now
+            return uSector === targetSector;
+        });
+
+        if (candidates.length === 0) {
+            alert(`No staff found for sector: ${issue.sector || 'General'}`);
+            return;
+        }
+
+        // 4. Try to match Zone if inferred
+        let finalCandidates = candidates;
+        if (inferredZone) {
+            const zonedCandidates = candidates.filter(u => {
+                const z = (u.assignedZone || u.assigned_zone || '').toLowerCase();
+                return z.includes(inferredZone);
+            });
+            if (zonedCandidates.length > 0) {
+                finalCandidates = zonedCandidates;
+            }
+        }
+
+        // 5. Pick randomly from final pool
+        const selected = finalCandidates[Math.floor(Math.random() * finalCandidates.length)];
+
+        try {
+            await api.updateIssue(issue.id, {
+                assigned_to: selected.id,
+                status: 'assigned'
+            });
+            setIssue({ ...issue, assignedTo: selected.id, status: 'assigned' });
+            alert(`✅ Auto-Assigned to ${selected.name || selected.username} (${selected.sector.toUpperCase()} - ${selected.assignedZone || selected.assigned_zone || 'Any Zone'})`);
+        } catch (error) {
+            console.error("Auto-assign failed", error);
+            alert("Failed to auto-assign");
+        }
     };
 
     return (
@@ -788,12 +847,21 @@ const IssueDetail = () => {
                                                 <option value="rejected" className="text-gray-900">Rejected</option>
                                             </select>
                                         </div>
-                                        <button
-                                            onClick={handleAssignmentUpdate}
-                                            className="px-6 py-2.5 liquid-btn liquid-btn-blue rounded-xl font-bold whitespace-nowrap shadow-lg"
-                                        >
-                                            Save Assignment
-                                        </button>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={handleAutoAssign}
+                                                className="px-4 py-2.5 liquid-btn liquid-btn-emerald rounded-xl font-bold whitespace-nowrap shadow-lg flex items-center gap-2"
+                                                title="Automatically assign to an available worker in this sector and zone"
+                                            >
+                                                <AutoFixHigh sx={{ fontSize: 18 }} /> Auto-Assign
+                                            </button>
+                                            <button
+                                                onClick={handleAssignmentUpdate}
+                                                className="px-6 py-2.5 liquid-btn liquid-btn-blue rounded-xl font-bold whitespace-nowrap shadow-lg"
+                                            >
+                                                Save Assignment
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
