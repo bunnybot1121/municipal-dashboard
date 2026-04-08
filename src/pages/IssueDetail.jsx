@@ -248,18 +248,23 @@ const IssueDetail = () => {
         else if(textToAnalyze.includes('central')) inferredZone = 'central';
 
         // 3. Filter candidate staff
-        let candidates = users.filter(u => {
+        let baseStaffPool = users.filter(u => {
             const isFieldStaff = u.role === 'worker' || u.role === 'field supervisor' || u.role === 'archived';
-            if (!isFieldStaff) return false;
-            if (!u.name && !u.username) return false;
-            
+            return isFieldStaff && (u.name || u.username);
+        });
+
+        let candidates = baseStaffPool.filter(u => {
             const uSector = (u.sector || 'general').toLowerCase();
-            // allow mapping 'general' sector to fallbacks if needed, but strict for now
             return uSector === targetSector;
         });
 
+        // Fallback 1: If no exact sector match, use everyone
         if (candidates.length === 0) {
-            alert(`No staff found for sector: ${issue.sector || 'General'}`);
+            candidates = baseStaffPool;
+        }
+
+        if (candidates.length === 0) {
+            alert(`No field staff available in the system!`);
             return;
         }
 
