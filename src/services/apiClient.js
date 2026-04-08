@@ -275,7 +275,8 @@ export const api = {
             scheduledEnd: t.scheduled_end,
             scheduledDate: t.scheduled_start?.split('T')[0],
             assignedTo: 'Unassigned',
-            assignedToId: t.assigned_to,
+            assignedToId: t.assigned_to || t.staff_id,
+            staffId: t.staff_id || t.assigned_to,
             createdBy: 'Admin'
         }));
     },

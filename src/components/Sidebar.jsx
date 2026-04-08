@@ -76,7 +76,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
             <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0 min-h-[72px]">
                 {!isCollapsed && (
                     <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="text-2xl drop-shadow-md">🏛️</div>
+                        <img src="/logo.png" alt="Nagarsevak AI Logo" className="w-8 h-8 rounded-lg shadow-md object-cover drop-shadow-md" />
                         <span className="font-bold text-lg tracking-wide whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-sm">Nagarsevak</span>
                     </div>
                 )}

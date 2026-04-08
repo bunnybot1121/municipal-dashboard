@@ -123,6 +123,7 @@ const LoginPage = () => {
 
                 {/* Header Section */}
                 <div className="text-center mb-12 levitate-icon">
+                    <img src="/logo.png" alt="Nagarsevak AI Logo" className="w-20 h-20 mx-auto mb-4 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/20 object-cover bg-white" />
                     <h1 className="text-4xl font-normal text-white tracking-tight drop-shadow-sm mb-2">Nagarsevak</h1>
                     <p className="text-white/80 text-sm font-light tracking-wide uppercase drop-shadow-sm">Municipal Command</p>
                 </div>
@@ -297,18 +298,7 @@ const LoginPage = () => {
                         </button>
                     </div>
 
-                    <div className="text-center mt-6 pt-4">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setIsRegistering(!isRegistering);
-                                setError('');
-                            }}
-                            className="text-white/70 hover:text-white text-sm font-light transition-colors duration-300"
-                        >
-                            {isRegistering ? 'Already have credentials? Login' : 'No credentials? Register Access'}
-                        </button>
-                    </div>
+
                 </form>
             </div>
         </div>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { api } from '../services/apiClient';
 import {
     Search, Add as Plus, Close, CheckCircle, Delete,
     Person as UserIcon, Badge, Work as RoleIcon,
-    Domain as SectorIcon, Key, Visibility, VisibilityOff
+    Domain as SectorIcon, Key, Visibility, VisibilityOff,
+    FilterList, Assignment, AssignmentTurnedIn, PendingActions
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -13,6 +15,7 @@ const Staff = () => {
     const [staffList, setStaffList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [sectorFilter, setSectorFilter] = useState('all');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingStaff, setEditingStaff] = useState(null);
     const [adding, setAdding] = useState(false);
@@ -45,7 +48,37 @@ const Staff = () => {
             const { data, error } = await query;
 
             if (error) throw error;
-            setStaffList(data || []);
+            
+            // Fetch tasks for analytics
+            let tasksData = [];
+            try {
+                tasksData = await api.getTasks() || [];
+            } catch (err) {
+                console.error('Failed to fetch tasks for analytics', err);
+            }
+
+            const staffWithAnalytics = (data || []).map(staff => {
+                const workerTasks = tasksData.filter(t => 
+                    t.assigned_to === staff.id || 
+                    t.assignedToId === staff.id ||
+                    t.staffId === staff.id ||
+                    t.staff_id === staff.id
+                );
+                const totalTasks = workerTasks.length;
+                const completedTasks = workerTasks.filter(t => ['completed', 'resolved', 'closed'].includes(t.status?.toLowerCase())).length;
+                const pendingTasks = workerTasks.filter(t => ['pending', 'in-progress', 'in_progress', 'scheduled'].includes(t.status?.toLowerCase())).length;
+                const completionRate = totalTasks > 0 ? Math.round((completedTasks/totalTasks)*100) : 0;
+                
+                return {
+                    ...staff,
+                    totalTasks,
+                    completedTasks,
+                    pendingTasks,
+                    completionRate
+                };
+            });
+
+            setStaffList(staffWithAnalytics);
         } catch (e) {
             console.error('Failed to fetch staff', e);
         } finally {
@@ -57,6 +90,18 @@ const Staff = () => {
         e.preventDefault();
         setError('');
         setAdding(true);
+
+        // Validation constraints
+        if (!/^[A-Za-z\s]+$/.test(newStaff.name.trim())) {
+            setError('Name should only contain alphabetic characters.');
+            setAdding(false);
+            return;
+        }
+        if (newStaff.password.length < 6) {
+            setError('Password must be at least 6 characters.');
+            setAdding(false);
+            return;
+        }
 
         const username = newStaff.username.trim().toLowerCase().replace(/\s/g, '');
 
@@ -112,6 +157,18 @@ const Staff = () => {
         setError('');
         setAdding(true);
 
+        // Validation constraints
+        if (!/^[A-Za-z\s]+$/.test(editingStaff.full_name.trim())) {
+            setError('Name should only contain alphabetic characters.');
+            setAdding(false);
+            return;
+        }
+        if (editingStaff.password && editingStaff.password.length < 6) {
+            setError('Password must be at least 6 characters.');
+            setAdding(false);
+            return;
+        }
+
         try {
             const { error: updateError } = await supabase.from('profiles').update({
                 full_name: editingStaff.full_name.trim(),
@@ -142,11 +199,13 @@ const Staff = () => {
         }
     }
 
-    const filtered = staffList.filter(s =>
-        (s.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (s.username || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (s.assigned_zone || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filtered = staffList.filter(s => {
+        const matchesSearch = (s.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (s.username || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (s.assigned_zone || '').toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSector = sectorFilter === 'all' || (s.sector || 'other').toLowerCase() === sectorFilter.toLowerCase();
+        return matchesSearch && matchesSector;
+    });
 
     return (
         <div className="space-y-6 animate-fade-in relative">
@@ -156,13 +215,34 @@ const Staff = () => {
                     <h1 className="text-xl font-bold text-white drop-shadow-sm">Field Supervisors</h1>
                     <p className="text-sm text-white/70">Manage field supervisors and their login credentials</p>
                 </div>
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                    <div className="relative flex-1 md:w-64">
+                <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                    {/* Sector Filter */}
+                    {(isAdmin || !department) && (
+                        <div className="relative w-full md:w-auto">
+                            <select
+                                value={sectorFilter}
+                                onChange={(e) => setSectorFilter(e.target.value)}
+                                className="w-full pl-10 pr-8 py-2 md:py-2.5 bg-white/10 rounded-xl border border-white/20 text-white text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none appearance-none [&>option]:text-gray-900 md:min-w-[160px] cursor-pointer hover:bg-white/20 transition-colors"
+                            >
+                                <option value="all">All Departments</option>
+                                <option value="water">Water</option>
+                                <option value="waste">Solid Waste</option>
+                                <option value="roads">Roads</option>
+                                <option value="electrical">Electrical</option>
+                                <option value="parks">Parks</option>
+                                <option value="health">Public Health</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <FilterList className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" sx={{ fontSize: 18 }} />
+                        </div>
+                    )}
+
+                    <div className="relative w-full md:w-64">
                         <Search sx={{ fontSize: 18 }} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
                         <input
                             type="text" placeholder="Search field supervisors..."
                             value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-white/10 rounded-xl border border-white/20 text-white placeholder-white/50 text-sm focus:ring-2 focus:ring-blue-500/50 outline-none"
+                            className="w-full pl-10 pr-4 py-2 md:py-2.5 bg-white/10 rounded-xl border border-white/20 text-white placeholder-white/50 text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none hover:bg-white/20 transition-colors"
                         />
                     </div>
                     <button
@@ -226,17 +306,55 @@ const Staff = () => {
                                 </button>
                             </div>
 
-                            {/* Details */}
-                            <div className="space-y-2 mb-4">
-                                <div className="flex items-center gap-2 text-sm text-white/70">
-                                    <Badge sx={{ fontSize: 16 }} className="text-white/50" />
-                                    <span className="font-mono font-semibold">@{staff.username || '—'}</span>
+                            {/* Details & Analytics */}
+                            <div className="space-y-4 mb-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-sm text-white/70">
+                                        <Badge sx={{ fontSize: 16 }} className="text-white/50" />
+                                        <span className="font-mono font-semibold">@{staff.username || '—'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm z-10 relative">
+                                        <span className={`px-2 py-0.5 rounded-md text-xs font-bold shadow-sm border ${
+                                            (staff.sector || '').toLowerCase() === 'water' ? 'border-blue-500/30 text-blue-200 bg-blue-500/20' :
+                                            (staff.sector || '').toLowerCase() === 'waste' ? 'border-amber-500/30 text-amber-200 bg-amber-500/20' :
+                                            'border-emerald-500/30 text-emerald-200 bg-emerald-500/20'
+                                        }`}>
+                                            {staff.sector ? staff.sector.charAt(0).toUpperCase() + staff.sector.slice(1) : 'General'} • {staff.assigned_zone || 'Unassigned'}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <SectorIcon sx={{ fontSize: 16 }} className="text-white/50" />
-                                    <span className="px-2 py-0.5 rounded-md text-xs font-bold shadow-sm border border-emerald-500/30 text-emerald-200 bg-emerald-500/20">
-                                        {staff.assigned_zone || 'Unassigned'} Zone
-                                    </span>
+                                
+                                {/* Analytics Mini-Dashboard */}
+                                <div className="bg-white/5 rounded-xl p-3 border border-white/10 relative overflow-hidden group-hover:bg-white/10 transition-colors">
+                                    {/* Progress background bar effect */}
+                                    <div className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-emerald-500/5 to-transparent transition-all duration-1000" style={{ width: `${staff.completionRate}%` }} />
+                                    
+                                    <h4 className="text-[10px] uppercase tracking-wider font-bold text-white/50 mb-3 flex items-center gap-1 z-10 relative">
+                                        <Assignment sx={{ fontSize: 14 }} /> Staff Activity Analytics
+                                    </h4>
+                                    
+                                    <div className="grid grid-cols-3 gap-2 z-10 relative">
+                                        <div className="text-center bg-black/20 rounded-lg p-2.5 flex flex-col justify-center items-center shadow-inner">
+                                            <span className="text-xl font-black text-white drop-shadow-md leading-none mb-1">{staff.totalTasks || 0}</span>
+                                            <span className="text-[9px] uppercase tracking-widest text-white/50 flex items-center gap-1"><Assignment sx={{fontSize:9}}/> Total</span>
+                                        </div>
+                                        <div className="text-center bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-2.5 flex flex-col justify-center items-center shadow-sm">
+                                            <span className="text-xl font-black text-emerald-400 drop-shadow-md leading-none mb-1">{staff.completedTasks || 0}</span>
+                                            <span className="text-[9px] uppercase tracking-widest text-emerald-400/80 flex items-center gap-1"><AssignmentTurnedIn sx={{fontSize:9}}/> Done</span>
+                                        </div>
+                                        <div className="text-center bg-amber-500/10 border border-amber-500/20 rounded-lg p-2.5 flex flex-col justify-center items-center shadow-sm">
+                                            <span className="text-xl font-black text-amber-400 drop-shadow-md leading-none mb-1">{staff.pendingTasks || 0}</span>
+                                            <span className="text-[9px] uppercase tracking-widest text-amber-400/80 flex items-center gap-1"><PendingActions sx={{fontSize:9}}/> Pend</span>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Completion Line */}
+                                    <div className="mt-3.5 flex items-center gap-2 z-10 relative">
+                                        <div className="flex-1 h-1.5 bg-black/40 rounded-full overflow-hidden shadow-inner">
+                                            <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-300 rounded-full transition-all duration-1000 ease-out" style={{ width: `${staff.completionRate}%` }} />
+                                        </div>
+                                        <span className="text-[10px] font-black tracking-wider text-white/80 w-8 text-right drop-shadow-sm">{staff.completionRate}%</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -284,7 +402,8 @@ const Staff = () => {
                                 <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Full Name</label>
                                 <input required type="text" placeholder="e.g. Ravi Kumar"
                                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 text-sm outline-none focus:ring-2 focus:ring-blue-500/50"
-                                    value={newStaff.name} onChange={e => setNewStaff({ ...newStaff, name: e.target.value })} />
+                                    value={newStaff.name} onChange={e => setNewStaff({ ...newStaff, name: e.target.value })} 
+                                    pattern="^[A-Za-z\s]+$" title="Name should only contain letters and spaces" />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
@@ -292,7 +411,8 @@ const Staff = () => {
                                     <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Username</label>
                                     <input required type="text" placeholder="e.g. ravi123"
                                         className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 font-mono"
-                                        value={newStaff.username} onChange={e => setNewStaff({ ...newStaff, username: e.target.value.toLowerCase().replace(/\s/g, '') })} />
+                                        value={newStaff.username} onChange={e => setNewStaff({ ...newStaff, username: e.target.value.toLowerCase().replace(/\s/g, '') })} 
+                                        pattern="^[a-z0-9_]+$" title="Username should only contain lowercase letters, numbers, and underscores" />
                                     {newStaff.username && (
                                         <p className="text-[10px] text-white/50 mt-0.5">Login email: {newStaff.username}@{DOMAIN}</p>
                                     )}
@@ -302,7 +422,8 @@ const Staff = () => {
                                     <div className="relative">
                                         <input required type={showPass.new ? 'text' : 'password'} placeholder="Min 6 chars"
                                             className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 pr-9"
-                                            value={newStaff.password} onChange={e => setNewStaff({ ...newStaff, password: e.target.value })} />
+                                            value={newStaff.password} onChange={e => setNewStaff({ ...newStaff, password: e.target.value })} 
+                                            minLength={6} />
                                         <button type="button" className="absolute right-2.5 top-2.5 text-white/50 hover:text-white"
                                             onClick={() => setShowPass(p => ({ ...p, new: !p.new }))}>
                                             {showPass.new ? <VisibilityOff sx={{ fontSize: 16 }} /> : <Visibility sx={{ fontSize: 16 }} />}
@@ -352,7 +473,8 @@ const Staff = () => {
                                 <label className="block text-xs font-bold text-white/70 uppercase mb-1 drop-shadow-sm">Full Name</label>
                                 <input required type="text" placeholder="e.g. Ravi Kumar"
                                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 text-sm outline-none focus:ring-2 focus:ring-blue-500/50"
-                                    value={editingStaff.full_name || ''} onChange={e => setEditingStaff({ ...editingStaff, full_name: e.target.value })} />
+                                    value={editingStaff.full_name || ''} onChange={e => setEditingStaff({ ...editingStaff, full_name: e.target.value })} 
+                                    pattern="^[A-Za-z\s]+$" title="Name should only contain letters and spaces" />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
@@ -368,7 +490,8 @@ const Staff = () => {
                                     <div className="relative">
                                         <input required type={showPass.edit ? 'text' : 'password'}
                                             className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 pr-9 font-mono"
-                                            value={editingStaff.password || ''} onChange={e => setEditingStaff({ ...editingStaff, password: e.target.value })} />
+                                            value={editingStaff.password || ''} onChange={e => setEditingStaff({ ...editingStaff, password: e.target.value })} 
+                                            minLength={6} />
                                         <button type="button" className="absolute right-2.5 top-2.5 text-white/50 hover:text-white"
                                             onClick={() => setShowPass(p => ({ ...p, edit: !p.edit }))}>
                                             {showPass.edit ? <VisibilityOff sx={{ fontSize: 16 }} /> : <Visibility sx={{ fontSize: 16 }} />}

@@ -13,12 +13,19 @@ export const CitizenLayout = () => {
                 padding: '1rem',
                 backgroundColor: '#1f2937',
                 borderBottom: '1px solid #374151',
-                textAlign: 'center'
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px'
             }}>
-                <h1 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#60a5fa' }}>
-                    Nagarsevak Setup
-                </h1>
-                <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Citizen Reporting Portal</p>
+                <img src="/logo.png" alt="Logo" style={{ width: '48px', height: '48px', borderRadius: '12px' }} />
+                <div>
+                    <h1 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#60a5fa', margin: 0 }}>
+                        Nagarsevak Setup
+                    </h1>
+                    <p style={{ fontSize: '0.875rem', color: '#9ca3af', margin: 0 }}>Citizen Reporting Portal</p>
+                </div>
             </header>
             <main>
                 <Outlet />

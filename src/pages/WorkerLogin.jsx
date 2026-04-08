@@ -60,8 +60,8 @@ export default function WorkerLogin() {
             <div style={{ width: '100%', maxWidth: '400px' }}>
                 {/* Logo / Brand */}
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                    <div style={{ width: '64px', height: '64px', background: 'rgba(255,255,255,0.15)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', margin: '0 auto 12px', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                        🏛️
+                    <div style={{ width: '64px', height: '64px', margin: '0 auto 12px', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', background: '#fff' }}>
+                        <img src="/logo.png" alt="Nagarsevak AI Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                     <h1 style={{ color: '#fff', fontWeight: 800, fontSize: '22px', margin: 0 }}>Nagarsevak AI</h1>
                     <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginTop: '4px' }}>Worker Field Portal</p>

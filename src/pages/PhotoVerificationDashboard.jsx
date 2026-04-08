@@ -21,12 +21,12 @@ export default function PhotoVerificationDashboard() {
             // Fetch resolved issues
             let queryIssues = supabase.from('issues')
                 .select('*')
-                .in('status', ['done', 'resolved', 'completed']);
+                .in('status', ['done', 'resolved', 'completed', 'pending_review']);
 
             // Fetch completed tasks
             let queryTasks = supabase.from('tasks')
                 .select('*')
-                .in('status', ['done', 'completed']);
+                .in('status', ['done', 'completed', 'pending_review']);
 
             const [resIssues, resTasks] = await Promise.all([queryIssues, queryTasks]);
             
@@ -83,15 +83,26 @@ export default function PhotoVerificationDashboard() {
         // action: 'approved' or 'rejected'
         const newStatus = action === 'approved' ? 'closed' : 'in_progress';
         try {
+            let updateError = null;
+
             if (item.isTask) {
-                await supabase.from('tasks').update({ status: newStatus }).eq('id', item.id);
+                const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', item.id);
+                updateError = error;
             } else {
-                await supabase.from('issues').update({ status: newStatus }).eq('id', item.id);
+                const { error } = await supabase.from('issues').update({ status: newStatus }).eq('id', item.id);
+                updateError = error;
             }
+
+            if (updateError) {
+                console.error("Supabase Error:", updateError);
+                throw updateError;
+            }
+
             // Remove from list or refresh
             setVerifications(prev => prev.filter(v => v.refId !== item.refId));
         } catch (err) {
-            alert('Failed to verify: ' + err.message);
+            console.error(err);
+            alert('Failed to verify: ' + (err.message || JSON.stringify(err)));
         }
     };
 
