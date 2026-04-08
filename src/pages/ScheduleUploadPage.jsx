@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader } from 'lucide-react';
-// NEW IMPORT
-import { parseMarkdownSchedule } from '../utils/markdownScheduleParser';
+// Use the proven working parser (scheduleParser) that correctly distributes tasks across all 12 months
+import { parseScheduleFile } from '../utils/scheduleParser';
 import { uploadTasksToSupabase } from '../services/taskService';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -34,7 +34,7 @@ export default function ScheduleUploadPage() {
 
         try {
             // USE MARKDOWN PARSER
-            const rawTasks = await parseMarkdownSchedule(selectedFile);
+            const rawTasks = await parseScheduleFile(selectedFile);
 
             // Enforce Department Ownership
             const finalTasks = isDepartment 

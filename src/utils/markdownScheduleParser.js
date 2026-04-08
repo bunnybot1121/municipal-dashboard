@@ -37,72 +37,41 @@ export async function parseMarkdownSchedule(file) {
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i].trim();
 
-                    // Extract Month: **Month: February**
-                    if (line.startsWith('**Month:')) {
-                        currentMonth = line.replace('**Month:', '').replace('**', '').trim();
-                        console.log(`📅 Found month: ${currentMonth}`);
+                    if (!line) continue;
+
+                    // Extract Month: e.g. **Month: February**, ## February, Month: March
+                    const monthMatch = line.match(/(?:Month|month)?\s*:?\s*\*?\*?\s*(January|February|March|April|May|June|July|August|September|October|November|December)/i);
+                    // Only match if it's acting as a heading or standalone (don't accidentally match a task description containing a month)
+                    if (monthMatch && (line.startsWith('#') || line.startsWith('*') || line.toLowerCase().includes('month'))) {
+                        currentMonth = monthMatch[1];
                         continue;
                     }
 
-                    // Extract Day: **Day 1:**
-                    if (line.startsWith('**Day')) {
-                        const dayMatch = line.match(/Day (\d+)/);
-                        if (dayMatch) {
-                            currentDay = parseInt(dayMatch[1]);
+                    // Extract Day: e.g. **Day 1**, ### Day 1:
+                    const dayMatch = line.match(/Day\s*(\d+)/i);
+                    if (dayMatch && (line.startsWith('#') || line.startsWith('*') || line.toLowerCase().includes('day'))) {
+                        currentDay = parseInt(dayMatch[1]);
+                        continue;
+                    }
+
+                    // A line starting with * could be a Sector or a Task
+                    if (line.startsWith('* ') || line.startsWith('- ')) {
+                        const withoutAsterisk = line.replace(/^[\*\-]\s*/, '').trim();
+                        const colonIndex = withoutAsterisk.indexOf(':');
+
+                        // If it has NO colon, or the colon is at the very end => SECTOR
+                        if (colonIndex !== -1 && colonIndex === withoutAsterisk.length - 1) {
+                            currentSector = withoutAsterisk.substring(0, colonIndex).trim();
+                            continue;
                         }
-                        continue;
-                    }
 
-                    // Extract Sector: * Water Supply:
-                    // Fix: Ensure we don't accidentally match task lines if they look similar
-                    if (line.startsWith('* ') && line.endsWith(':') &&
-                        !line.includes('Inspection:') &&
-                        !line.includes('Maintenance:') &&
-                        !line.includes('Cleaning:') &&
-                        !line.includes('Emergency') &&
-                        !line.includes('Preventive') &&
-                        !line.includes('Corrective') &&
-                        !line.includes('Audit:') &&
-                        !line.includes('Survey:')) {
+                        // Otherwise => TASK
+                        let taskType = 'Routine';
+                        let description = withoutAsterisk;
 
-                        currentSector = line.replace('*', '').replace(':', '').trim();
-                        continue;
-                    }
-
-                    // Extract Task: * Inspection: Check valve...
-                    if (line.includes('Inspection:') || line.includes('Maintenance:') ||
-                        line.includes('Cleaning:') || line.includes('Emergency') ||
-                        line.includes('Preventive') || line.includes('Corrective') ||
-                        line.includes('Audit:') || line.includes('Survey:')) {
-
-                        // Extract task type and description
-                        let taskType = '';
-                        let description = '';
-
-                        if (line.includes('Inspection:')) {
-                            taskType = 'Inspection';
-                            description = line.split('Inspection:')[1].trim();
-                        } else if (line.includes('Maintenance:')) {
-                            taskType = 'Maintenance';
-                            description = line.split('Maintenance:')[1].trim();
-                        } else if (line.includes('Cleaning:')) {
-                            taskType = 'Cleaning';
-                            description = line.split('Cleaning:')[1].trim();
-                        } else if (line.includes('Emergency readiness:')) {
-                            taskType = 'Emergency';
-                            description = line.split('Emergency readiness:')[1].trim();
-                        } else if (line.includes('Preventive maintenance:')) {
-                            taskType = 'Preventive';
-                            description = line.split('Preventive maintenance:')[1].trim();
-                        } else if (line.includes('Corrective maintenance:')) {
-                            taskType = 'Corrective';
-                            description = line.split('Corrective maintenance:')[1].trim();
-                        } else if (line.includes('Audit:')) {
-                            taskType = 'Audit';
-                            description = line.split('Audit:')[1].trim();
-                        } else if (line.includes('Survey:')) {
-                            taskType = 'Survey';
-                            description = line.split('Survey:')[1].trim();
+                        if (colonIndex !== -1) {
+                            taskType = withoutAsterisk.substring(0, colonIndex).trim();
+                            description = withoutAsterisk.substring(colonIndex + 1).trim();
                         }
 
                         // Map sector names to standardized format
@@ -120,10 +89,11 @@ export async function parseMarkdownSchedule(file) {
 
                         // Determine priority based on task type
                         let priority = 'medium';
-                        if (taskType === 'Emergency') priority = 'critical';
-                        else if (taskType === 'Inspection') priority = 'high';
-                        else if (taskType === 'Preventive') priority = 'medium';
-                        else if (taskType === 'Cleaning') priority = 'low';
+                        const typeLower = taskType.toLowerCase();
+                        if (typeLower.includes('emergency')) priority = 'critical';
+                        else if (typeLower.includes('inspection') || typeLower.includes('audit')) priority = 'high';
+                        else if (typeLower.includes('preventive')) priority = 'medium';
+                        else if (typeLower.includes('cleaning')) priority = 'low';
 
                         // Default to current year
                         const year = new Date().getFullYear();
@@ -140,10 +110,10 @@ export async function parseMarkdownSchedule(file) {
                             day: currentDay,
                             task_type: taskType,
                             status: 'assigned',
-                            scheduled_start: scheduledDate, // Map to DB field
+                            scheduled_start: scheduledDate, 
                             scheduled_date: scheduledDate,
                             scheduled_time: '09:00:00',
-                            scheduled_end: scheduledDate    // Map to DB field
+                            scheduled_end: scheduledDate
                         });
                     }
                 }

@@ -246,19 +246,16 @@ export const api = {
     async getTasks(filters = {}) {
         console.log("🔍 API getTasks called with filters:", filters); // DEBUG LOG
         const { data: { user } } = await supabase.auth.getUser();
-        // if (!user) return []; // Removed to allow fetching without strict auth check (handle RLS on backend)
 
-        // Simplified query without JOINs
         let query = supabase
             .from('tasks')
-            .select('*', { count: 'exact' })
-            .range(0, 49999)
+            .select('*')
+            .limit(5000)
             .order('scheduled_start', { ascending: true });
 
         // Apply filters
         if (filters.status) query = query.eq('status', filters.status);
 
-        // NEW: Filter by Minimum Creation Date (Soft Reset)
         if (filters.minCreatedDate) {
             query = query.gte('created_at', filters.minCreatedDate);
         }
@@ -274,8 +271,8 @@ export const api = {
             scheduledStart: t.scheduled_start,
             scheduledEnd: t.scheduled_end,
             scheduledDate: t.scheduled_start?.split('T')[0],
-            assignedTo: 'Unassigned',
-            assignedToId: t.assigned_to || t.staff_id,
+            assignedTo: 'Unassigned', // Handled heavily by TaskScheduler mapping
+            assignedToId: t.staff_id || t.assigned_to,
             staffId: t.staff_id || t.assigned_to,
             createdBy: 'Admin'
         }));

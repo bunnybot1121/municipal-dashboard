@@ -86,6 +86,7 @@ export default function WorkerLogin() {
                             <input
                                 type="text" required autoFocus
                                 value={username} onChange={e => setUsername(e.target.value)}
+                                autoComplete="off"
                                 placeholder="e.g. ravi123"
                                 style={{ width: '100%', boxSizing: 'border-box', border: '1.5px solid #E5E7EB', borderRadius: '10px', padding: '10px 14px', fontSize: '14px', outline: 'none', fontFamily: 'monospace', fontWeight: 600 }}
                             />
@@ -99,6 +100,7 @@ export default function WorkerLogin() {
                                 <input
                                     type={showPass ? 'text' : 'password'} required
                                     value={password} onChange={e => setPassword(e.target.value)}
+                                    autoComplete="new-password"
                                     placeholder="Your password"
                                     style={{ width: '100%', boxSizing: 'border-box', border: '1.5px solid #E5E7EB', borderRadius: '10px', padding: '10px 40px 10px 14px', fontSize: '14px', outline: 'none' }}
                                 />

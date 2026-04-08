@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Upload, FileText, AlertTriangle, RefreshCw, Trash2, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { api } from '../services/apiClient';
-// UPDATED IMPORTS
-import { parseMarkdownSchedule } from '../utils/markdownScheduleParser';
+// Use the proven working parser that correctly distributes tasks across all 12 months
+import { parseScheduleFile } from '../utils/scheduleParser';
 import { uploadTasksToSupabase } from '../services/taskService';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -66,8 +66,7 @@ const Settings = () => {
 
         try {
             // 1. USE CORRECT MARKDOWN PARSER
-            const pTasks = await parseMarkdownSchedule(file); // Note: this might need file object or text depending on implementation. 
-            // checking parseMarkdownSchedule implementation in previous turns -> it takes 'file' object.
+            const pTasks = await parseScheduleFile(file);
 
             if (pTasks.length === 0) {
                 const msg = "No valid tasks found. Ensure format: **Month**, **Day**, * Sector, * Task";

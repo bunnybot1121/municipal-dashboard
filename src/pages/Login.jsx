@@ -272,6 +272,7 @@ const LoginPage = () => {
                             placeholder="Email Address"
                             value={username}
                             maxLength={50}
+                            autoComplete="off"
                             onChange={(e) => setUsername(e.target.value.trim())}
                             className="w-full bg-transparent text-white px-6 py-4 rounded-full border border-white/40 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300 outline-none placeholder:text-white/60 font-light"
                         />
@@ -282,6 +283,7 @@ const LoginPage = () => {
                             type="password"
                             placeholder="Password"
                             value={password}
+                            autoComplete="new-password"
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full bg-transparent text-white px-6 py-4 rounded-full border border-white/40 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300 outline-none placeholder:text-white/60 font-light"
                         />

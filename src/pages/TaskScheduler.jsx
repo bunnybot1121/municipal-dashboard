@@ -67,13 +67,21 @@ const TaskScheduler = () => {
                 return [];
             });
 
+            // Map user IDs to names manually, bypassing backend join errors
+            const userMap = {};
+            if (usersData && Array.isArray(usersData)) {
+                usersData.forEach(u => {
+                    userMap[u.id || u._id] = u.full_name || u.name || u.username || 'Unassigned';
+                });
+            }
+
             if (tasksData && Array.isArray(tasksData)) {
-                const relevantTasks = isDeptScoped ? tasksData.filter(t => (t.sector || '').toLowerCase() === (department || '').toLowerCase()) : tasksData;
+                const relevantTasks = (isDeptScoped && department) ? tasksData.filter(t => (t.sector || '').toLowerCase() === (department || '').toLowerCase()) : tasksData;
 
                 const normalizedTasks = relevantTasks.map(t => ({
                     ...t,
                     id: t.id,
-                    assignee: t.assignedTo || 'Unassigned',
+                    assignee: userMap[t.staffId || t.assignedToId] || 'Unassigned',
                     assigneeId: t.assignedToId,
                     scheduledDate: t.scheduledStart ? t.scheduledStart.split('T')[0] : (t.scheduledDate || ''),
                 }));
@@ -81,7 +89,7 @@ const TaskScheduler = () => {
             }
 
             if (usersData && Array.isArray(usersData)) {
-                let staffOnly = usersData.filter(u => ['admin', 'staff', 'worker'].includes(u.role));
+                let staffOnly = usersData.filter(u => ['admin', 'staff', 'worker', 'field supervisor'].includes(u.role?.toLowerCase()));
                 if (isDeptScoped && department) {
                     staffOnly = staffOnly.filter(u => u.sector && u.sector.toLowerCase() === department.toLowerCase());
                 }
@@ -147,7 +155,11 @@ const TaskScheduler = () => {
         const matchesPriority = filterPriority === 'all' || task.priority === filterPriority;
         const matchesSearch = task.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             task.sector?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesDate = !selectedDate || task.scheduledDate === selectedDate.toISOString().split('T')[0];
+        // Fix timezone offset issue by formatting locally instead of using toISOString
+        const formattedTargetDate = selectedDate ? 
+            `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}` : null;
+            
+        const matchesDate = !selectedDate || task.scheduledDate === formattedTargetDate;
         return matchesPriority && matchesSearch && matchesDate;
     });
 

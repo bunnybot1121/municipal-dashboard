@@ -67,13 +67,12 @@ export const parseSchedule = (markdownText) => {
         if (taskMatch) {
             const type = taskMatch[1].trim();
             const description = taskMatch[2].trim();
-
             if (currentMonth !== null && currentDay !== null) {
-                const date = new Date(currentYear, currentMonth, currentDay);
-                const start = new Date(date);
-                start.setHours(9, 0, 0, 0);
-                const end = new Date(date);
-                end.setHours(17, 0, 0, 0);
+                const maxDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+                const validDay = Math.min(currentDay, maxDays);
+
+                const startStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(validDay).padStart(2, '0')}T09:00:00.000Z`;
+                const endStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(validDay).padStart(2, '0')}T17:00:00.000Z`;
 
                 const newTask = {
                     title: `${type}: ${description}`,
@@ -81,10 +80,10 @@ export const parseSchedule = (markdownText) => {
                     sector: currentSector,
                     priority: mapPriority(type),
                     status: 'assigned',
-                    scheduled_start: start.toISOString(),
-                    scheduled_date: start.toISOString(),
+                    scheduled_start: startStr,
+                    scheduled_date: startStr,
                     scheduled_time: '09:00:00',
-                    scheduled_end: end.toISOString(),
+                    scheduled_end: endStr,
                     month: Object.keys(monthMap).find(key => monthMap[key] === currentMonth), // Add helpful metadata
                     week: Math.ceil(currentDay / 7),
                     created_at: new Date().toISOString()

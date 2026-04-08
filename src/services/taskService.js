@@ -17,6 +17,22 @@ export async function uploadTasksToSupabase(tasks, cityId) {
     // Get current user for created_by field
     const { data: { user } } = await supabase.auth.getUser();
 
+    // FETCH STAFF TO ASSIGN RANDOMLY
+    const { data: staffList } = await supabase
+        .from('profiles')
+        .select('id, sector')
+        .in('role', ['worker', 'staff', 'field supervisor']);
+
+    // Group staff by sector
+    const staffBySector = {};
+    if (staffList) {
+        staffList.forEach(s => {
+            const sec = (s.sector || 'general').toLowerCase();
+            if (!staffBySector[sec]) staffBySector[sec] = [];
+            staffBySector[sec].push(s.id);
+        });
+    }
+
     try {
         // STEP 1: Clear existing tasks?? 
         // The user requested clearing tasks for city, but we might just want to append or let the user decide.
@@ -26,23 +42,33 @@ export async function uploadTasksToSupabase(tasks, cityId) {
         // User Prompt Code: "Clear existing tasks for this city (optional)" -> I'll skip auto-delete for safety unless forced.
 
         // STEP 2: Add timestamps and metadata
-        const tasksWithMeta = tasks.map(task => ({
-            title: task.title,
-            description: task.description,
-            sector: task.sector,
-            priority: task.priority,
-            status: task.status === 'pending' ? 'assigned' : (task.status || 'assigned'),
-            scheduled_start: task.scheduled_start || new Date().toISOString(),
-            scheduled_date: task.scheduled_start || new Date().toISOString(), // Fix for "scheduled_date" not-null constraint
-            scheduled_time: '09:00:00', // Fix for "scheduled_time" not-null constraint
-            scheduled_end: task.scheduled_end || new Date().toISOString(),
-            // month: task.month, // Column does not exist
-            // week: task.week,   // Column does not exist
-            user_id: user?.id,
-            // city_id: cityId, // Column does not exist
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-        }));
+        const tasksWithMeta = tasks.map(task => {
+            let assigned_to = null;
+            const taskSector = (task.sector || 'general').toLowerCase();
+            if (staffBySector[taskSector] && staffBySector[taskSector].length > 0) {
+                assigned_to = staffBySector[taskSector][Math.floor(Math.random() * staffBySector[taskSector].length)];
+            } else if (staffBySector['general'] && staffBySector['general'].length > 0) {
+                assigned_to = staffBySector['general'][Math.floor(Math.random() * staffBySector['general'].length)];
+            } else if (staffList && staffList.length > 0) {
+                assigned_to = staffList[Math.floor(Math.random() * staffList.length)].id;
+            }
+
+            return {
+                title: task.title,
+                description: task.description,
+                sector: task.sector,
+                priority: task.priority,
+                status: task.status === 'pending' ? 'assigned' : (task.status || 'assigned'),
+                scheduled_start: task.scheduled_start || new Date().toISOString(),
+                scheduled_date: task.scheduled_start || new Date().toISOString(), // Fix for "scheduled_date" not-null constraint
+                scheduled_time: '09:00:00', // Fix for "scheduled_time" not-null constraint
+                scheduled_end: task.scheduled_end || new Date().toISOString(),
+                staff_id: assigned_to,
+                user_id: user?.id,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+        });
 
         // STEP 3: Insert to Supabase (batch insert)
         console.log(`📤 Inserting ${tasksWithMeta.length} tasks to database...`);
